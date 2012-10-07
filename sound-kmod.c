@@ -21,12 +21,21 @@ static struct stmp3xxx_dma_descriptor *g_p_dma_cmds = NULL;
 static irqreturn_t dma_irq_func(int irq, void* p_dev)
 {
     u32 irq_mask = 1;
+    int i;
+    short max, curr;
+
     if (HW_APBX_CTRL1_RD() & irq_mask) {
-        stmp3xxx_dma_clear_interrupt(g_dma_ch);
-        printk("pcm period elapsed\n");
+        max = 0x8000;
+        for (i=0; i<PERIOD_SIZE; ++i) {
+            curr = (unsigned short)
+                (g_p_snd_buff[i*2] + (g_p_snd_buff[i*2+1]<<8));
+            if (curr > max) max=curr;
+        }
+        printk("pcm period elapsed. max=%d\n", max);
     } else
         printk(KERN_WARNING "Unknown interrupt\n");
 
+    stmp3xxx_dma_clear_interrupt(g_dma_ch);
     return IRQ_HANDLED;
 }
 
