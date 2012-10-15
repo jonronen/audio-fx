@@ -88,7 +88,7 @@ static irqreturn_t dma_irq_rec_func(int irq, void* p_dev)
                 (g_p_snd_buff[i*2] + (g_p_snd_buff[i*2+1]<<8));
             if (curr > max) max=curr;
         }
-        printk("recording period elapsed. max=%d\n", max);
+        //printk("recording period elapsed. max=%d\n", max);
     } else
         printk(KERN_WARNING "Unknown interrupt\n");
 
@@ -101,7 +101,7 @@ static irqreturn_t dma_irq_play_func(int irq, void* p_dev)
     u32 irq_mask = 2;
 
     if (HW_APBX_CTRL1_RD() & irq_mask) {
-        printk(KERN_INFO "playback period elapsed.");
+        //printk(KERN_INFO "playback period elapsed.");
     } else
         printk(KERN_WARNING "Unknown interrupt\n");
 
@@ -151,7 +151,7 @@ static int __init sound_kmod_init(void)
     imx233_reset_audioin();
 
     /* Set the audio recorder to use LRADC1, and set to an 8K resistor. */
-    HW_AUDIOIN_MICLINE_SET(0x01300000);
+    HW_AUDIOIN_MICLINE_SET(0x01300001);
 
     HW_AUDIOIN_CTRL_CLR(BM_AUDIOIN_CTRL_FIFO_OVERFLOW_IRQ);
     HW_AUDIOIN_CTRL_CLR(BM_AUDIOIN_CTRL_FIFO_UNDERFLOW_IRQ);
@@ -367,7 +367,7 @@ static int __init sound_kmod_init(void)
 
     HW_AUDIOIN_CTRL_SET(0x001f0000);
     HW_AUDIOOUT_CTRL_SET(0x001f0000);
-    HW_AUDIOIN_ADCVOL_WR(0x00000808);
+    HW_AUDIOIN_ADCVOL_WR(0x00000c0c);
     HW_AUDIOOUT_DACVOLUME_WR(0x02db00db);
 
     /* Set word-length to 16-bit */
@@ -390,7 +390,7 @@ static int __init sound_kmod_init(void)
     HW_AUDIOOUT_PWRDN_CLR(BM_AUDIOOUT_PWRDN_SPEAKER);
     HW_AUDIOOUT_PWRDN_CLR(BM_AUDIOOUT_PWRDN_HEADPHONE);
     /* release HP from ground */
-    HW_RTC_PERSISTENT0_CLR(0x00080000);
+    //HW_RTC_PERSISTENT0_CLR(0x00080000);
     /* Set HP mode to AB */
     HW_AUDIOOUT_ANACTRL_SET(BM_AUDIOOUT_ANACTRL_HP_CLASSAB);
     /* Stop holding to ground */
