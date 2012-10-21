@@ -12,16 +12,18 @@
 #include <mach/regs-rtc.h>
 #include <asm/dma.h>
 
-#define PERIOD_SIZE 256
-#define NUM_PERIODS 4
+#define PERIOD_SIZE 2048
+#define NUM_PERIODS 3
 
 
-static unsigned char* g_p_snd_buff = NULL;
+static unsigned short* g_snd_rec_buff = NULL;
+static unsigned short* g_snd_play_buff = NULL;
 static int g_dma_rec_ch = -1;
 static int g_dma_play_ch = -1;
-static struct stmp3xxx_dma_descriptor *g_p_dma_rec_cmds = NULL;
-static struct stmp3xxx_dma_descriptor *g_p_dma_play_cmds = NULL;
+static struct stmp3xxx_dma_descriptor *g_dma_rec_cmds = NULL;
+static struct stmp3xxx_dma_descriptor *g_dma_play_cmds = NULL;
 
+static unsigned char g_rec_index;
 
 static void imx233_reset_audioin(void)
 {
@@ -80,19 +82,33 @@ static irqreturn_t dma_irq_rec_func(int irq, void* p_dev)
     u32 irq_mask = 1;
     int i;
     short max, curr;
+    unsigned short* rec_buff = 
+        &g_snd_rec_buff[g_rec_index*PERIOD_SIZE*2];
+    unsigned short* play_buff =
+        &g_snd_play_buff[g_rec_index*PERIOD_SIZE*2];
 
     if (HW_APBX_CTRL1_RD() & irq_mask) {
+        stmp3xxx_dma_clear_interrupt(g_dma_rec_ch);
+
         max = 0x8000;
+        
         for (i=0; i<PERIOD_SIZE; ++i) {
-            curr = (unsigned short)
-                (g_p_snd_buff[i*2] + (g_p_snd_buff[i*2+1]<<8));
+            curr = rec_buff[i*2];
             if (curr > max) max=curr;
         }
-        //printk("recording period elapsed. max=%d\n", max);
+        if (g_rec_index == 0) {
+            //printk("recording period elapsed. max=%d\n", max);
+        }
+        
+        // copy and amplify
+        for (i=0; i<PERIOD_SIZE*2; ++i) {
+            play_buff[i] = rec_buff[i];
+        }
+        
+        g_rec_index = (g_rec_index+1)%NUM_PERIODS;
     } else
         printk(KERN_WARNING "Unknown interrupt\n");
 
-    stmp3xxx_dma_clear_interrupt(g_dma_rec_ch);
     return IRQ_HANDLED;
 }
 
@@ -101,11 +117,11 @@ static irqreturn_t dma_irq_play_func(int irq, void* p_dev)
     u32 irq_mask = 2;
 
     if (HW_APBX_CTRL1_RD() & irq_mask) {
-        //printk(KERN_INFO "playback period elapsed.");
+        stmp3xxx_dma_clear_interrupt(g_dma_play_ch);
+        //printk(KERN_INFO "playback period elapsed.\n");
     } else
         printk(KERN_WARNING "Unknown interrupt\n");
 
-    stmp3xxx_dma_clear_interrupt(g_dma_play_ch);
     return IRQ_HANDLED;
 }
 
@@ -134,33 +150,34 @@ static int __init sound_kmod_init(void)
     int i;
     dma_addr_t dma_addr_phys;
 
-    g_p_snd_buff = kzalloc(PERIOD_SIZE*NUM_PERIODS*2, GFP_KERNEL|GFP_DMA);
-    if (g_p_snd_buff == NULL) {
+    g_snd_rec_buff = kzalloc(PERIOD_SIZE*NUM_PERIODS*4, GFP_KERNEL|GFP_DMA);
+    if (g_snd_rec_buff == NULL) {
         printk("Error allocating memory\n");
         return -ENOMEM;
     }
-
-    //for (i=0; i<NUM_PERIODS; i++) {
-    //    memset(g_p_snd_buff + (i*4)*(PERIOD_SIZE/2), 0x00, PERIOD_SIZE/2);
-    //    memset(g_p_snd_buff + (i*4+1)*(PERIOD_SIZE/2), 0x40, PERIOD_SIZE/2);
-    //    memset(g_p_snd_buff + (i*4+2)*(PERIOD_SIZE/2), 0x80, PERIOD_SIZE/2);
-    //    memset(g_p_snd_buff + (i*4+3)*(PERIOD_SIZE/2), 0xC0, PERIOD_SIZE/2);
-    //}
+    g_snd_play_buff = kzalloc(PERIOD_SIZE*NUM_PERIODS*4, GFP_KERNEL|GFP_DMA);
+    if (g_snd_play_buff == NULL) {
+        printk("Error allocating memory\n");
+        kfree(g_snd_rec_buff);
+        return -ENOMEM;
+    }
 
     imx233_reset_audioout();
     imx233_reset_audioin();
 
     /* Set the audio recorder to use LRADC1, and set to an 8K resistor. */
-    HW_AUDIOIN_MICLINE_SET(0x01300001);
+    HW_AUDIOIN_MICLINE_SET(0x01300003);
 
     HW_AUDIOIN_CTRL_CLR(BM_AUDIOIN_CTRL_FIFO_OVERFLOW_IRQ);
     HW_AUDIOIN_CTRL_CLR(BM_AUDIOIN_CTRL_FIFO_UNDERFLOW_IRQ);
     HW_AUDIOIN_CTRL_SET(BM_AUDIOIN_CTRL_FIFO_ERROR_IRQ_EN);
+    //HW_AUDIOIN_CTRL_CLR(BM_AUDIOIN_CTRL_OFFSET_ENABLE);
+    //HW_AUDIOIN_CTRL_CLR(BM_AUDIOIN_CTRL_HPF_ENABLE);
     
     HW_AUDIOOUT_CTRL_CLR(BM_AUDIOOUT_CTRL_FIFO_OVERFLOW_IRQ);
     HW_AUDIOOUT_CTRL_CLR(BM_AUDIOOUT_CTRL_FIFO_UNDERFLOW_IRQ);
     HW_AUDIOOUT_CTRL_SET(BM_AUDIOOUT_CTRL_FIFO_ERROR_IRQ_EN);
-    
+
     g_dma_rec_ch = STMP3xxx_DMA(0, STMP3XXX_BUS_APBX);
     g_dma_play_ch = STMP3xxx_DMA(1, STMP3XXX_BUS_APBX);
     ret = stmp3xxx_dma_request(
@@ -170,6 +187,8 @@ static int __init sound_kmod_init(void)
     );
     if (ret) {
         printk(KERN_ERR "Failed to request recording DMA channel\n");
+        kfree(g_snd_rec_buff);
+        kfree(g_snd_play_buff);
         return ret;
     }
     else 
@@ -182,23 +201,27 @@ static int __init sound_kmod_init(void)
     if (ret) {
         printk(KERN_ERR "Failed to request playback DMA channel\n");
         stmp3xxx_dma_release(g_dma_rec_ch);
+        kfree(g_snd_rec_buff);
+        kfree(g_snd_play_buff);
         return ret;
     }
     else 
         printk("Got DMA channel %d\n", g_dma_play_ch);
 
-    g_p_dma_rec_cmds = kzalloc(
+    g_dma_rec_cmds = kzalloc(
         sizeof(struct stmp3xxx_dma_descriptor) * NUM_PERIODS,
         GFP_KERNEL
     );
-    g_p_dma_play_cmds = kzalloc(
+    g_dma_play_cmds = kzalloc(
         sizeof(struct stmp3xxx_dma_descriptor) * NUM_PERIODS,
         GFP_KERNEL
     );
-    if ((g_p_dma_rec_cmds == NULL) || (g_p_dma_play_cmds == NULL)) {
+    if ((g_dma_rec_cmds == NULL) || (g_dma_play_cmds == NULL)) {
         printk(KERN_ERR "Unable to allocate memory\n");
         stmp3xxx_dma_release(g_dma_rec_ch);
         stmp3xxx_dma_release(g_dma_play_ch);
+        kfree(g_snd_rec_buff);
+        kfree(g_snd_play_buff);
         return -ENOMEM;
     }
 
@@ -207,8 +230,10 @@ static int __init sound_kmod_init(void)
         printk(KERN_ERR "Unable to request DMA recording irq\n");
         stmp3xxx_dma_release(g_dma_rec_ch);
         stmp3xxx_dma_release(g_dma_play_ch);
-        kfree(g_p_dma_rec_cmds);
-        kfree(g_p_dma_play_cmds);
+        kfree(g_dma_rec_cmds);
+        kfree(g_dma_play_cmds);
+        kfree(g_snd_rec_buff);
+        kfree(g_snd_play_buff);
         return ret;
     }
     ret = request_irq(IRQ_DAC_DMA, dma_irq_play_func, 0, "PCM DMA", NULL);
@@ -217,8 +242,10 @@ static int __init sound_kmod_init(void)
         free_irq(IRQ_ADC_DMA, NULL);
         stmp3xxx_dma_release(g_dma_rec_ch);
         stmp3xxx_dma_release(g_dma_play_ch);
-        kfree(g_p_dma_rec_cmds);
-        kfree(g_p_dma_play_cmds);
+        kfree(g_dma_rec_cmds);
+        kfree(g_dma_play_cmds);
+        kfree(g_snd_rec_buff);
+        kfree(g_snd_play_buff);
         return ret;
     }
     ret = request_irq(IRQ_DAC_ERROR, audioout_err_func, 0, "DAC Error", NULL);
@@ -228,8 +255,10 @@ static int __init sound_kmod_init(void)
         free_irq(IRQ_ADC_DMA, NULL);
         stmp3xxx_dma_release(g_dma_rec_ch);
         stmp3xxx_dma_release(g_dma_play_ch);
-        kfree(g_p_dma_rec_cmds);
-        kfree(g_p_dma_play_cmds);
+        kfree(g_dma_rec_cmds);
+        kfree(g_dma_play_cmds);
+        kfree(g_snd_rec_buff);
+        kfree(g_snd_play_buff);
         return ret;
     }
     ret = request_irq(IRQ_ADC_ERROR, audioin_err_func, 0, "ADC Error", NULL);
@@ -240,41 +269,48 @@ static int __init sound_kmod_init(void)
         free_irq(IRQ_DAC_ERROR, NULL);
         stmp3xxx_dma_release(g_dma_rec_ch);
         stmp3xxx_dma_release(g_dma_play_ch);
-        kfree(g_p_dma_rec_cmds);
-        kfree(g_p_dma_play_cmds);
+        kfree(g_dma_rec_cmds);
+        kfree(g_dma_play_cmds);
+        kfree(g_snd_rec_buff);
+        kfree(g_snd_play_buff);
         return ret;
     }
 
+    g_rec_index = 0;
     for (desc = 0; desc < NUM_PERIODS; desc++) {
         ret = stmp3xxx_dma_allocate_command(g_dma_rec_ch,
-                        &g_p_dma_rec_cmds[desc]);
+                        &g_dma_rec_cmds[desc]);
         if (ret) {
             printk(KERN_ERR "Unable to allocate DMA rec. command %d\n", desc);
             while (--desc >= 0)
                 stmp3xxx_dma_free_command(g_dma_rec_ch,
-                              &g_p_dma_rec_cmds[desc]);
-            kfree(g_p_dma_rec_cmds);
-            kfree(g_p_dma_play_cmds);
+                              &g_dma_rec_cmds[desc]);
+            kfree(g_dma_rec_cmds);
+            kfree(g_dma_play_cmds);
             stmp3xxx_dma_release(g_dma_rec_ch);
             stmp3xxx_dma_release(g_dma_play_ch);
+            kfree(g_snd_rec_buff);
+            kfree(g_snd_play_buff);
 
             return ret;
         }
     }
     for (desc = 0; desc < NUM_PERIODS; desc++) {
         ret = stmp3xxx_dma_allocate_command(g_dma_play_ch,
-                        &g_p_dma_play_cmds[desc]);
+                        &g_dma_play_cmds[desc]);
         if (ret) {
             printk(KERN_ERR "Unable to allocate DMA play command %d\n", desc);
             while (--desc >= 0)
                 stmp3xxx_dma_free_command(g_dma_play_ch,
-                              &g_p_dma_play_cmds[desc]);
+                              &g_dma_play_cmds[desc]);
             desc=NUM_PERIODS;
             while (--desc >= 0)
                 stmp3xxx_dma_free_command(g_dma_rec_ch,
-                              &g_p_dma_rec_cmds[desc]);
-            kfree(g_p_dma_rec_cmds);
-            kfree(g_p_dma_play_cmds);
+                              &g_dma_rec_cmds[desc]);
+            kfree(g_dma_rec_cmds);
+            kfree(g_dma_play_cmds);
+            kfree(g_snd_rec_buff);
+            kfree(g_snd_play_buff);
             stmp3xxx_dma_release(g_dma_rec_ch);
             stmp3xxx_dma_release(g_dma_play_ch);
 
@@ -282,17 +318,6 @@ static int __init sound_kmod_init(void)
         }
     }
     
-    //print_array(
-    //    g_p_dma_cmds,
-    //    sizeof(struct stmp3xxx_dma_descriptor)*NUM_PERIODS,
-    //    "dma_cmds"
-    //);
-    //printk(
-    //    KERN_INFO "g_p_dma_cmds: 0x%08x, phys: 0x%08x\n",
-    //    (unsigned int)g_p_dma_cmds,
-    //    (unsigned int)virt_to_phys(g_p_dma_cmds)
-    //);
-
     /* clear completion interrupt */
     stmp3xxx_dma_clear_interrupt(g_dma_rec_ch);
     stmp3xxx_dma_enable_interrupt(g_dma_rec_ch);
@@ -304,71 +329,58 @@ static int __init sound_kmod_init(void)
     stmp3xxx_dma_reset_channel(g_dma_play_ch);
 
     /* Set up a DMA chain to sent DMA buffer */
-    dma_addr_phys = virt_to_phys(g_p_snd_buff);
-    //printk(
-    //    KERN_INFO "g_p_snd_buff: 0x%08x, dma_phys: 0x%08x\n",
-    //    (unsigned int)g_p_snd_buff, dma_addr_phys
-    //);
+    dma_addr_phys = virt_to_phys(g_snd_rec_buff);
     for (i = 0; i < NUM_PERIODS; i++) {
-        int next = (i + 1) % NUM_PERIODS;
+        int next = (i+1) % NUM_PERIODS;
         u32 cmd = 0;
 
         /* Link with previous command */
-        g_p_dma_rec_cmds[i].command->next =
-                g_p_dma_rec_cmds[next].handle;
+        g_dma_rec_cmds[i].command->next =
+                g_dma_rec_cmds[next].handle;
 
-        g_p_dma_rec_cmds[i].next_descr =
-                &g_p_dma_rec_cmds[next];
+        g_dma_rec_cmds[i].next_descr =
+                &g_dma_rec_cmds[next];
 
-        cmd = BF_APBX_CHn_CMD_XFER_COUNT(PERIOD_SIZE*2) |
+        cmd = BF_APBX_CHn_CMD_XFER_COUNT(PERIOD_SIZE*4) |
               BM_APBX_CHn_CMD_CHAIN;
         cmd |= BF_APBX_CHn_CMD_COMMAND(
             BV_APBX_CHn_CMD_COMMAND__DMA_WRITE);
-        if (i==0) cmd |= BM_APBX_CHn_CMD_IRQONCMPLT;
+        cmd |= BM_APBX_CHn_CMD_IRQONCMPLT;
 
-        g_p_dma_rec_cmds[i].command->cmd = cmd;
-        g_p_dma_rec_cmds[i].command->buf_ptr = dma_addr_phys;
+        g_dma_rec_cmds[i].command->cmd = cmd;
+        g_dma_rec_cmds[i].command->buf_ptr = dma_addr_phys;
 
         /* Next data chunk */
-        dma_addr_phys += PERIOD_SIZE*2;
+        dma_addr_phys += PERIOD_SIZE*4;
     }
-    dma_addr_phys -= (PERIOD_SIZE*2*NUM_PERIODS);
+    
+    dma_addr_phys = virt_to_phys(g_snd_play_buff);
     for (i = 0; i < NUM_PERIODS; i++) {
         int next = (i+1) % NUM_PERIODS;
-        size_t addr_offset = ((i+2) % NUM_PERIODS) * PERIOD_SIZE*2;
+        size_t addr_offset = ((i+1)%NUM_PERIODS) * PERIOD_SIZE*4;
         u32 cmd = 0;
 
         /* Link with previous command */
-        g_p_dma_play_cmds[i].command->next =
-                g_p_dma_play_cmds[next].handle;
+        g_dma_play_cmds[i].command->next =
+                g_dma_play_cmds[next].handle;
 
-        g_p_dma_play_cmds[i].next_descr =
-                &g_p_dma_play_cmds[next];
+        g_dma_play_cmds[i].next_descr =
+                &g_dma_play_cmds[next];
 
-        cmd = BF_APBX_CHn_CMD_XFER_COUNT(PERIOD_SIZE*2) |
+        cmd = BF_APBX_CHn_CMD_XFER_COUNT(PERIOD_SIZE*4) |
               BM_APBX_CHn_CMD_CHAIN;
         cmd |= BF_APBX_CHn_CMD_COMMAND(
             BV_APBX_CHn_CMD_COMMAND__DMA_READ);
-        if (i==0) cmd |= BM_APBX_CHn_CMD_IRQONCMPLT;
+        cmd |= BM_APBX_CHn_CMD_IRQONCMPLT;
 
-        g_p_dma_play_cmds[i].command->cmd = cmd;
-        g_p_dma_play_cmds[i].command->buf_ptr = dma_addr_phys+addr_offset;
+        g_dma_play_cmds[i].command->cmd = cmd;
+        g_dma_play_cmds[i].command->buf_ptr = dma_addr_phys+addr_offset;
     }
 
-    print_array(
-        g_p_dma_play_cmds,
-        sizeof(struct stmp3xxx_dma_descriptor)*NUM_PERIODS,
-        "g_p_dma_play_cmds"
-    );
-    printk(
-        "g_p_dma_play_cmds: 0x%lx, phys: 0x%lx\n",
-        (long unsigned int)g_p_dma_play_cmds, virt_to_phys(g_p_dma_play_cmds)
-    );
-
-    HW_AUDIOIN_CTRL_SET(0x001f0000);
-    HW_AUDIOOUT_CTRL_SET(0x001f0000);
+    //HW_AUDIOIN_CTRL_SET(0x001f0000);
+    //HW_AUDIOOUT_CTRL_SET(0x001f0000);
     HW_AUDIOIN_ADCVOL_WR(0x00000c0c);
-    HW_AUDIOOUT_DACVOLUME_WR(0x02db00db);
+    HW_AUDIOOUT_DACVOLUME_WR(0x00db00db);
 
     /* Set word-length to 16-bit */
     HW_AUDIOOUT_CTRL_SET(BM_AUDIOOUT_CTRL_WORD_LENGTH);
@@ -390,7 +402,7 @@ static int __init sound_kmod_init(void)
     HW_AUDIOOUT_PWRDN_CLR(BM_AUDIOOUT_PWRDN_SPEAKER);
     HW_AUDIOOUT_PWRDN_CLR(BM_AUDIOOUT_PWRDN_HEADPHONE);
     /* release HP from ground */
-    //HW_RTC_PERSISTENT0_CLR(0x00080000);
+    
     /* Set HP mode to AB */
     HW_AUDIOOUT_ANACTRL_SET(BM_AUDIOOUT_ANACTRL_HP_CLASSAB);
     /* Stop holding to ground */
@@ -405,10 +417,10 @@ static int __init sound_kmod_init(void)
     udelay(200);
     HW_AUDIOOUT_DATA_WR(0x00000001);
     udelay(200);
-    HW_AUDIOIN_CTRL_SET(BM_AUDIOIN_CTRL_RUN);
-    stmp3xxx_dma_go(g_dma_rec_ch, g_p_dma_rec_cmds, 1);
-    stmp3xxx_dma_go(g_dma_play_ch, g_p_dma_play_cmds, 1);
     HW_AUDIOOUT_CTRL_SET(BM_AUDIOOUT_CTRL_RUN);
+    stmp3xxx_dma_go(g_dma_play_ch, g_dma_play_cmds, 1);
+    HW_AUDIOIN_CTRL_SET(BM_AUDIOIN_CTRL_RUN);
+    stmp3xxx_dma_go(g_dma_rec_ch, g_dma_rec_cmds, 1);
 
     return ret;
 }
@@ -430,11 +442,11 @@ static void __exit sound_kmod_exit(void)
     for (desc = 0; desc < NUM_PERIODS; desc++) {
         stmp3xxx_dma_free_command(
             g_dma_rec_ch,
-            &g_p_dma_rec_cmds[desc]
+            &g_dma_rec_cmds[desc]
         );
         stmp3xxx_dma_free_command(
             g_dma_play_ch,
-            &g_p_dma_play_cmds[desc]
+            &g_dma_play_cmds[desc]
         );
     }
 
@@ -442,17 +454,21 @@ static void __exit sound_kmod_exit(void)
     stmp3xxx_dma_release(g_dma_rec_ch);
     stmp3xxx_dma_release(g_dma_play_ch);
     
-    if (g_p_dma_rec_cmds) {
-        kfree(g_p_dma_rec_cmds);
-        g_p_dma_rec_cmds = NULL;
+    if (g_dma_rec_cmds) {
+        kfree(g_dma_rec_cmds);
+        g_dma_rec_cmds = NULL;
     }
-    if (g_p_dma_play_cmds) {
-        kfree(g_p_dma_play_cmds);
-        g_p_dma_play_cmds = NULL;
+    if (g_dma_play_cmds) {
+        kfree(g_dma_play_cmds);
+        g_dma_play_cmds = NULL;
     }
-    if (g_p_snd_buff) {
-        kfree(g_p_snd_buff);
-        g_p_snd_buff = NULL;
+    if (g_snd_rec_buff) {
+        kfree(g_snd_rec_buff);
+        g_snd_rec_buff = NULL;
+    }
+    if (g_snd_play_buff) {
+        kfree(g_snd_play_buff);
+        g_snd_play_buff = NULL;
     }
 }
 
