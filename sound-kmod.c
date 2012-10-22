@@ -12,7 +12,7 @@
 #include <mach/regs-rtc.h>
 #include <asm/dma.h>
 
-#define PERIOD_SIZE 2048
+#define PERIOD_SIZE 4096
 #define NUM_PERIODS 3
 
 
@@ -81,7 +81,7 @@ static irqreturn_t dma_irq_rec_func(int irq, void* p_dev)
 {
     u32 irq_mask = 1;
     int i;
-    short max, curr;
+    //short max, curr;
     unsigned short* rec_buff = 
         &g_snd_rec_buff[g_rec_index*PERIOD_SIZE*2];
     unsigned short* play_buff =
@@ -90,17 +90,17 @@ static irqreturn_t dma_irq_rec_func(int irq, void* p_dev)
     if (HW_APBX_CTRL1_RD() & irq_mask) {
         stmp3xxx_dma_clear_interrupt(g_dma_rec_ch);
 
-        max = 0x8000;
+        //max = 0x8000;
         
-        for (i=0; i<PERIOD_SIZE; ++i) {
-            curr = rec_buff[i*2];
-            if (curr > max) max=curr;
-        }
-        if (g_rec_index == 0) {
+        //for (i=0; i<PERIOD_SIZE; ++i) {
+        //    curr = rec_buff[i*2];
+        //    if (curr > max) max=curr;
+        //}
+        //if (g_rec_index == 0) {
             //printk("recording period elapsed. max=%d\n", max);
-        }
+        //}
         
-        // copy and amplify
+        // copy the buffer
         for (i=0; i<PERIOD_SIZE*2; ++i) {
             play_buff[i] = rec_buff[i];
         }
@@ -166,17 +166,21 @@ static int __init sound_kmod_init(void)
     imx233_reset_audioin();
 
     /* Set the audio recorder to use LRADC1, and set to an 8K resistor. */
-    HW_AUDIOIN_MICLINE_SET(0x01300003);
+    HW_AUDIOIN_MICLINE_SET(0x00000003);
 
     HW_AUDIOIN_CTRL_CLR(BM_AUDIOIN_CTRL_FIFO_OVERFLOW_IRQ);
     HW_AUDIOIN_CTRL_CLR(BM_AUDIOIN_CTRL_FIFO_UNDERFLOW_IRQ);
     HW_AUDIOIN_CTRL_SET(BM_AUDIOIN_CTRL_FIFO_ERROR_IRQ_EN);
-    //HW_AUDIOIN_CTRL_CLR(BM_AUDIOIN_CTRL_OFFSET_ENABLE);
-    //HW_AUDIOIN_CTRL_CLR(BM_AUDIOIN_CTRL_HPF_ENABLE);
+    HW_AUDIOIN_CTRL_CLR(BM_AUDIOIN_CTRL_OFFSET_ENABLE);
+    HW_AUDIOIN_CTRL_CLR(BM_AUDIOIN_CTRL_HPF_ENABLE);
     
     HW_AUDIOOUT_CTRL_CLR(BM_AUDIOOUT_CTRL_FIFO_OVERFLOW_IRQ);
     HW_AUDIOOUT_CTRL_CLR(BM_AUDIOOUT_CTRL_FIFO_UNDERFLOW_IRQ);
     HW_AUDIOOUT_CTRL_SET(BM_AUDIOOUT_CTRL_FIFO_ERROR_IRQ_EN);
+
+    // set the frequencies to 44.1KHz
+    HW_AUDIOIN_ADCSRR_WR(0x10110037);
+    HW_AUDIOOUT_DACSRR_WR(0x10110037);
 
     g_dma_rec_ch = STMP3xxx_DMA(0, STMP3XXX_BUS_APBX);
     g_dma_play_ch = STMP3xxx_DMA(1, STMP3XXX_BUS_APBX);
@@ -394,14 +398,15 @@ static int __init sound_kmod_init(void)
     /* Hold HP to ground to avoid pop, then release and power up stuff */
     HW_AUDIOOUT_ANACTRL_SET(BM_AUDIOOUT_ANACTRL_HP_HOLD_GND);
     HW_RTC_PERSISTENT0_SET(0x00080000);
-    /* Set capless mode */
-    HW_AUDIOOUT_PWRDN_CLR(BM_AUDIOOUT_PWRDN_CAPLESS);
+    ///* Set capless mode */
+    //HW_AUDIOOUT_PWRDN_CLR(BM_AUDIOOUT_PWRDN_CAPLESS);
     /* Power up DAC, ADC, speaker, and headphones */
     HW_AUDIOOUT_PWRDN_CLR(BM_AUDIOOUT_PWRDN_DAC);
     HW_AUDIOOUT_PWRDN_CLR(BM_AUDIOOUT_PWRDN_ADC);
     HW_AUDIOOUT_PWRDN_CLR(BM_AUDIOOUT_PWRDN_SPEAKER);
     HW_AUDIOOUT_PWRDN_CLR(BM_AUDIOOUT_PWRDN_HEADPHONE);
     /* release HP from ground */
+    HW_RTC_PERSISTENT0_CLR(0x00080000);
     
     /* Set HP mode to AB */
     HW_AUDIOOUT_ANACTRL_SET(BM_AUDIOOUT_ANACTRL_HP_CLASSAB);
