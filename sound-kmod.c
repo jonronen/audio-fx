@@ -16,14 +16,15 @@
 #define NUM_PERIODS 3
 
 
-static unsigned short* g_snd_rec_buff = NULL;
-static unsigned short* g_snd_play_buff = NULL;
+static int* g_snd_rec_buff = NULL;
+static int* g_snd_play_buff = NULL;
 static int g_dma_rec_ch = -1;
 static int g_dma_play_ch = -1;
 static struct stmp3xxx_dma_descriptor *g_dma_rec_cmds = NULL;
 static struct stmp3xxx_dma_descriptor *g_dma_play_cmds = NULL;
 
 static unsigned char g_rec_index;
+static unsigned int g_first_interrupt;
 
 static void imx233_reset_audioin(void)
 {
@@ -81,27 +82,34 @@ static irqreturn_t dma_irq_rec_func(int irq, void* p_dev)
 {
     u32 irq_mask = 1;
     int i;
-    //short max, curr;
-    unsigned short* rec_buff = 
-        &g_snd_rec_buff[g_rec_index*PERIOD_SIZE*2];
-    unsigned short* play_buff =
-        &g_snd_play_buff[g_rec_index*PERIOD_SIZE*2];
+    int min, max, curr;
+    int* rec_buff = 
+        &g_snd_rec_buff[g_rec_index*PERIOD_SIZE];
+    int* play_buff =
+        &g_snd_play_buff[g_rec_index*PERIOD_SIZE];
 
     if (HW_APBX_CTRL1_RD() & irq_mask) {
         stmp3xxx_dma_clear_interrupt(g_dma_rec_ch);
 
-        //max = 0x8000;
+        if (g_first_interrupt) {
+            g_first_interrupt = 0;
+            HW_AUDIOIN_CTRL_CLR(BM_AUDIOIN_CTRL_OFFSET_ENABLE);
+        }
+
+        max = -0x7fffffff;
+        min = 0x7fffffff;
         
-        //for (i=0; i<PERIOD_SIZE; ++i) {
-        //    curr = rec_buff[i*2];
-        //    if (curr > max) max=curr;
-        //}
-        //if (g_rec_index == 0) {
-            //printk("recording period elapsed. max=%d\n", max);
-        //}
+        for (i=0; i<PERIOD_SIZE; i+=2) {
+            curr = rec_buff[i];
+            if (curr > max) max=curr;
+            if (curr < min) min=curr;
+        }
+        if (g_rec_index == 0) {
+            printk("recording period elapsed. min=%d, max=%d\n", min, max);
+        }
         
         // copy the buffer
-        for (i=0; i<PERIOD_SIZE*2; ++i) {
+        for (i=0; i<PERIOD_SIZE; ++i) {
             play_buff[i] = rec_buff[i];
         }
         
@@ -150,6 +158,8 @@ static int __init sound_kmod_init(void)
     int i;
     dma_addr_t dma_addr_phys;
 
+    g_first_interrupt = 1;
+
     g_snd_rec_buff = kzalloc(PERIOD_SIZE*NUM_PERIODS*4, GFP_KERNEL|GFP_DMA);
     if (g_snd_rec_buff == NULL) {
         printk("Error allocating memory\n");
@@ -166,13 +176,13 @@ static int __init sound_kmod_init(void)
     imx233_reset_audioin();
 
     /* Set the audio recorder to use LRADC1, and set to an 8K resistor. */
-    HW_AUDIOIN_MICLINE_SET(0x00000003);
+    HW_AUDIOIN_MICLINE_WR(0x00000001);
 
     HW_AUDIOIN_CTRL_CLR(BM_AUDIOIN_CTRL_FIFO_OVERFLOW_IRQ);
     HW_AUDIOIN_CTRL_CLR(BM_AUDIOIN_CTRL_FIFO_UNDERFLOW_IRQ);
     HW_AUDIOIN_CTRL_SET(BM_AUDIOIN_CTRL_FIFO_ERROR_IRQ_EN);
-    HW_AUDIOIN_CTRL_CLR(BM_AUDIOIN_CTRL_OFFSET_ENABLE);
-    HW_AUDIOIN_CTRL_CLR(BM_AUDIOIN_CTRL_HPF_ENABLE);
+    HW_AUDIOIN_CTRL_SET(BM_AUDIOIN_CTRL_OFFSET_ENABLE);
+    HW_AUDIOIN_CTRL_SET(BM_AUDIOIN_CTRL_HPF_ENABLE);
     
     HW_AUDIOOUT_CTRL_CLR(BM_AUDIOOUT_CTRL_FIFO_OVERFLOW_IRQ);
     HW_AUDIOOUT_CTRL_CLR(BM_AUDIOOUT_CTRL_FIFO_UNDERFLOW_IRQ);
@@ -381,20 +391,23 @@ static int __init sound_kmod_init(void)
         g_dma_play_cmds[i].command->buf_ptr = dma_addr_phys+addr_offset;
     }
 
-    //HW_AUDIOIN_CTRL_SET(0x001f0000);
-    //HW_AUDIOOUT_CTRL_SET(0x001f0000);
-    HW_AUDIOIN_ADCVOL_WR(0x00000c0c);
-    HW_AUDIOOUT_DACVOLUME_WR(0x00db00db);
+    HW_AUDIOIN_CTRL_SET(0x001f0000);
+    HW_AUDIOOUT_CTRL_SET(0x001f0000);
+    HW_AUDIOIN_ADCVOL_WR(0x00000202);
+    HW_AUDIOIN_ADCVOLUME_WR(0x00db00db);
+    HW_AUDIOOUT_DACVOLUME_WR(0x00ff00ff);
 
-    /* Set word-length to 16-bit */
-    HW_AUDIOOUT_CTRL_SET(BM_AUDIOOUT_CTRL_WORD_LENGTH);
-    HW_AUDIOIN_CTRL_SET(BM_AUDIOIN_CTRL_WORD_LENGTH);
+    /* Set word-length to 32-bit */
+    HW_AUDIOOUT_CTRL_CLR(BM_AUDIOOUT_CTRL_WORD_LENGTH);
+    HW_AUDIOIN_CTRL_CLR(BM_AUDIOIN_CTRL_WORD_LENGTH);
     /* Set frequencies to 44.1KHz */
     HW_AUDIOIN_ADCSRR_WR(0x10110037);
     HW_AUDIOOUT_DACSRR_WR(0x10110037);
     /* Enable DAC and ADC */
     HW_AUDIOOUT_ANACLKCTRL_CLR(BM_AUDIOOUT_ANACLKCTRL_CLKGATE);
     HW_AUDIOIN_ANACLKCTRL_CLR(BM_AUDIOIN_ANACLKCTRL_CLKGATE);
+    /* set the diethering. they say it improves quality */
+    HW_AUDIOIN_ANACLKCTRL_CLR(BM_AUDIOIN_ANACLKCTRL_DITHER_OFF);
     /* Hold HP to ground to avoid pop, then release and power up stuff */
     HW_AUDIOOUT_ANACTRL_SET(BM_AUDIOOUT_ANACTRL_HP_HOLD_GND);
     HW_RTC_PERSISTENT0_SET(0x00080000);
