@@ -12,16 +12,18 @@
 #include <mach/regs-rtc.h>
 #include <asm/dma.h>
 
-#define PERIOD_SIZE 4096
+#define PERIOD_SIZE 1024
 #define NUM_PERIODS 3
 
 
-static int* g_snd_rec_buff = NULL;
-static int* g_snd_play_buff = NULL;
+static int* g_snd_rec_buffs[NUM_PERIODS];
+static int* g_snd_play_buffs[NUM_PERIODS];
+static dma_addr_t g_snd_rec_phys[NUM_PERIODS];
+static dma_addr_t g_snd_play_phys[NUM_PERIODS];
 static int g_dma_rec_ch = -1;
 static int g_dma_play_ch = -1;
-static struct stmp3xxx_dma_descriptor *g_dma_rec_cmds = NULL;
-static struct stmp3xxx_dma_descriptor *g_dma_play_cmds = NULL;
+static struct stmp3xxx_dma_descriptor g_dma_rec_cmds[NUM_PERIODS];
+static struct stmp3xxx_dma_descriptor g_dma_play_cmds[NUM_PERIODS];
 
 static unsigned char g_rec_index;
 static unsigned int g_first_interrupt;
@@ -83,10 +85,6 @@ static irqreturn_t dma_irq_rec_func(int irq, void* p_dev)
     u32 irq_mask = 1;
     int i;
     int min, max, curr;
-    int* rec_buff = 
-        &g_snd_rec_buff[g_rec_index*PERIOD_SIZE];
-    int* play_buff =
-        &g_snd_play_buff[g_rec_index*PERIOD_SIZE];
 
     if (HW_APBX_CTRL1_RD() & irq_mask) {
         stmp3xxx_dma_clear_interrupt(g_dma_rec_ch);
@@ -100,7 +98,7 @@ static irqreturn_t dma_irq_rec_func(int irq, void* p_dev)
         min = 0x7fffffff;
         
         for (i=0; i<PERIOD_SIZE; i+=2) {
-            curr = rec_buff[i];
+            curr = g_snd_rec_buffs[g_rec_index][i];
             if (curr > max) max=curr;
             if (curr < min) min=curr;
         }
@@ -110,7 +108,7 @@ static irqreturn_t dma_irq_rec_func(int irq, void* p_dev)
         
         // copy the buffer
         for (i=0; i<PERIOD_SIZE; ++i) {
-            play_buff[i] = rec_buff[i];
+            g_snd_play_buffs[g_rec_index][i] = g_snd_rec_buffs[g_rec_index][i];
         }
         
         g_rec_index = (g_rec_index+1)%NUM_PERIODS;
@@ -156,19 +154,17 @@ static int __init sound_kmod_init(void)
     int ret = 0;
     int desc;
     int i;
-    dma_addr_t dma_addr_phys;
 
     g_first_interrupt = 1;
-
-    g_snd_rec_buff = kzalloc(PERIOD_SIZE*NUM_PERIODS*4, GFP_KERNEL|GFP_DMA);
-    if (g_snd_rec_buff == NULL) {
-        printk("Error allocating memory\n");
-        return -ENOMEM;
+    
+    for (i=0; i<NUM_PERIODS; i++) {
+        g_snd_rec_buffs[i] = dma_alloc_coherent(NULL, PERIOD_SIZE*4, 
+            &g_snd_rec_phys[i], GFP_KERNEL);
+        g_snd_play_buffs[i] = dma_alloc_coherent(NULL, PERIOD_SIZE*4, 
+            &g_snd_play_phys[i], GFP_KERNEL);
     }
-    g_snd_play_buff = kzalloc(PERIOD_SIZE*NUM_PERIODS*4, GFP_KERNEL|GFP_DMA);
-    if (g_snd_play_buff == NULL) {
+    if ((g_snd_rec_buffs[0] == NULL) || (g_snd_play_buffs[0] == NULL)) {
         printk("Error allocating memory\n");
-        kfree(g_snd_rec_buff);
         return -ENOMEM;
     }
 
@@ -201,8 +197,6 @@ static int __init sound_kmod_init(void)
     );
     if (ret) {
         printk(KERN_ERR "Failed to request recording DMA channel\n");
-        kfree(g_snd_rec_buff);
-        kfree(g_snd_play_buff);
         return ret;
     }
     else 
@@ -215,39 +209,16 @@ static int __init sound_kmod_init(void)
     if (ret) {
         printk(KERN_ERR "Failed to request playback DMA channel\n");
         stmp3xxx_dma_release(g_dma_rec_ch);
-        kfree(g_snd_rec_buff);
-        kfree(g_snd_play_buff);
         return ret;
     }
     else 
         printk("Got DMA channel %d\n", g_dma_play_ch);
-
-    g_dma_rec_cmds = kzalloc(
-        sizeof(struct stmp3xxx_dma_descriptor) * NUM_PERIODS,
-        GFP_KERNEL
-    );
-    g_dma_play_cmds = kzalloc(
-        sizeof(struct stmp3xxx_dma_descriptor) * NUM_PERIODS,
-        GFP_KERNEL
-    );
-    if ((g_dma_rec_cmds == NULL) || (g_dma_play_cmds == NULL)) {
-        printk(KERN_ERR "Unable to allocate memory\n");
-        stmp3xxx_dma_release(g_dma_rec_ch);
-        stmp3xxx_dma_release(g_dma_play_ch);
-        kfree(g_snd_rec_buff);
-        kfree(g_snd_play_buff);
-        return -ENOMEM;
-    }
 
     ret = request_irq(IRQ_ADC_DMA, dma_irq_rec_func, 0, "PCM DMA", NULL);
     if (ret) {
         printk(KERN_ERR "Unable to request DMA recording irq\n");
         stmp3xxx_dma_release(g_dma_rec_ch);
         stmp3xxx_dma_release(g_dma_play_ch);
-        kfree(g_dma_rec_cmds);
-        kfree(g_dma_play_cmds);
-        kfree(g_snd_rec_buff);
-        kfree(g_snd_play_buff);
         return ret;
     }
     ret = request_irq(IRQ_DAC_DMA, dma_irq_play_func, 0, "PCM DMA", NULL);
@@ -256,10 +227,6 @@ static int __init sound_kmod_init(void)
         free_irq(IRQ_ADC_DMA, NULL);
         stmp3xxx_dma_release(g_dma_rec_ch);
         stmp3xxx_dma_release(g_dma_play_ch);
-        kfree(g_dma_rec_cmds);
-        kfree(g_dma_play_cmds);
-        kfree(g_snd_rec_buff);
-        kfree(g_snd_play_buff);
         return ret;
     }
     ret = request_irq(IRQ_DAC_ERROR, audioout_err_func, 0, "DAC Error", NULL);
@@ -269,10 +236,6 @@ static int __init sound_kmod_init(void)
         free_irq(IRQ_ADC_DMA, NULL);
         stmp3xxx_dma_release(g_dma_rec_ch);
         stmp3xxx_dma_release(g_dma_play_ch);
-        kfree(g_dma_rec_cmds);
-        kfree(g_dma_play_cmds);
-        kfree(g_snd_rec_buff);
-        kfree(g_snd_play_buff);
         return ret;
     }
     ret = request_irq(IRQ_ADC_ERROR, audioin_err_func, 0, "ADC Error", NULL);
@@ -283,10 +246,6 @@ static int __init sound_kmod_init(void)
         free_irq(IRQ_DAC_ERROR, NULL);
         stmp3xxx_dma_release(g_dma_rec_ch);
         stmp3xxx_dma_release(g_dma_play_ch);
-        kfree(g_dma_rec_cmds);
-        kfree(g_dma_play_cmds);
-        kfree(g_snd_rec_buff);
-        kfree(g_snd_play_buff);
         return ret;
     }
 
@@ -299,12 +258,8 @@ static int __init sound_kmod_init(void)
             while (--desc >= 0)
                 stmp3xxx_dma_free_command(g_dma_rec_ch,
                               &g_dma_rec_cmds[desc]);
-            kfree(g_dma_rec_cmds);
-            kfree(g_dma_play_cmds);
             stmp3xxx_dma_release(g_dma_rec_ch);
             stmp3xxx_dma_release(g_dma_play_ch);
-            kfree(g_snd_rec_buff);
-            kfree(g_snd_play_buff);
 
             return ret;
         }
@@ -321,10 +276,6 @@ static int __init sound_kmod_init(void)
             while (--desc >= 0)
                 stmp3xxx_dma_free_command(g_dma_rec_ch,
                               &g_dma_rec_cmds[desc]);
-            kfree(g_dma_rec_cmds);
-            kfree(g_dma_play_cmds);
-            kfree(g_snd_rec_buff);
-            kfree(g_snd_play_buff);
             stmp3xxx_dma_release(g_dma_rec_ch);
             stmp3xxx_dma_release(g_dma_play_ch);
 
@@ -343,7 +294,6 @@ static int __init sound_kmod_init(void)
     stmp3xxx_dma_reset_channel(g_dma_play_ch);
 
     /* Set up a DMA chain to sent DMA buffer */
-    dma_addr_phys = virt_to_phys(g_snd_rec_buff);
     for (i = 0; i < NUM_PERIODS; i++) {
         int next = (i+1) % NUM_PERIODS;
         u32 cmd = 0;
@@ -362,16 +312,11 @@ static int __init sound_kmod_init(void)
         cmd |= BM_APBX_CHn_CMD_IRQONCMPLT;
 
         g_dma_rec_cmds[i].command->cmd = cmd;
-        g_dma_rec_cmds[i].command->buf_ptr = dma_addr_phys;
-
-        /* Next data chunk */
-        dma_addr_phys += PERIOD_SIZE*4;
+        g_dma_rec_cmds[i].command->buf_ptr = g_snd_rec_phys[i];
     }
     
-    dma_addr_phys = virt_to_phys(g_snd_play_buff);
     for (i = 0; i < NUM_PERIODS; i++) {
         int next = (i+1) % NUM_PERIODS;
-        size_t addr_offset = ((i+1)%NUM_PERIODS) * PERIOD_SIZE*4;
         u32 cmd = 0;
 
         /* Link with previous command */
@@ -388,7 +333,7 @@ static int __init sound_kmod_init(void)
         cmd |= BM_APBX_CHn_CMD_IRQONCMPLT;
 
         g_dma_play_cmds[i].command->cmd = cmd;
-        g_dma_play_cmds[i].command->buf_ptr = dma_addr_phys+addr_offset;
+        g_dma_play_cmds[i].command->buf_ptr = g_snd_play_phys[(i+1)%NUM_PERIODS];
     }
 
     HW_AUDIOIN_CTRL_SET(0x001f0000);
@@ -445,7 +390,7 @@ static int __init sound_kmod_init(void)
 
 static void __exit sound_kmod_exit(void)
 {
-    int desc;
+    int desc, i;
 
     HW_AUDIOIN_CTRL_CLR(BM_AUDIOIN_CTRL_RUN);
     HW_AUDIOOUT_CTRL_CLR(BM_AUDIOIN_CTRL_RUN);
@@ -472,21 +417,17 @@ static void __exit sound_kmod_exit(void)
     stmp3xxx_dma_release(g_dma_rec_ch);
     stmp3xxx_dma_release(g_dma_play_ch);
     
-    if (g_dma_rec_cmds) {
-        kfree(g_dma_rec_cmds);
-        g_dma_rec_cmds = NULL;
-    }
-    if (g_dma_play_cmds) {
-        kfree(g_dma_play_cmds);
-        g_dma_play_cmds = NULL;
-    }
-    if (g_snd_rec_buff) {
-        kfree(g_snd_rec_buff);
-        g_snd_rec_buff = NULL;
-    }
-    if (g_snd_play_buff) {
-        kfree(g_snd_play_buff);
-        g_snd_play_buff = NULL;
+    for (i=0; i<NUM_PERIODS; i++) {
+        if (g_snd_rec_buffs[i]) {
+            dma_free_coherent(NULL, PERIOD_SIZE*4,
+                g_snd_rec_buffs[i], g_snd_rec_phys[i]);
+            g_snd_rec_buffs[i] = NULL;
+        }
+        if (g_snd_play_buffs[i]) {
+            dma_free_coherent(NULL, PERIOD_SIZE*4,
+                g_snd_play_buffs[i], g_snd_play_phys[i]);
+            g_snd_play_buffs[i] = NULL;
+        }
     }
 }
 
