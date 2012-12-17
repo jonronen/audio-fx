@@ -7,12 +7,15 @@
 #include <linux/dma-mapping.h>
 #include <mach/regs-audioin.h>
 #include <mach/regs-audioout.h>
+#include <mach/regs-lradc.h>
+#include <mach/lradc.h>
 #include <mach/dma.h>
 #include <mach/regs-apbx.h>
 #include <mach/regs-rtc.h>
 #include <asm/dma.h>
 
-#define PERIOD_SIZE 1024
+
+#define PERIOD_SIZE 512
 #define NUM_PERIODS 3
 
 
@@ -25,6 +28,7 @@ static int g_dma_play_ch = -1;
 static struct stmp3xxx_dma_descriptor g_dma_rec_cmds[NUM_PERIODS];
 static struct stmp3xxx_dma_descriptor g_dma_play_cmds[NUM_PERIODS];
 
+static unsigned char print_cnt;
 static unsigned char g_rec_index;
 static unsigned int g_first_interrupt;
 
@@ -54,6 +58,16 @@ static void imx233_reset_audioout(void)
     /* make sure clock is running */
     HW_AUDIOOUT_CTRL_CLR(BM_AUDIOOUT_CTRL_CLKGATE);
     while(HW_AUDIOOUT_CTRL_RD() & BM_AUDIOOUT_CTRL_CLKGATE);
+}
+
+static void imx233_init_adc(void)
+{
+    hw_lradc_use_channel(LRADC_CH4);
+    hw_lradc_init_ladder(LRADC_CH4, 0, 20); /* sample at 100Hz */
+    /* don't use IRQs for the ADC. just poll manually */
+    HW_LRADC_CTRL1_CLR(BM_LRADC_CTRL1_LRADC4_IRQ);
+    HW_LRADC_CTRL1_CLR(BM_LRADC_CTRL1_LRADC4_IRQ_EN);
+    hw_lradc_set_delay_trigger_kick(0, !0);
 }
 
 static irqreturn_t audioout_err_func(int irq, void* p_dev)
@@ -103,7 +117,10 @@ static irqreturn_t dma_irq_rec_func(int irq, void* p_dev)
             if (curr < min) min=curr;
         }
         if (g_rec_index == 0) {
-            printk("recording period elapsed. min=%d, max=%d\n", min, max);
+            print_cnt++;
+            if (print_cnt == 0) {
+                printk("recording period elapsed. min=%d, max=%d\n", min, max);
+            }
         }
         
         // copy the buffer
@@ -170,6 +187,7 @@ static int __init sound_kmod_init(void)
 
     imx233_reset_audioout();
     imx233_reset_audioin();
+    imx233_init_adc();
 
     /* Set the audio recorder to use LRADC1, and set to an 8K resistor. */
     HW_AUDIOIN_MICLINE_WR(0x00000001);
@@ -249,6 +267,7 @@ static int __init sound_kmod_init(void)
         return ret;
     }
 
+    print_cnt = 0;
     g_rec_index = 0;
     for (desc = 0; desc < NUM_PERIODS; desc++) {
         ret = stmp3xxx_dma_allocate_command(g_dma_rec_ch,
@@ -429,6 +448,9 @@ static void __exit sound_kmod_exit(void)
             g_snd_play_buffs[i] = NULL;
         }
     }
+
+    /* stop the ADC scheduling */
+    hw_lradc_set_delay_trigger_kick(0, 0);
 }
 
 module_init(sound_kmod_init);
