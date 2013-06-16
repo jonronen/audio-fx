@@ -24,10 +24,10 @@
 //#include "kernel-imx233.h"
 #include "string.h"
 
+/*
 #define default_interrupt(name) \
     extern __attribute__((weak)) void name(void)
 
-/*
 #define default_interrupt(name) \
     extern __attribute__((weak, alias("UIRQ"))) void name(void)
 */
@@ -36,6 +36,9 @@ void UIRQ (void) __attribute__((interrupt ("IRQ")));
 void irq_handler(void) __attribute__((interrupt("IRQ")));
 void fiq_handler(void) __attribute__((interrupt("FIQ")));
 
+isr_t isr_table[INT_SRC_NR_SOURCES] CACHEALIGN_ATTR IBSS_ATTR;
+
+/*
 default_interrupt(INT_USB_CTRL);
 default_interrupt(INT_TIMER0);
 default_interrupt(INT_TIMER1);
@@ -70,8 +73,11 @@ default_interrupt(INT_TOUCH_DETECT);
 default_interrupt(INT_RTC_1MSEC);
 
 void INT_RTC_1MSEC(void);
+*/
 
 isr_t isr_table[INT_SRC_NR_SOURCES] =
+{0};
+/*
 {
     [INT_SRC_USB_CTRL] = INT_USB_CTRL,
     [INT_SRC_TIMER(0)] = INT_TIMER0,
@@ -106,9 +112,7 @@ isr_t isr_table[INT_SRC_NR_SOURCES] =
     [INT_SRC_TOUCH_DETECT] = INT_TOUCH_DETECT,
     [INT_SRC_RTC_1MSEC] = INT_RTC_1MSEC,
 };
-
-#define IRQ_STORM_DELAY         100 /* ms */
-#define IRQ_STORM_THRESHOLD     100000 /* allows irq / delay */
+*/
 
 static uint32_t irq_count_old[INT_SRC_NR_SOURCES];
 static uint32_t irq_count[INT_SRC_NR_SOURCES];
@@ -156,6 +160,9 @@ void UIRQ(void)
 
 void irq_handler(void)
 {
+    while (1);
+
+/*
     int irq_nr = (HW_ICOLL_VECTOR - HW_ICOLL_VBASE) / 4;
 
     stmp378x_ack_irq(irq_nr);
@@ -167,6 +174,7 @@ void irq_handler(void)
     if(irq_nr == INT_SRC_TIMER(0))
         do_irq_stat();
     (*(isr_t *)HW_ICOLL_VECTOR)();
+*/
 }
 
 void fiq_handler(void)

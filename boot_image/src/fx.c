@@ -30,7 +30,7 @@ __ENSURE_STRUCT_CACHE_FRIENDLY(struct audio_dma_command_t)
 
 
 #define NUM_PERIODS 3
-#define NUM_SAMPLES 512
+#define NUM_SAMPLES 128
 
 
 static struct audio_dma_command_t g_audio_play_cmds[NUM_PERIODS];
@@ -141,16 +141,28 @@ static void audio_dma_init(void)
     imx233_dma_reset_channel(APB_AUDIO_DAC);
     imx233_dma_reset_channel(APB_AUDIO_ADC);
 
-    isr_table[INT_SRC_DAC_DMA] = dac_dma_interrupt;
-    isr_table[INT_SRC_DAC_ERROR] = dac_error_interrupt;
-    isr_table[INT_SRC_ADC_DMA] = adc_dma_interrupt;
-    isr_table[INT_SRC_ADC_ERROR] = adc_error_interrupt;
- 
+    //
+    // for some reason, the interrupt handler pitch is 8 bytes
+    // instead of 4 bytes (as it should be on startup
+    // according to the imx233 manual)
+    //
+
+    // clear all the interrupt handlers
+    for (i=0; i<256; i++) {
+        isr_table[i] = 0;
+    }
+
+    // and set our own interrupt handlers
+    isr_table[INT_SRC_DAC_DMA*2] = dac_dma_interrupt;
+    isr_table[INT_SRC_DAC_ERROR*2] = dac_error_interrupt;
+    isr_table[INT_SRC_ADC_DMA*2] = adc_dma_interrupt;
+    isr_table[INT_SRC_ADC_ERROR*2] = adc_error_interrupt;
+
     imx233_icoll_enable_interrupt(INT_SRC_DAC_DMA, true);
     imx233_icoll_enable_interrupt(INT_SRC_ADC_DMA, true);
     imx233_icoll_enable_interrupt(INT_SRC_DAC_ERROR, true);
     imx233_icoll_enable_interrupt(INT_SRC_ADC_ERROR, true);
-   
+
     imx233_dma_enable_channel_interrupt(APB_AUDIO_ADC, true);
     imx233_dma_enable_channel_interrupt(APB_AUDIO_DAC, true);
 }
@@ -208,16 +220,6 @@ u32 fx_main()
     enable_irq();
     //enable_fiq();
 
-    /* disable some mechanisms */
-    /*
-    __REG_SET(HW_ICOLL_CTRL) = 0x40000000;
-    __REG_SET(HW_AUDIOOUT_CTRL) = 0x40000000;
-    __REG_SET(HW_AUDIOIN_CTRL) = 0x40000000;
-    __REG_SET(HW_LRADC_CTRL0) = 0x40000000;
-    __REG_SET(HW_APBX_CTRL0) = 0x40000000;
-    __REG_SET(HW_APBH_CTRL0) = 0x40000000;
-    */
-
     serial_puts("initialisations complete\n");
 
     __REG_SET(HW_AUDIOOUT_CTRL) = HW_AUDIOOUT_CTRL__RUN;
@@ -233,7 +235,7 @@ u32 fx_main()
     serial_puts(", irqs ");
     serial_puts(int_enabled ? "enabled\n" : "disabled\n");
 
-    serial_puts("\nInterrupt vectors:\n");
+    serial_puts("\nException vectors:\n");
     serial_hexdump(0xffff0000, 0x40);
 
     serial_puts("\n\nAUDIOIN regs:\n");
@@ -260,8 +262,6 @@ u32 fx_main()
 
     serial_puts("\n");
 
-    addr_start = (char*)0xc0000000;
-    addr_offset = 0;
     while(1) {
         tmp = imx233_lradc_read_channel(LRADC_CHANNEL);
         serial_puts("lradc data: ");
@@ -277,14 +277,8 @@ u32 fx_main()
         serial_puts("DAC data: ");
         serial_puthex(tmp);
         serial_puts("\n");
-        /*
-        serial_puts("\nBoot ROM:\n");
-        serial_puthex(addr_start + addr_offset);
-        serial_puts("\n");
-        serial_hexdump(addr_start + addr_offset, 0x200);
-        addr_offset += 0x200;
-        */
-        udelay(1000000);
+
+        udelay(3000000);
     }
     return 0;
 }
@@ -292,7 +286,14 @@ u32 fx_main()
 
 static void dac_dma_interrupt()
 {
+/*
     serial_puts("dac dma!\n");
+
+    serial_puts("processor mode: ");
+    serial_puthex(get_processor_mode());
+    serial_puts("\n");
+*/
+
     stmp378x_ack_irq(INT_SRC_DAC_DMA);
 
     if (HW_APBX_CTRL1 &

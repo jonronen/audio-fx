@@ -83,6 +83,6 @@ struct imx233_icoll_irq_info_t imx233_icoll_get_irq_info(int src);
 
 typedef void (*isr_t)(void);
 
-isr_t isr_table[INT_SRC_NR_SOURCES];
+extern isr_t isr_table[INT_SRC_NR_SOURCES];
 
 #endif /* ICOLL_IMX233_H */
