@@ -81,6 +81,7 @@ SECTIONS
         stackbegin = .;
         . += 0x2000;
         stackend = .;
+        . += 0x400;
         irq_stack = .;
         . += 0x400;
         fiq_stack = .;

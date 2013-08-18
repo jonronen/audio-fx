@@ -268,6 +268,7 @@ u32 fx_main()
         serial_puthex(tmp);
         serial_puts("\n");
 
+        /*
         tmp = HW_AUDIOIN_DATA;
         serial_puts("ADC data: ");
         serial_puthex(tmp);
@@ -277,8 +278,9 @@ u32 fx_main()
         serial_puts("DAC data: ");
         serial_puthex(tmp);
         serial_puts("\n");
+        */
 
-        udelay(3000000);
+        udelay(500000);
     }
     return 0;
 }
@@ -286,16 +288,6 @@ u32 fx_main()
 
 static void dac_dma_interrupt()
 {
-/*
-    serial_puts("dac dma!\n");
-
-    serial_puts("processor mode: ");
-    serial_puthex(get_processor_mode());
-    serial_puts("\n");
-*/
-
-    stmp378x_ack_irq(INT_SRC_DAC_DMA);
-
     if (HW_APBX_CTRL1 &
         HW_APBX_CTRL1__CHx_CMDCMPLT_IRQ(APB_GET_DMA_CHANNEL(APB_AUDIO_DAC))) {
         imx233_dma_clear_channel_interrupt(APB_AUDIO_DAC);
@@ -303,15 +295,14 @@ static void dac_dma_interrupt()
     else {
         serial_puts("Unknown DAC DMA interrupt\n");
     }
+
+    stmp378x_ack_irq(INT_SRC_DAC_DMA);
 }
 
 static void adc_dma_interrupt()
 {
     int i;
     int min, max, curr;
-
-    serial_puts("adc dma!\n");
-    stmp378x_ack_irq(INT_SRC_ADC_DMA);
 
     if (HW_APBX_CTRL1 &
         HW_APBX_CTRL1__CHx_CMDCMPLT_IRQ(APB_GET_DMA_CHANNEL(APB_AUDIO_ADC))) {
@@ -333,7 +324,7 @@ static void adc_dma_interrupt()
         }
         if (g_rec_index == 0) {
             g_print_cnt++;
-            if (g_print_cnt == 0) {
+            if ((g_print_cnt & 0x1f) == 0) {
                 serial_puts("recording period elapsed. min=");
                 serial_puthex(min);
                 serial_puts(", max=");
@@ -352,6 +343,8 @@ static void adc_dma_interrupt()
     else {
         serial_puts("Unknown ADC DMA interrupt\n");
     }
+
+    stmp378x_ack_irq(INT_SRC_ADC_DMA);
 }
 
 static void dac_error_interrupt()
