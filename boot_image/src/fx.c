@@ -173,10 +173,10 @@ static void audio_dma_init(void)
 static void lradc_init(void)
 {
     imx233_lradc_init();
-    imx233_lradc_setup_channel(LRADC_CHANNEL, 1, 0, 1, LRADC_CHANNEL);
+    imx233_lradc_setup_channel(LRADC_CHANNEL, 1, 0, 0, LRADC_CHANNEL);
     imx233_lradc_enable_channel_irq(LRADC_CHANNEL, false);
     imx233_lradc_clear_channel_irq(LRADC_CHANNEL);
-    imx233_lradc_setup_delay(LRADC_DELAY_INDEX, LRADC_CHANNEL, LRADC_DELAY_INDEX, 0, 20);
+    imx233_lradc_setup_delay(LRADC_DELAY_INDEX, 1<<LRADC_CHANNEL, 1<<LRADC_DELAY_INDEX, 0, 100);
     imx233_lradc_kick_delay(LRADC_DELAY_INDEX);
 }
 

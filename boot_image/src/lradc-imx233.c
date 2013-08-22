@@ -55,6 +55,9 @@ void imx233_lradc_set_channel_irq_callback(int channel, lradc_irq_fn_t cb)
 
 void imx233_lradc_setup_channel(int channel, bool div2, bool acc, int nr_samples, int src)
 {
+    // clear all first
+    __REG_CLR(HW_LRADC_CHx(channel)) = 0xFFFFFFFF;
+
     __REG_CLR(HW_LRADC_CHx(channel)) = HW_LRADC_CHx__NUM_SAMPLES_BM | HW_LRADC_CHx__ACCUMULATE;
     __REG_SET(HW_LRADC_CHx(channel)) = nr_samples << HW_LRADC_CHx__NUM_SAMPLES_BP |
         acc << HW_LRADC_CHx__ACCUMULATE;
