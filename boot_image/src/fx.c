@@ -16,7 +16,7 @@
 
 static uint8_t g_print_cnt;
 static uint8_t g_rec_index;
-static bool g_first_interrupt;
+//static bool g_first_interrupt;
 
 
 struct audio_dma_command_t
@@ -57,13 +57,13 @@ static void audio_regs_init()
     __REG_CLR(HW_CLKCTRL_XTAL) = 0x40000000;
 
     /* Set the audio recorder to use LRADC1, and set to an 8K resistor. */
-    __REG_SET(HW_AUDIOIN_MICLINE) = 0x00000001;
+    //__REG_SET(HW_AUDIOIN_MICLINE) = 0x00000001;
 
     __REG_CLR(HW_AUDIOIN_CTRL) = HW_AUDIOIN_CTRL__FIFO_OVERFLOW_IRQ;
     __REG_CLR(HW_AUDIOIN_CTRL) = HW_AUDIOIN_CTRL__FIFO_UNDERFLOW_IRQ;
     //__REG_SET(HW_AUDIOIN_CTRL) = HW_AUDIOIN_CTRL__FIFO_ERROR_IRQ_EN;
-    __REG_SET(HW_AUDIOIN_CTRL) = HW_AUDIOIN_CTRL__OFFSET_ENABLE;
-    __REG_SET(HW_AUDIOIN_CTRL) = HW_AUDIOIN_CTRL__HPF_ENABLE;
+    //__REG_SET(HW_AUDIOIN_CTRL) = HW_AUDIOIN_CTRL__OFFSET_ENABLE;
+    //__REG_SET(HW_AUDIOIN_CTRL) = HW_AUDIOIN_CTRL__HPF_ENABLE;
 
     __REG_CLR(HW_AUDIOOUT_CTRL) = HW_AUDIOOUT_CTRL__FIFO_OVERFLOW_IRQ;
     __REG_CLR(HW_AUDIOOUT_CTRL) = HW_AUDIOOUT_CTRL__FIFO_UNDERFLOW_IRQ;
@@ -73,10 +73,10 @@ static void audio_regs_init()
     HW_AUDIOIN_ADCSRR = 0x10110037;
     HW_AUDIOOUT_DACSRR = 0x10110037;
 
-    __REG_SET(HW_AUDIOIN_CTRL) = 0x001f0000;
-    __REG_SET(HW_AUDIOOUT_CTRL) = 0x001f0000;
-    HW_AUDIOIN_ADCVOL = 0x00000202;
-    HW_AUDIOIN_ADCVOLUME = 0x00db00db;
+    //__REG_SET(HW_AUDIOIN_CTRL) = 0x001f0000; // TODO: change that?
+    //__REG_SET(HW_AUDIOOUT_CTRL) = 0x001f0000; // TODO: change that?
+    HW_AUDIOIN_ADCVOL = 0x00001414; // take the audio from LINE1
+    HW_AUDIOIN_ADCVOLUME = 0x00fe00fe;
     HW_AUDIOOUT_DACVOLUME = 0x00ff00ff;
 
     /* Set word-length to 32-bit */
@@ -85,8 +85,6 @@ static void audio_regs_init()
     /* Enable DAC and ADC */
     __REG_CLR(HW_AUDIOOUT_ANACLKCTRL) = HW_AUDIOOUT_ANACLKCTRL__CLKGATE;
     __REG_CLR(HW_AUDIOIN_ANACLKCTRL) = HW_AUDIOIN_ANACLKCTRL__CLKGATE;
-    /* set the diethering. they say it improves quality */
-    __REG_CLR(HW_AUDIOIN_ANACLKCTRL) = HW_AUDIOIN_ANACLKCTRL__DITHER_OFF;
     /* Hold HP to ground to avoid pop, then release and power up stuff */
     __REG_SET(HW_AUDIOOUT_ANACTRL) = HW_AUDIOOUT_ANACTRL__HP_HOLD_GND;
     __REG_SET(HW_RTC_PERSISTENT0) = 0x00080000;
@@ -94,7 +92,7 @@ static void audio_regs_init()
     /* Power up DAC, ADC, speaker, and headphones */
     __REG_CLR(HW_AUDIOOUT_PWRDN) = HW_AUDIOOUT_PWRDN__DAC;
     __REG_CLR(HW_AUDIOOUT_PWRDN) = HW_AUDIOOUT_PWRDN__ADC;
-    __REG_CLR(HW_AUDIOOUT_PWRDN) = HW_AUDIOOUT_PWRDN__SPEAKER;
+    __REG_SET(HW_AUDIOOUT_PWRDN) = HW_AUDIOOUT_PWRDN__SPEAKER; // spkr is off
     __REG_CLR(HW_AUDIOOUT_PWRDN) = HW_AUDIOOUT_PWRDN__HEADPHONE;
     /* release HP from ground */
     __REG_CLR(HW_RTC_PERSISTENT0) = 0x00080000;
@@ -105,7 +103,9 @@ static void audio_regs_init()
     __REG_CLR(HW_AUDIOOUT_ANACTRL) = HW_AUDIOOUT_ANACTRL__HP_HOLD_GND;
 
     __REG_CLR(HW_AUDIOOUT_HPVOL) = HW_AUDIOOUT_HPVOL__MUTE;
-    __REG_CLR(HW_AUDIOOUT_HPVOL) = 0x0000FFFF;
+    __REG_CLR(HW_AUDIOOUT_HPVOL) = 0x00007f7f;
+    //__REG_SET(HW_AUDIOOUT_HPVOL) = 0x00014040; // temp - line1 as input
+    __REG_SET(HW_AUDIOOUT_HPVOL) = 0x00004040; // volume shouldn't be too high
 
     // write some shit to the data to make sure it's not stuck
     HW_AUDIOOUT_DATA = 0x00000000;
@@ -209,7 +209,7 @@ u32 fx_main()
 
     g_print_cnt = 0;
     g_rec_index = 0;
-    g_first_interrupt = true;
+    //g_first_interrupt = true;
 
     imx233_icoll_init();
     lradc_init();
@@ -309,10 +309,13 @@ static void adc_dma_interrupt()
 
         imx233_dma_clear_channel_interrupt(APB_AUDIO_ADC);
 
-        if (g_first_interrupt) {
-            g_first_interrupt = false;
-            __REG_CLR(HW_AUDIOIN_CTRL) = HW_AUDIOIN_CTRL__OFFSET_ENABLE;
-        }
+        //if (g_first_interrupt) {
+            //g_first_interrupt = false;
+            //__REG_CLR(HW_AUDIOIN_CTRL) = HW_AUDIOIN_CTRL__OFFSET_ENABLE;
+        //}
+
+        /*
+        // TODO: remove this min-max computation and print
 
         max = -0x7fffffff;
         min = 0x7fffffff;
@@ -332,6 +335,7 @@ static void adc_dma_interrupt()
                 serial_puts("\n");
             }
         }
+        */
 
         // copy the buffer
         for (i=0; i<NUM_SAMPLES*2; ++i) {
