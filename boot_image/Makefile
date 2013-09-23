@@ -93,6 +93,6 @@ $(CHUMBY_BOOT): $(CHUMBY_BOOT_OBJS) $(BOOT_LAYOUT_OUT)
 $(BOOT_LAYOUT_OUT): $(BOOT_LAYOUT_IN)
 	$(CPP) -P -DMEMORY_SIZE=64 -DBASE_ADDR=$(BASE_ADDR) -o $@ $<
 
-image: $(CHUMBY_BOOT_ROM)
+image: build_prep $(CHUMBY_BOOT_ROM)
 	cp startup.img.orig startup.img
 	dd if=$(CHUMBY_BOOT_ROM) seek=132 of=./startup.img
