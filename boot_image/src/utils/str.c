@@ -1,27 +1,4 @@
-#include "utils.h"
-#include "stmp3xxx.h"
-
-/* minimal implementation of string functions */
-/*
-char *strstr(const char *s1, const char *s2)
-{
-	int i;
-
-	if (*s1 == '\0')
-		return *s2 ? 0 : (char *)s1;
-
-	while (*s1) {
-		for (i = 0; ; i++) {
-			if (s2[i] == '\0')
-				return (char *)s1;
-			if (s2[i] != s1[i])
-				break;
-		}
-		s1++;
-	}
-	return 0;
-}
-*/
+#include "utils/str.h"
 
 void *memset(void *s, int c, int count) {
     char *xs = (char*)s;
@@ -94,35 +71,6 @@ void *memcpy(void *s1, const void *s2, int n)
 	return s1;
 }
 
-/*
-unsigned char _ctype[] = {
-    _C,_C,_C,_C,_C,_C,_C,_C,                                // 0-7
-    _C,_C|_S,_C|_S,_C|_S,_C|_S,_C|_S,_C,_C,                 // 8-15
-    _C,_C,_C,_C,_C,_C,_C,_C,                                // 16-23
-    _C,_C,_C,_C,_C,_C,_C,_C,                                // 24-31
-    _S|_SP,_P,_P,_P,_P,_P,_P,_P,                            // 32-39
-    _P,_P,_P,_P,_P,_P,_P,_P,                                // 40-47
-    _D,_D,_D,_D,_D,_D,_D,_D,                                // 48-55
-    _D,_D,_P,_P,_P,_P,_P,_P,                                // 56-63
-    _P,_U|_X,_U|_X,_U|_X,_U|_X,_U|_X,_U|_X,_U,              // 64-71
-    _U,_U,_U,_U,_U,_U,_U,_U,                                // 72-79
-    _U,_U,_U,_U,_U,_U,_U,_U,                                // 80-87
-    _U,_U,_U,_P,_P,_P,_P,_P,                                // 88-95
-    _P,_L|_X,_L|_X,_L|_X,_L|_X,_L|_X,_L|_X,_L,              // 96-103
-    _L,_L,_L,_L,_L,_L,_L,_L,                                // 104-111
-    _L,_L,_L,_L,_L,_L,_L,_L,                                // 112-119
-    _L,_L,_L,_P,_P,_P,_P,_C,                                // 120-127
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,                        // 128-143
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,                        // 144-159
-    _S|_SP,_P,_P,_P,_P,_P,_P,_P,_P,_P,_P,_P,_P,_P,_P,_P,    // 160-175
-    _P,_P,_P,_P,_P,_P,_P,_P,_P,_P,_P,_P,_P,_P,_P,_P,        // 176-191
-    _U,_U,_U,_U,_U,_U,_U,_U,_U,_U,_U,_U,_U,_U,_U,_U,        // 192-207
-    _U,_U,_U,_U,_U,_U,_U,_P,_U,_U,_U,_U,_U,_U,_U,_L,        // 208-223
-    _L,_L,_L,_L,_L,_L,_L,_L,_L,_L,_L,_L,_L,_L,_L,_L,        // 224-239
-    _L,_L,_L,_L,_L,_L,_L,_P,_L,_L,_L,_L,_L,_L,_L,_L};       // 240-255
-*/
-
-
 
 unsigned long simple_strtoul(const char *cp,char **endp,unsigned int base) {
     unsigned long result = 0,value;
@@ -150,10 +98,5 @@ unsigned long simple_strtoul(const char *cp,char **endp,unsigned int base) {
         *endp = (char *)cp;
 
     return result;
-}
-
-void sys_reboot() {
-    // Reset the digital sections of the chip, but not the power modules.
-    HW_CLKCTRL_RESET_WR(1);
 }
 
