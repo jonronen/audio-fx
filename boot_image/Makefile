@@ -1,12 +1,12 @@
 CURRENTDIR	= .
-SRCDIR		= $(CURRENTDIR)/src
+PLATFORMDIR	= $(CURRENTDIR)/platform/imx233
 OUTPUTDIR	= $(CURRENTDIR)/output
 
 INCLUDEDIR	= $(CURRENTDIR)/include
 
 # Linker script 
 BASE_ADDR	?= 0x40808000
-BOOT_LAYOUT_IN	= $(SRCDIR)/boot.lds
+BOOT_LAYOUT_IN	= $(PLATFORMDIR)/boot.lds
 BOOT_LAYOUT_OUT	= $(OUTPUTDIR)/boot.out.lds
 
 
@@ -35,12 +35,14 @@ CFLAGS += -fPIC
 
 
 # Generic code
-SRC_OBJS = entry.o mmu-arm.o serial.o lradc-imx233.o fx.o utils/str.o dma-imx233.o icoll-imx233.o system-imx233.o
+UTILS_OBJS = str.o
+PLATFORM_OBJS = entry.o mmu-arm.o serial.o lradc.o fx.o dma.o icoll.o system.o
+EFFECTS_OBJS = fx_main.o
 
 
-CHUMBY_BOOT_OBJS = $(addprefix $(SRCDIR)/, $(SRC_OBJS))
-#		  $(addprefix $(BOARDDIR)/, $(BOARD_OBJS)) \
-#		  $(addprefix $(HWDIR)/, $(HW_OBJS))
+CHUMBY_BOOT_OBJS = $(addprefix utils/, $(UTILS_OBJS)) \
+		  $(addprefix $(PLATFORMDIR)/, $(PLATFORM_OBJS)) \
+		  $(addprefix effects/, $(EFFECTS_OBJS))
 
 # Default goal
 .PHONY: all

@@ -1,5 +1,5 @@
-#include "system.h"
-#include "dma-imx233.h"
+#include "platform/imx233/system.h"
+#include "platform/imx233/dma.h"
 #include "utils/str.h"
 
 // statistics about unaligned transfers

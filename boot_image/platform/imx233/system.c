@@ -1,8 +1,8 @@
-#include "system.h"
-#include "system-target.h"
-#include "dma-imx233.h"
-#include "icoll-imx233.h"
-#include "lradc-imx233.h"
+#include "platform/imx233/system.h"
+#include "platform/imx233/system-target.h"
+#include "platform/imx233/dma.h"
+#include "platform/imx233/icoll.h"
+#include "platform/imx233/lradc.h"
 
 bool imx233_us_elapsed(uint32_t ref, unsigned us_delay)
 {

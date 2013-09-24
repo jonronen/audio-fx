@@ -4,14 +4,14 @@
  * kind, whether express or implied.
  */
 
-#include "serial.h"
-#include "dma-imx233.h"
-#include "audioin-imx233.h"
-#include "audioout-imx233.h"
-#include "rtc-imx233.h"
-#include "icoll-imx233.h"
-#include "lradc-imx233.h"
-#include "system-arm.h"
+#include "platform/imx233/serial.h"
+#include "platform/imx233/dma.h"
+#include "platform/imx233/audioin.h"
+#include "platform/imx233/audioout.h"
+#include "platform/imx233/rtc.h"
+#include "platform/imx233/icoll.h"
+#include "platform/imx233/lradc.h"
+#include "platform/imx233/system-arm.h"
 
 
 static uint8_t g_print_cnt;

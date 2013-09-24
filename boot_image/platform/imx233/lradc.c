@@ -1,6 +1,6 @@
-#include "system.h"
-#include "system-target.h"
-#include "lradc-imx233.h"
+#include "platform/imx233/system.h"
+#include "platform/imx233/system-target.h"
+#include "platform/imx233/lradc.h"
 
 /* irq callbacks */
 static lradc_irq_fn_t irq_cb[HW_LRADC_NUM_CHANNELS];

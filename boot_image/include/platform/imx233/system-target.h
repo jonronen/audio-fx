@@ -1,10 +1,10 @@
 #ifndef SYSTEM_TARGET_H
 #define SYSTEM_TARGET_H
 
-#include "system-arm.h"
-#include "mmu-arm.h"
-#include "clkctrl-imx233.h"
-#include "icoll-imx233.h"
+#include "platform/imx233/system-arm.h"
+#include "platform/arm/mmu-arm.h"
+#include "platform/imx233/clkctrl.h"
+#include "platform/imx233/icoll.h"
 
 /* Digital control */
 #define HW_DIGCTL_BASE          0x8001C000

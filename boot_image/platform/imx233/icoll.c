@@ -1,6 +1,6 @@
-#include "icoll-imx233.h"
-#include "rtc-imx233.h"
-#include "serial.h"
+#include "platform/imx233/icoll.h"
+#include "platform/imx233/rtc.h"
+#include "platform/imx233/serial.h"
 
 isr_t isr_table[INT_SRC_NR_SOURCES] CACHEALIGN_ATTR IBSS_ATTR;
 
