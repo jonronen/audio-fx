@@ -21,8 +21,6 @@
 #ifndef __audioout_imx233__
 #define __audioout_imx233__
 
-//#include "config.h"
-//#include "cpu.h"
 #include "system.h"
 
 #define HW_AUDIOOUT_BASE       0x80048000 
@@ -121,15 +119,5 @@
 
 #define HW_AUDIOOUT_VERSION     (*(volatile uint32_t *)(HW_AUDIOOUT_BASE + 0x200))
 
-
-void imx233_audioout_preinit(void);
-void imx233_audioout_postinit(void);
-void imx233_audioout_close(void);
-/* volume in half dB */
-void imx233_audioout_set_hp_vol(int vol_l, int vol_r);
-/* frequency index, NOT the frequency itself */
-void imx233_audioout_set_freq(int fsel);
-/* select between DAC and Line1 */
-void imx233_audioout_select_hp_input(bool line1);
 
 #endif /* __audioout_imx233__ */

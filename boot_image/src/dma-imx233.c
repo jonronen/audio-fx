@@ -1,28 +1,6 @@
-/***************************************************************************
- *             __________               __   ___.
- *   Open      \______   \ ____   ____ |  | _\_ |__   _______  ___
- *   Source     |       _//  _ \_/ ___\|  |/ /| __ \ /  _ \  \/  /
- *   Jukebox    |    |   (  <_> )  \___|    < | \_\ (  <_> > <  <
- *   Firmware   |____|_  /\____/ \___  >__|_ \|___  /\____/__/\_ \
- *                     \/            \/     \/    \/            \/
- * $Id$
- *
- * Copyright (C) 2011 by Amaury Pouly
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
- * KIND, either express or implied.
- *
- ****************************************************************************/
-//#include "config.h"
 #include "system.h"
 #include "dma-imx233.h"
-//#include "lcd.h"
-#include "string.h"
+#include "utils/str.h"
 
 // statistics about unaligned transfers
 static int apb_nr_unaligned[32];
@@ -154,8 +132,6 @@ static void imx233_dma_commit_and_discard(unsigned chan, struct apb_dma_command_
     while((cur->cmd & HW_APB_CHx_CMD__UNUSED_BM) != HW_APB_CHx_CMD__UNUSED_MAGIC)
     {
         cur->cmd = (cur->cmd & ~HW_APB_CHx_CMD__UNUSED_BM) | HW_APB_CHx_CMD__UNUSED_MAGIC;
-        int op = cur->cmd & HW_APB_CHx_CMD__COMMAND_BM;
-        int sz = __XTRACT_EX(cur->cmd, HW_APB_CHx_CMD__XFER_COUNT);
         if((uint32_t)cur->buffer % CACHEALIGN_SIZE)
             apb_nr_unaligned[chan]++;
         /* Virtual to physical buffer pointer conversion */

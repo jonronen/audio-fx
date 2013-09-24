@@ -35,7 +35,7 @@ CFLAGS += -fPIC
 
 
 # Generic code
-SRC_OBJS = entry.o mmu-arm.o serial.o lradc-imx233.o fx.o utils.o audioin-imx233.o audioout-imx233.o dma-imx233.o icoll-imx233.o system-imx233.o
+SRC_OBJS = entry.o mmu-arm.o serial.o lradc-imx233.o fx.o utils/str.o dma-imx233.o icoll-imx233.o system-imx233.o
 
 
 CHUMBY_BOOT_OBJS = $(addprefix $(SRCDIR)/, $(SRC_OBJS))

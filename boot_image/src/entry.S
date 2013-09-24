@@ -25,13 +25,6 @@
 .code 32
     /* most handlers are in DRAM which is too far away for a relative jump */
     ldr     pc, =start
-    ldr     pc, =fiq_handler
-    ldr     pc, =fiq_handler
-    ldr     pc, =fiq_handler
-    ldr     pc, =fiq_handler
-    ldr     pc, =fiq_handler
-    ldr     pc, =irq_handler
-    ldr     pc, =fiq_handler
 
 .text
 .global start

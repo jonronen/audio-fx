@@ -16,7 +16,6 @@
 
 static uint8_t g_print_cnt;
 static uint8_t g_rec_index;
-//static bool g_first_interrupt;
 
 
 struct audio_dma_command_t
@@ -181,12 +180,8 @@ static void lradc_init(void)
 }
 
 
-u32 fx_main()
+int fx_main()
 {
-    bool int_enabled;
-    unsigned int proc_mode;
-    char* addr_start;
-    unsigned int addr_offset;
     unsigned int tmp;
 
     int hwver = 9; /* ??? */
@@ -203,13 +198,8 @@ u32 fx_main()
         HW_RTC_PERSISTENT0__XTAL24MHZ_PWRUP |
         HW_RTC_PERSISTENT0__CLOCKSOURCE;
 
-    //serial_puts("hwver is: ");
-    //serial_puthex(hwver);
-    //serial_puts("\n");
-
     g_print_cnt = 0;
     g_rec_index = 0;
-    //g_first_interrupt = true;
 
     imx233_icoll_init();
     lradc_init();
@@ -218,7 +208,6 @@ u32 fx_main()
 
     /* enable interrupts (ARM specific) */
     enable_irq();
-    //enable_fiq();
 
     serial_puts("initialisations complete\n");
 
@@ -227,39 +216,6 @@ u32 fx_main()
     __REG_SET(HW_AUDIOIN_CTRL) = HW_AUDIOIN_CTRL__RUN;
     imx233_dma_start_command(APB_AUDIO_ADC, (struct apb_dma_command_t*)&g_audio_rec_cmds[0]);
 
-    /* 
-    proc_mode = get_processor_mode();
-    int_enabled = irq_enabled();
-    serial_puts("processor mode: ");
-    serial_puthex(proc_mode);
-    serial_puts(", irqs ");
-    serial_puts(int_enabled ? "enabled\n" : "disabled\n");
-
-    serial_puts("\nException vectors:\n");
-    serial_hexdump(0xffff0000, 0x40);
-
-    serial_puts("\n\nAUDIOIN regs:\n");
-    serial_hexdump(0x8004C000, 0x100);
-
-    serial_puts("\n\nAUDIOOUT regs:\n");
-    serial_hexdump(0x80048000, 0x100);
-    */
-
-    /*
-    serial_puts("\nISR Table is ");
-    serial_puthex((void*)isr_table);
-    serial_puts(" with contents:\n");
-    serial_hexdump(isr_table, 0x100);
-    */
-
-    /*
-    serial_puts("\n\nRTC regs:\n");
-    serial_hexdump(0x8005C000, 0x100);
-
-    serial_puts("\n\nICOLL regs:\n");
-    serial_hexdump(0x80000000, 0x100);
-    */
-
     serial_puts("\n");
 
     while(1) {
@@ -267,18 +223,6 @@ u32 fx_main()
         serial_puts("lradc data: ");
         serial_puthex(tmp);
         serial_puts("\n");
-
-        /*
-        tmp = HW_AUDIOIN_DATA;
-        serial_puts("ADC data: ");
-        serial_puthex(tmp);
-        serial_puts("\n");
-
-        tmp = HW_AUDIOOUT_DATA;
-        serial_puts("DAC data: ");
-        serial_puthex(tmp);
-        serial_puts("\n");
-        */
 
         udelay(500000);
     }
@@ -302,7 +246,9 @@ static void dac_dma_interrupt()
 static void adc_dma_interrupt()
 {
     int i;
+    /*
     int min, max, curr;
+    */
 
     if (HW_APBX_CTRL1 &
         HW_APBX_CTRL1__CHx_CMDCMPLT_IRQ(APB_GET_DMA_CHANNEL(APB_AUDIO_ADC))) {

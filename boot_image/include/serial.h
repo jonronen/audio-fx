@@ -14,7 +14,6 @@
 #define DBGUART_BASE    (STMP378X_REGS_BASE + 0x00070000)
 #define PINCTRL_BASE (STMP378X_REGS_BASE + 0x18000)
 
-#include "types.h"
 #include "regs-pinctrl.h"
 
 #define HW_PINCTRL_MUXSEL3_ADDR (PINCTRL_BASE + 0x00000130)
@@ -81,7 +80,7 @@ void serial_puts(const char *s);
 void serial_init(void);
 int  serial_getc(void);
 void serial_putc(const char c);
-void serial_puthex(u32 c);
+void serial_puthex(unsigned int c);
 int  serial_tstc (void);
 void serial_clear_error(void);
 void serial_flush(void);

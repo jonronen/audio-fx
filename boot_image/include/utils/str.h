@@ -10,35 +10,12 @@
 
 
 
-/* minimal implementation of string functions */
-/*
-static char *strstr(const char *s1, const char *s2)
-{
-	int i;
-
-	if (*s1 == '\0')
-		return *s2 ? 0 : (char *)s1;
-
-	while (*s1) {
-		for (i = 0; ; i++) {
-			if (s2[i] == '\0')
-				return (char *)s1;
-			if (s2[i] != s1[i])
-				break;
-		}
-		s1++;
-	}
-	return 0;
-}
-*/
-
 int strlen(const char *s);
 char *strcpy(char *s1, const char *s2);
 int strncmp(const char *str1, const char *str2, int n);
 int strcmp(const char *str1, const char *str2);
 void *memcpy(void *s1, const void *s2, int n);
 void *memset(void *s, int c, int count);
-void sys_reboot();
 
 #define TOLOWER(x) ((x) | 0x20)
 /*

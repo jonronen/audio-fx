@@ -17,7 +17,6 @@
  *
  */
 
-#include "stmp3xxx.h"
 #include "serial.h"
 
 #define isprint(x) (x>=0x20 && x<=0x7e)
@@ -28,8 +27,8 @@
  */
 static void serial_setbrg (void)
 {
-    u32 cr, lcr_h;
-    u32 quot;
+    unsigned int cr, lcr_h;
+    unsigned int quot;
 
     // Disable everything
     cr = REG_RD(DBGUART_BASE + UARTDBGCR);
@@ -50,7 +49,7 @@ static void serial_setbrg (void)
 
 void serial_init (void)
 {
-    u32 cr;
+    unsigned int cr;
 
     // Set the uart_tx and uart_rx pins to be for the uart, and not e.g.
     // for GPIO.
@@ -91,18 +90,6 @@ void serial_init (void)
 
 void serial_flush() {
         while (!(REG_RD(DBGUART_BASE + UARTDBGFR) & TXFE));
-}
-
-
-static void serial_dump_registers() {
-    serial_puts("  CR: "), serial_puthex(REG_RD(DBGUART_BASE + UARTDBGCR)),
-    serial_puts("  DR: "), serial_puthex(REG_RD(DBGUART_BASE + UARTDBGDR)),
-    serial_puts("  SR_ECR: "), serial_puthex(REG_RD(DBGUART_BASE + UARTDBGRSR_ECR)),
-    serial_puts("  IMSC: "), serial_puthex(REG_RD(DBGUART_BASE + UARTDBGIMSC)),
-    serial_puts("  IS: "), serial_puthex(REG_RD(DBGUART_BASE + UARTDBGRIS)),
-    serial_puts("  LCR_H: "), serial_puthex(REG_RD(DBGUART_BASE + UARTDBGLCR_H)),
-    serial_puts("  FR: "), serial_puthex(REG_RD(DBGUART_BASE + UARTDBGFR)),
-    serial_puts("\n");
 }
 
 
@@ -189,8 +176,6 @@ int serial_tstc (void) {
 
 void serial_clear_error() {
     REG_WR(DBGUART_BASE + UARTDBGRSR_ECR, 0x000000f0);
-//    serial_puts("Clearing serial error...\n");
-//    serial_flush();
     serial_init();
 }
 
@@ -217,7 +202,7 @@ int serial_getc (void)
 
 static char hex[] = "0123456789abcdef";
 
-void serial_puthex(u32 c) {
+void serial_puthex(unsigned int c) {
     int i;
     serial_puts("0x");
     for(i=7; i>=0; i--)
