@@ -1,4 +1,4 @@
-#include "../include/imx233.h"
+#include "../../include/platform/imx233/imx233.h"
 
 ENTRY(start)
 OUTPUT_FORMAT(elf32-littlearm)
