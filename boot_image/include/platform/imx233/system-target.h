@@ -50,22 +50,9 @@
 #define CPUFREQ_MAX         IMX233_CPUFREQ_454_MHz
 #define CPUFREQ_SLEEP       IMX233_CPUFREQ_64_MHz
 
-void udelay(unsigned int us);
 bool imx233_us_elapsed(uint32_t ref, unsigned us_delay);
 void imx233_reset_block(volatile uint32_t *block_reg);
 void power_off(void);
-void imx233_enable_usb_controller(bool enable);
-void imx233_enable_usb_phy(bool enable);
-
-void udelay(unsigned usecs);
-
-static inline void mdelay(unsigned msecs)
-{
-    udelay(1000 * msecs);
-}
-
-void usb_insert_int(void);
-void usb_remove_int(void);
 
 bool dbg_hw_target_info(void);
 

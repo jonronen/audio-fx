@@ -1,28 +1,5 @@
-/***************************************************************************
- *             __________               __   ___.
- *   Open      \______   \ ____   ____ |  | _\_ |__   _______  ___
- *   Source     |       _//  _ \_/ ___\|  |/ /| __ \ /  _ \  \/  /
- *   Jukebox    |    |   (  <_> )  \___|    < | \_\ (  <_> > <  <
- *   Firmware   |____|_  /\____/ \___  >__|_ \|___  /\____/__/\_ \
- *                     \/            \/     \/    \/            \/
- * $Id$
- *
- * Copyright (C) 2011 by Amaury Pouly
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
- * KIND, either express or implied.
- *
- ****************************************************************************/
 #ifndef __lradc_imx233__
 #define __lradc_imx233__
-
-//#include "config.h"
-//#include "cpu.h"
 
 #include "system.h"
 #include "system-target.h"
@@ -136,7 +113,6 @@ void imx233_lradc_set_channel_irq_callback(int channel, lradc_irq_fn_t cb);
 void imx233_lradc_kick_channel(int channel);
 void imx233_lradc_kick_delay(int dchan);
 void imx233_lradc_wait_channel(int channel);
-int imx233_lradc_read_channel(int channel);
 void imx233_lradc_clear_channel(int channel);
 // acquire a virtual channel, returns -1 on timeout, channel otherwise */
 int imx233_lradc_acquire_channel(int timeout);

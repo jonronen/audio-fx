@@ -1,23 +1,3 @@
-/***************************************************************************
- *             __________               __   ___.
- *   Open      \______   \ ____   ____ |  | _\_ |__   _______  ___
- *   Source     |       _//  _ \_/ ___\|  |/ /| __ \ /  _ \  \/  /
- *   Jukebox    |    |   (  <_> )  \___|    < | \_\ (  <_> > <  <
- *   Firmware   |____|_  /\____/ \___  >__|_ \|___  /\____/__/\_ \
- *                     \/            \/     \/    \/            \/
- * $Id$
- *
- * Copyright (C) 2012 by Amaury Pouly
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
- * KIND, either express or implied.
- *
- ****************************************************************************/
 #ifndef ICOLL_IMX233_H
 #define ICOLL_IMX233_H
 
@@ -76,13 +56,14 @@ struct imx233_icoll_irq_info_t
     unsigned freq;
 };
 
-void stmp378x_ack_irq(unsigned int irq);
+typedef void (*isr_t)(void);
+
+void imx233_icoll_ack_irq(unsigned int irq);
+void imx233_icoll_set_handler(int src, isr_t handler);
 void imx233_icoll_init(void);
 void imx233_icoll_enable_interrupt(int src, bool enable);
 struct imx233_icoll_irq_info_t imx233_icoll_get_irq_info(int src);
 
-typedef void (*isr_t)(void);
-
-extern isr_t isr_table[INT_SRC_NR_SOURCES];
+extern isr_t isr_table[INT_SRC_NR_SOURCES*2];
 
 #endif /* ICOLL_IMX233_H */

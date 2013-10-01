@@ -1,20 +1,11 @@
-/* 
- * This file is licensed under the terms of the GNU General Public License
- * version 2.  This program  is licensed "as is" without any warranty of any
- * kind, whether express or implied.
- */
-
-#include "platform/imx233/serial.h"
+#include "serial.h"
+#include "system.h"
+#include "platform/imx233/rtc.h"
 #include "platform/imx233/dma.h"
 #include "platform/imx233/audioin.h"
 #include "platform/imx233/audioout.h"
-#include "platform/imx233/rtc.h"
-#include "platform/imx233/icoll.h"
-#include "platform/imx233/lradc.h"
-#include "platform/imx233/system-arm.h"
 
 
-static uint8_t g_print_cnt;
 static uint8_t g_rec_index;
 
 
@@ -48,7 +39,7 @@ static int32_t g_play_buff[NUM_PERIODS][NUM_SAMPLES*2] \
     CACHEALIGN_ATTR IBSS_ATTR;
 
 
-static void audio_regs_init()
+void audio_setup()
 {
     imx233_reset_block(&HW_AUDIOIN_CTRL);
     imx233_reset_block(&HW_AUDIOOUT_CTRL);
@@ -103,7 +94,7 @@ static void audio_regs_init()
 
     __REG_CLR(HW_AUDIOOUT_HPVOL) = HW_AUDIOOUT_HPVOL__MUTE;
     __REG_CLR(HW_AUDIOOUT_HPVOL) = 0x00007f7f;
-    //__REG_SET(HW_AUDIOOUT_HPVOL) = 0x00014040; // temp - line1 as input
+    //__REG_SET(HW_AUDIOOUT_HPVOL) = 0x00014040; // test only - line1->HP
     __REG_SET(HW_AUDIOOUT_HPVOL) = 0x00004040; // volume shouldn't be too high
 
     // write some shit to the data to make sure it's not stuck
@@ -113,9 +104,11 @@ static void audio_regs_init()
     udelay(200);
 }
 
-static void audio_dma_init(void)
+void audio_dma_init(void)
 {
     int i;
+
+    g_rec_index = 0;
 
     imx233_dma_init();
 
@@ -140,22 +133,11 @@ static void audio_dma_init(void)
     imx233_dma_reset_channel(APB_AUDIO_DAC);
     imx233_dma_reset_channel(APB_AUDIO_ADC);
 
-    //
-    // for some reason, the interrupt handler pitch is 8 bytes
-    // instead of 4 bytes (as it should be on startup
-    // according to the imx233 manual)
-    //
-
-    // clear all the interrupt handlers
-    for (i=0; i<256; i++) {
-        isr_table[i] = 0;
-    }
-
     // and set our own interrupt handlers
-    isr_table[INT_SRC_DAC_DMA*2] = dac_dma_interrupt;
-    isr_table[INT_SRC_DAC_ERROR*2] = dac_error_interrupt;
-    isr_table[INT_SRC_ADC_DMA*2] = adc_dma_interrupt;
-    isr_table[INT_SRC_ADC_ERROR*2] = adc_error_interrupt;
+    imx233_icoll_set_handler(INT_SRC_DAC_DMA, dac_dma_interrupt);
+    imx233_icoll_set_handler(INT_SRC_DAC_ERROR, dac_error_interrupt);
+    imx233_icoll_set_handler(INT_SRC_ADC_DMA, adc_dma_interrupt);
+    imx233_icoll_set_handler(INT_SRC_ADC_ERROR, adc_error_interrupt);
 
     imx233_icoll_enable_interrupt(INT_SRC_DAC_DMA, true);
     imx233_icoll_enable_interrupt(INT_SRC_ADC_DMA, true);
@@ -167,66 +149,16 @@ static void audio_dma_init(void)
 }
 
 
-#define LRADC_CHANNEL 4
-#define LRADC_DELAY_INDEX 0
-static void lradc_init(void)
+void audio_dma_start()
 {
-    imx233_lradc_init();
-    imx233_lradc_setup_channel(LRADC_CHANNEL, 1, 0, 0, LRADC_CHANNEL);
-    imx233_lradc_enable_channel_irq(LRADC_CHANNEL, false);
-    imx233_lradc_clear_channel_irq(LRADC_CHANNEL);
-    imx233_lradc_setup_delay(LRADC_DELAY_INDEX, 1<<LRADC_CHANNEL, 1<<LRADC_DELAY_INDEX, 0, 100);
-    imx233_lradc_kick_delay(LRADC_DELAY_INDEX);
-}
-
-
-int fx_main()
-{
-    unsigned int tmp;
-
-    int hwver = 9; /* ??? */
-    HW_RTC_PERSISTENT4 = hwver;
-
-	/* Turn off auto-slow and other tricks */
-    __REG_CLR(HW_CLKCTRL_HBUS) = 0x07f00000U;
-    HW_CLKCTRL_HBUS = 0x00000002; /* clock divider for HCLK */
-
-    /* power up the clocks */
-    imx233_reset_block(&HW_RTC_CTRL);
-    __REG_SET(HW_RTC_PERSISTENT0) = 
-        HW_RTC_PERSISTENT0__XTAL32KHZ_PWRUP |
-        HW_RTC_PERSISTENT0__XTAL24MHZ_PWRUP |
-        HW_RTC_PERSISTENT0__CLOCKSOURCE;
-
-    g_print_cnt = 0;
-    g_rec_index = 0;
-
-    imx233_icoll_init();
-    lradc_init();
-    audio_dma_init();
-    audio_regs_init();
-
-    /* enable interrupts (ARM specific) */
+    /* enable interrupts first */
     enable_irq();
 
-    serial_puts("initialisations complete\n");
-
+    /* then start the DAC and ADC modules with their proper DMA commands */
     __REG_SET(HW_AUDIOOUT_CTRL) = HW_AUDIOOUT_CTRL__RUN;
     imx233_dma_start_command(APB_AUDIO_DAC, (struct apb_dma_command_t*)&g_audio_play_cmds[0]);
     __REG_SET(HW_AUDIOIN_CTRL) = HW_AUDIOIN_CTRL__RUN;
     imx233_dma_start_command(APB_AUDIO_ADC, (struct apb_dma_command_t*)&g_audio_rec_cmds[0]);
-
-    serial_puts("\n");
-
-    while(1) {
-        tmp = imx233_lradc_read_channel(LRADC_CHANNEL);
-        serial_puts("lradc data: ");
-        serial_puthex(tmp);
-        serial_puts("\n");
-
-        udelay(500000);
-    }
-    return 0;
 }
 
 
@@ -240,7 +172,7 @@ static void dac_dma_interrupt()
         serial_puts("Unknown DAC DMA interrupt\n");
     }
 
-    stmp378x_ack_irq(INT_SRC_DAC_DMA);
+    imx233_icoll_ack_irq(INT_SRC_DAC_DMA);
 }
 
 static void adc_dma_interrupt()
@@ -294,12 +226,12 @@ static void adc_dma_interrupt()
         serial_puts("Unknown ADC DMA interrupt\n");
     }
 
-    stmp378x_ack_irq(INT_SRC_ADC_DMA);
+    imx233_icoll_ack_irq(INT_SRC_ADC_DMA);
 }
 
 static void dac_error_interrupt()
 {
-    stmp378x_ack_irq(INT_SRC_DAC_ERROR);
+    imx233_icoll_ack_irq(INT_SRC_DAC_ERROR);
 
     if (HW_AUDIOOUT_CTRL & HW_AUDIOOUT_CTRL__FIFO_UNDERFLOW_IRQ) {
         serial_puts("AUDIOOUT underflow detected\n");
@@ -311,7 +243,7 @@ static void dac_error_interrupt()
 
 static void adc_error_interrupt()
 {
-    stmp378x_ack_irq(INT_SRC_ADC_ERROR);
+    imx233_icoll_ack_irq(INT_SRC_ADC_ERROR);
 
     if (HW_AUDIOIN_CTRL & HW_AUDIOIN_CTRL__FIFO_OVERFLOW_IRQ) {
         serial_puts("AUDIOIN overflow detected\n");

@@ -18,6 +18,7 @@
  */
 
 #include "platform/imx233/serial.h"
+#include "serial.h"
 
 #define isprint(x) (x>=0x20 && x<=0x7e)
 

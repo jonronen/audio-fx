@@ -36,7 +36,7 @@ CFLAGS += -fPIC
 
 # Generic code
 UTILS_OBJS = str.o
-PLATFORM_OBJS = entry.o mmu-arm.o serial.o lradc.o fx.o dma.o icoll.o system.o
+PLATFORM_OBJS = entry.o mmu-arm.o serial.o lradc.o dma.o icoll.o system.o audio_dma.o
 EFFECTS_OBJS = fx_main.o
 
 

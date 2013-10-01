@@ -93,7 +93,7 @@ void imx233_lradc_wait_channel(int channel)
     while(!imx233_lradc_read_channel_irq(channel));
 }
 
-int imx233_lradc_read_channel(int channel)
+int lradc_read_channel(int channel)
 {
     return __XTRACT_EX(HW_LRADC_CHx(channel), HW_LRADC_CHx__VALUE);
 }
@@ -117,3 +117,16 @@ void imx233_lradc_init(void)
     __REG_CLR(HW_LRADC_CTRL3) = HW_LRADC_CTRL3__CYCLE_TIME_BM;
     __REG_SET(HW_LRADC_CTRL3) = HW_LRADC_CTRL3__CYCLE_TIME__6MHz;
 }
+
+
+#define LRADC_DELAY_INDEX 0
+void lradc_setup_channel_for_polling(unsigned char channel_index)
+{
+    imx233_lradc_init();
+    imx233_lradc_setup_channel(channel_index, 1, 0, 0, channel_index);
+    imx233_lradc_enable_channel_irq(channel_index, false);
+    imx233_lradc_clear_channel_irq(channel_index);
+    imx233_lradc_setup_delay(LRADC_DELAY_INDEX, 1<<channel_index, 1<<LRADC_DELAY_INDEX, 0, 100);
+    imx233_lradc_kick_delay(LRADC_DELAY_INDEX);
+}
+

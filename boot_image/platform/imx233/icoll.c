@@ -2,17 +2,17 @@
 #include "platform/imx233/rtc.h"
 #include "platform/imx233/serial.h"
 
-isr_t isr_table[INT_SRC_NR_SOURCES] CACHEALIGN_ATTR IBSS_ATTR;
+isr_t isr_table[INT_SRC_NR_SOURCES*2] CACHEALIGN_ATTR IBSS_ATTR;
 
 
-isr_t isr_table[INT_SRC_NR_SOURCES] =
+isr_t isr_table[INT_SRC_NR_SOURCES*2] =
 {0};
 
 
 /*
  * IRQ handling
  */
-void stmp378x_ack_irq(unsigned int irq)
+void imx233_icoll_ack_irq(unsigned int irq)
 {
     volatile int dummy;
 
@@ -24,6 +24,18 @@ void stmp378x_ack_irq(unsigned int irq)
 
     /* Barrier */
     dummy = HW_ICOLL_STAT;
+}
+
+void imx233_icoll_set_handler(int src, isr_t handler)
+{
+    //
+    // for some reason, the interrupt handler pitch is 8 bytes
+    // instead of 4 bytes (as it should be on startup
+    // according to the imx233 manual)
+    //
+
+    if ((src >= 0) && (src < INT_SRC_NR_SOURCES))
+        isr_table[src*2] = handler;
 }
 
 void imx233_icoll_enable_interrupt(int src, bool enable)
@@ -45,6 +57,13 @@ void imx233_icoll_init(void)
         /* priority = 0, disable, disable fiq */
         HW_ICOLL_INTERRUPT(i) = 0;
     }
+
+    // clear all the interrupt handlers
+    for (i=0; i<INT_SRC_NR_SOURCES; i++) {
+        isr_table[i*2] = 0;
+        isr_table[i*2+1] = 0;
+    }
+
     /* setup vbase as isr_table */
     HW_ICOLL_VBASE = (uint32_t)&isr_table;
     /* enable final irq bit */
