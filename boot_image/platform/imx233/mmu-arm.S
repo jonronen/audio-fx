@@ -1,5 +1,5 @@
 #define ASM
-#include "imx233.h"
+#include "platform/imx233/imx233.h"
 
 /* Used by ARMv4 & ARMv5 CPUs with cp15 register and MMU */
 

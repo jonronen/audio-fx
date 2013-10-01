@@ -27,7 +27,7 @@ OBJCOPY	= $(CROSS_COMPILE)objcopy
 OBJDUMP	= $(CROSS_COMPILE)objdump
 
 LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
-CFLAGS 	= -Wall -I$(INCLUDEDIR) -I$(LINUX_DIR)/include -I$(CURRENTDIR)/src -fno-builtin -O2 -nostdinc -DMEMORYSIZE=64
+CFLAGS 	= -Wall -I$(INCLUDEDIR) -fno-builtin -O2 -nostdinc -DMEMORYSIZE=64
 LDFLAGS = -static -nostdlib -T $(BOOT_LAYOUT_OUT) -L$(LIBGCCDIR) -lgcc
 #LDFLAGS = -static -nostdlib -nolibc -T $(BOOT_LAYOUT_OUT)
 
