@@ -40,9 +40,11 @@ PLATFORM_OBJS = entry.o mmu-arm.o serial.o lradc.o dma.o icoll.o system.o audio_
 EFFECTS_OBJS = fx_main.o
 
 
-CHUMBY_BOOT_OBJS = $(addprefix utils/, $(UTILS_OBJS)) \
-		  $(addprefix $(PLATFORMDIR)/, $(PLATFORM_OBJS)) \
+# IMPORTANT! entry.o should appear first - this is where execution starts
+CHUMBY_BOOT_OBJS = $(addprefix $(PLATFORMDIR)/, $(PLATFORM_OBJS)) \
+		  $(addprefix utils/, $(UTILS_OBJS)) \
 		  $(addprefix effects/, $(EFFECTS_OBJS))
+
 
 # Default goal
 .PHONY: all
