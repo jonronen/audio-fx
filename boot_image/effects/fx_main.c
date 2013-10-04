@@ -17,6 +17,41 @@
 static uint8_t g_print_cnt;
 
 
+static void modify_buffers(
+    int out_buff[],
+    int in_buff[],
+    unsigned int num_samples,
+    unsigned int num_channels
+)
+{
+    int i;
+    int min, max, curr;
+
+    // TODO: remove this min-max computation and print
+
+    max = -0x7fffffff;
+    min = 0x7fffffff;
+
+    for (i=0; i<num_samples; i+=2) {
+        curr = in_buff[i];
+        if (curr > max) max=curr;
+        if (curr < min) min=curr;
+    }
+    g_print_cnt++;
+    if ((g_print_cnt & 0x1f) == 0) {
+        serial_puts("recording period elapsed. min=");
+        serial_puthex(min);
+        serial_puts(", max=");
+        serial_puthex(max);
+        serial_puts("\n");
+    }
+
+    // copy the buffer
+    for (i=0; i < num_samples*num_channels; ++i) {
+        out_buff[i] = in_buff[i];
+    }
+}
+
 int fx_main()
 {
     unsigned int tmp;
@@ -24,7 +59,7 @@ int fx_main()
     system_init();
     lradc_setup_channel_for_polling(LRADC_CHANNEL);
     audio_setup();
-    audio_dma_init(0);
+    audio_dma_init(modify_buffers);
 
     g_print_cnt = 0;
 

@@ -1,5 +1,6 @@
 #include "serial.h"
 #include "system.h"
+#include "audio_dma.h"
 #include "platform/imx233/rtc.h"
 #include "platform/imx233/dma.h"
 #include "platform/imx233/audioin.h"
@@ -7,6 +8,7 @@
 
 
 static uint8_t g_rec_index;
+static audio_dma_callback_t g_callback;
 
 
 struct audio_dma_command_t
@@ -104,11 +106,12 @@ void audio_setup()
     udelay(200);
 }
 
-void audio_dma_init(void)
+void audio_dma_init(audio_dma_callback_t p_callback)
 {
     int i;
 
     g_rec_index = 0;
+    g_callback = p_callback;
 
     imx233_dma_init();
 
@@ -177,48 +180,18 @@ static void dac_dma_interrupt()
 
 static void adc_dma_interrupt()
 {
-    int i;
-    /*
-    int min, max, curr;
-    */
-
     if (HW_APBX_CTRL1 &
         HW_APBX_CTRL1__CHx_CMDCMPLT_IRQ(APB_GET_DMA_CHANNEL(APB_AUDIO_ADC))) {
 
         imx233_dma_clear_channel_interrupt(APB_AUDIO_ADC);
 
-        //if (g_first_interrupt) {
-            //g_first_interrupt = false;
-            //__REG_CLR(HW_AUDIOIN_CTRL) = HW_AUDIOIN_CTRL__OFFSET_ENABLE;
-        //}
-
-        /*
-        // TODO: remove this min-max computation and print
-
-        max = -0x7fffffff;
-        min = 0x7fffffff;
-
-        for (i=0; i<NUM_SAMPLES*2; i+=2) {
-            curr = g_rec_buff[g_rec_index][i];
-            if (curr > max) max=curr;
-            if (curr < min) min=curr;
-        }
-        if (g_rec_index == 0) {
-            g_print_cnt++;
-            if ((g_print_cnt & 0x1f) == 0) {
-                serial_puts("recording period elapsed. min=");
-                serial_puthex(min);
-                serial_puts(", max=");
-                serial_puthex(max);
-                serial_puts("\n");
-            }
-        }
-        */
-
-        // copy the buffer
-        for (i=0; i<NUM_SAMPLES*2; ++i) {
-            g_play_buff[g_rec_index][i] = g_rec_buff[g_rec_index][i];
-        }
+        // handle the buffers
+        g_callback(
+            g_play_buff[g_rec_index],
+            g_rec_buff[g_rec_index],
+            NUM_SAMPLES,
+            2 /* two channels for each sample */
+        );
 
         g_rec_index = (g_rec_index+1)%NUM_PERIODS;
     }
