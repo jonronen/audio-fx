@@ -10,10 +10,37 @@
 #include "lradc.h"
 #include "system.h"
 #include "audio_dma.h"
+#include "effects/parameters.h"
 
 
+/*
+ * low pass filter - we have the previous results and the deltas
+ * (this enables us to do resonance as well)
+ */
+static int g_low_pass_prev_results[NUM_CHANNELS];
+static int g_low_pass_prev_deltas[NUM_CHANNELS];
+
+/*
+ * high pass - we have the previous cleans and the previous results
+ */
+static int g_high_pass_prev_results[NUM_CHANNELS];
+static int g_high_pass_prev_cleans[NUM_CHANNELS];
+
+/*
+ * flanger - we're keeping the current phase
+ */
+static unsigned int g_flanger_phase[NUM_CHANNELS];
+
+/*
+ * tremolo - a semi-phase
+ */
+static unsigned int g_tremolo_phase[NUM_CHANNELS];
+
+
+/* TODO: re-design the LRADC channels thing */
 #define LRADC_CHANNEL 4
 
+/* for debugging - remove later */
 static uint8_t g_print_cnt;
 
 
@@ -38,8 +65,8 @@ static void modify_buffers(
         if (curr < min) min=curr;
     }
     g_print_cnt++;
-    if ((g_print_cnt & 0x1f) == 0) {
-        serial_puts("recording period elapsed. min=");
+    if ((g_print_cnt & 0x7f) == 0) {
+        serial_puts("min=");
         serial_puthex(min);
         serial_puts(", max=");
         serial_puthex(max);
