@@ -17,14 +17,14 @@
  * low pass filter - we have the previous results and the deltas
  * (this enables us to do resonance as well)
  */
-static int g_low_pass_prev_results[NUM_CHANNELS];
-static int g_low_pass_prev_deltas[NUM_CHANNELS];
+static int g_low_pass_prev_result[NUM_CHANNELS];
+static int g_low_pass_prev_delta[NUM_CHANNELS];
 
 /*
  * high pass - we have the previous cleans and the previous results
  */
-static int g_high_pass_prev_results[NUM_CHANNELS];
-static int g_high_pass_prev_cleans[NUM_CHANNELS];
+static int g_high_pass_prev_result[NUM_CHANNELS];
+static int g_high_pass_prev_clean[NUM_CHANNELS];
 
 /*
  * flanger - we're keeping the current phase
@@ -51,7 +51,7 @@ static void modify_buffers(
     unsigned int num_channels
 )
 {
-    int i;
+    int i, j, index, sample, tmp;
     int min, max, curr;
 
     // TODO: remove this min-max computation and print
@@ -73,9 +73,40 @@ static void modify_buffers(
         serial_puts("\n");
     }
 
-    // copy the buffer
-    for (i=0; i < num_samples*num_channels; ++i) {
-        out_buff[i] = in_buff[i];
+    // start modifying!
+    for (i=0; i < num_samples; ++i) {
+        for (j=0; j < num_channels; j++) {
+
+            /* some definitions first */
+            index = i*num_channels + j;
+            sample = in_buff[index] / 0x200; /* 23-bit is enough */
+
+            /*
+             * low-pass first, high-pass next.
+             * low-pass result is high-pass clean
+            */
+            g_high_pass_prev_clean[j] = g_low_pass_prev_result[j];
+
+            /* low-pass with resonance */
+            g_low_pass_prev_delta[j] *= g_resonance_level[j];
+            g_low_pass_prev_delta[j] /= 0x100;
+            tmp = sample - g_low_pass_prev_result[j];
+            g_low_pass_prev_delta[j] +=
+                (sample - g_low_pass_prev_result[j]) *
+                g_low_pass_level[j] / 0x100;
+            g_low_pass_prev_delta[j] = limit_value_of_delta(g_low_pass_prev_delta[j]);
+            sample = limit_value_of_sample(
+                g_low_pass_prev_result[j] + g_low_pass_prev_delta[j]
+            );
+            g_low_pass_prev_result[j] = sample;
+
+            /* high-pass */
+            sample = limit_value_of_sample(
+                (g_high_pass_prev_result[j] + sample-g_high_pass_prev_clean[j]) *
+                g_high_pass_level[j] / 0x100
+            );
+            g_high_pass_prev_result[j] = sample;
+        }
     }
 }
 
