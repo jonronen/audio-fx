@@ -10,6 +10,7 @@
 #include "lradc.h"
 #include "system.h"
 #include "audio_dma.h"
+#include "math.h"
 #include "effects/parameters.h"
 
 
