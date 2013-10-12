@@ -2,6 +2,7 @@
 #define __lradc_h__
 
 
+/* TODO: units */
 int lradc_read_channel(int channel);
 void lradc_setup_channel_for_polling(int channel);
 

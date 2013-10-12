@@ -16,7 +16,7 @@ static inline int limit_value_of_delta(const int delta_value)
     else return delta_value;
 }
 
-int scaled_sine(const unsigned int degrees);
+int scaled_sine_8_bit(const unsigned int degrees);
 
 
 #endif /* __MATH_H__ */

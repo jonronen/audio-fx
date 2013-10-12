@@ -38,11 +38,8 @@ static unsigned int g_flanger_phase[NUM_CHANNELS];
 static unsigned int g_tremolo_phase[NUM_CHANNELS];
 
 
-/* TODO: re-design the LRADC channels thing */
-#define LRADC_CHANNEL 4
-
 /* for debugging - remove later */
-static uint8_t g_print_cnt;
+// static uint8_t g_print_cnt;
 
 
 static void modify_buffers(
@@ -52,10 +49,12 @@ static void modify_buffers(
     unsigned int num_channels
 )
 {
-    int i, j, index, sample, tmp;
-    int min, max, curr;
+    int i, j, sample;
+    unsigned int index;
 
     // TODO: remove this min-max computation and print
+    /*
+    int min, max, curr;
 
     max = -0x7fffffff;
     min = 0x7fffffff;
@@ -73,6 +72,7 @@ static void modify_buffers(
         serial_puthex(max);
         serial_puts("\n");
     }
+    */
 
     // start modifying!
     for (i=0; i < num_samples; ++i) {
@@ -91,10 +91,9 @@ static void modify_buffers(
             /* low-pass with resonance */
             g_low_pass_prev_delta[j] *= g_resonance_level[j];
             g_low_pass_prev_delta[j] /= 0x100;
-            tmp = sample - g_low_pass_prev_result[j];
             g_low_pass_prev_delta[j] +=
-                (sample - g_low_pass_prev_result[j]) *
-                g_low_pass_level[j] / 0x100;
+                (((sample - g_low_pass_prev_result[j]) *
+                  (int)g_low_pass_level[j]) / 0x100);
             g_low_pass_prev_delta[j] = limit_value_of_delta(g_low_pass_prev_delta[j]);
             sample = limit_value_of_sample(
                 g_low_pass_prev_result[j] + g_low_pass_prev_delta[j]
@@ -104,37 +103,43 @@ static void modify_buffers(
             /* high-pass */
             sample = limit_value_of_sample(
                 (g_high_pass_prev_result[j] + sample-g_high_pass_prev_clean[j]) *
-                g_high_pass_level[j] / 0x100
+                (int)g_high_pass_level[j] / 0x100
             );
             g_high_pass_prev_result[j] = sample;
+
+            out_buff[index] = sample * 0x200; /* scale back from 23-bit to 32 */
         }
     }
 }
 
 int fx_main()
 {
-    unsigned int tmp;
+    int j;
 
     system_init();
-    lradc_setup_channel_for_polling(LRADC_CHANNEL);
     audio_setup();
     audio_dma_init(modify_buffers);
 
-    g_print_cnt = 0;
+    /* g_print_cnt = 0; */
+
+    for (j=0; j<NUM_CHANNELS; j++) {
+        g_low_pass_prev_result[j] = 0;
+        g_low_pass_prev_delta[j] = 0;
+        g_high_pass_prev_result[j] = 0;
+        g_high_pass_prev_clean[j] = 0;
+        g_flanger_phase[j] = 0;
+        g_tremolo_phase[j] = 0;
+    }
+
+    parameters_setup();
 
     serial_puts("initialisations complete\n");
 
     audio_dma_start();
 
-    serial_puts("\n");
-
     while(1) {
-        tmp = lradc_read_channel(LRADC_CHANNEL);
-        serial_puts("lradc data: ");
-        serial_puthex(tmp);
-        serial_puts("\n");
-
-        udelay(500000);
+        parameters_set();
+        udelay(50000);
     }
     return 0;
 }
