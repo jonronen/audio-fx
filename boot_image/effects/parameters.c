@@ -5,7 +5,6 @@
 
 /*
  * overdrive and distortion
- * TODO: units!
  */
 unsigned short g_overdrive_level[NUM_CHANNELS];
 unsigned short g_distortion_level[NUM_CHANNELS];
@@ -13,7 +12,6 @@ unsigned short g_distortion_level[NUM_CHANNELS];
 
 /*
  * low-pass level
- * TODO: units!
  */
 unsigned short g_low_pass_level[NUM_CHANNELS];
 
@@ -31,10 +29,9 @@ unsigned short g_high_pass_level[NUM_CHANNELS];
 
 
 /*
- * tremolo
+ * volume
  */
-unsigned short g_tremolo_frequency[NUM_CHANNELS];
-unsigned short g_tremolo_level[NUM_CHANNELS];
+unsigned short g_volume_factor[NUM_CHANNELS];
 
 
 /*
@@ -56,13 +53,12 @@ void parameters_setup()
 
     /* clear all the parameters at start */
     for (j=0; j<NUM_CHANNELS; j++) {
-        g_overdrive_level[j] = 0x100;
+        g_overdrive_level[j] = OVERDRIVE_NORMAL_LEVEL;
         g_distortion_level[j] = 0;
-        g_low_pass_level[j] = 0x100;
+        g_low_pass_level[j] = LOW_PASS_MAX_LEVEL;
         g_resonance_level[j] = 0;
-        g_high_pass_level[j] = 0x100;
-        g_tremolo_frequency[j] = 1;
-        g_tremolo_level[j] = 0;
+        g_high_pass_level[j] = HIGH_PASS_MAX_LEVEL;
+        g_volume_factor[j] = VOLUME_NORMAL_LEVEL;
         g_flanger_low_freq_limit[j] = 1;
         g_flanger_high_freq_limit[j] = 1;
         g_flanger_frequency[j] = 1;
@@ -83,5 +79,10 @@ void parameters_set()
     for (j = 0; j < NUM_CHANNELS; j++) {
         g_low_pass_level[j] = tmp / 4;
     }
+}
+
+
+void parameters_counter_increment()
+{
 }
 

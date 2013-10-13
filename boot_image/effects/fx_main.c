@@ -82,6 +82,11 @@ static void modify_buffers(
             index = i*num_channels + j;
             sample = in_buff[index] / 0x200; /* 23-bit is enough */
 
+            /* overdrive */
+            sample = limit_value_of_sample(
+                sample * (int)g_overdrive_level[j] / OVERDRIVE_NORMAL_LEVEL
+            );
+
             /*
              * low-pass first, high-pass next.
              * low-pass result is high-pass clean
@@ -90,10 +95,10 @@ static void modify_buffers(
 
             /* low-pass with resonance */
             g_low_pass_prev_delta[j] *= g_resonance_level[j];
-            g_low_pass_prev_delta[j] /= 0x100;
+            g_low_pass_prev_delta[j] /= RESONANCE_MAX_LEVEL;
             g_low_pass_prev_delta[j] +=
                 (((sample - g_low_pass_prev_result[j]) *
-                  (int)g_low_pass_level[j]) / 0x100);
+                  (int)g_low_pass_level[j]) / LOW_PASS_MAX_LEVEL);
             g_low_pass_prev_delta[j] = limit_value_of_delta(g_low_pass_prev_delta[j]);
             sample = limit_value_of_sample(
                 g_low_pass_prev_result[j] + g_low_pass_prev_delta[j]
@@ -103,12 +108,24 @@ static void modify_buffers(
             /* high-pass */
             sample = limit_value_of_sample(
                 (g_high_pass_prev_result[j] + sample-g_high_pass_prev_clean[j]) *
-                (int)g_high_pass_level[j] / 0x100
+                (int)g_high_pass_level[j] / HIGH_PASS_MAX_LEVEL
             );
             g_high_pass_prev_result[j] = sample;
 
             out_buff[index] = sample * 0x200; /* scale back from 23-bit to 32 */
+
+            /*
+             * in the end, do the volume adjustment.
+             * don't confuse this with overdrive,
+             * this is for effects like tremolo.
+             */
+            if (g_volume_factor[j]) {
+                sample = sample * (int)g_volume_factor[j] / VOLUME_NORMAL_LEVEL;
+            }
         }
+
+        // take care of other parameters too
+        parameters_counter_increment();
     }
 }
 
