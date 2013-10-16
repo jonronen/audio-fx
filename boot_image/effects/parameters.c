@@ -54,7 +54,7 @@ void parameters_setup()
     /* clear all the parameters at start */
     for (j=0; j<NUM_CHANNELS; j++) {
         g_overdrive_level[j] = OVERDRIVE_NORMAL_LEVEL;
-        g_distortion_level[j] = 0;
+        g_distortion_level[j] = 1;
         g_low_pass_level[j] = LOW_PASS_MAX_LEVEL;
         g_resonance_level[j] = 0;
         g_high_pass_level[j] = HIGH_PASS_MAX_LEVEL;

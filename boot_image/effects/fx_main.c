@@ -87,6 +87,12 @@ static void modify_buffers(
                 sample * (int)g_overdrive_level[j] / OVERDRIVE_NORMAL_LEVEL
             );
 
+            /* distortion */
+            sample = (
+                (sample + (int)g_distortion_level[j]/2) /
+                (int)g_distortion_level[j]
+            ) * (int)g_distortion_level[j];
+
             /*
              * low-pass first, high-pass next.
              * low-pass result is high-pass clean
