@@ -67,7 +67,7 @@ void audio_setup()
 
     //__REG_SET(HW_AUDIOIN_CTRL) = 0x001f0000; // TODO: change that?
     //__REG_SET(HW_AUDIOOUT_CTRL) = 0x001f0000; // TODO: change that?
-    HW_AUDIOIN_ADCVOL = 0x00001414; // take the audio from LINE1
+    HW_AUDIOIN_ADCVOL = 0x00001111; // take the audio from LINE1
     HW_AUDIOIN_ADCVOLUME = 0x00fe00fe;
     HW_AUDIOOUT_DACVOLUME = 0x00ff00ff;
 
@@ -97,7 +97,7 @@ void audio_setup()
     __REG_CLR(HW_AUDIOOUT_HPVOL) = HW_AUDIOOUT_HPVOL__MUTE;
     __REG_CLR(HW_AUDIOOUT_HPVOL) = 0x00007f7f;
     //__REG_SET(HW_AUDIOOUT_HPVOL) = 0x00014040; // test only - line1->HP
-    __REG_SET(HW_AUDIOOUT_HPVOL) = 0x00004040; // volume shouldn't be too high
+    __REG_SET(HW_AUDIOOUT_HPVOL) = 0x00008080; // volume shouldn't be too high
 
     // write some shit to the data to make sure it's not stuck
     HW_AUDIOOUT_DATA = 0x00000000;

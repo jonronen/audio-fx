@@ -39,7 +39,7 @@ static unsigned int g_tremolo_phase[NUM_CHANNELS];
 
 
 /* for debugging - remove later */
-// static uint8_t g_print_cnt;
+static uint8_t g_print_cnt;
 
 
 static void modify_buffers(
@@ -53,7 +53,6 @@ static void modify_buffers(
     unsigned int index;
 
     // TODO: remove this min-max computation and print
-    /*
     int min, max, curr;
 
     max = -0x7fffffff;
@@ -72,7 +71,6 @@ static void modify_buffers(
         serial_puthex(max);
         serial_puts("\n");
     }
-    */
 
     // start modifying!
     for (i=0; i < num_samples; ++i) {
@@ -118,8 +116,6 @@ static void modify_buffers(
             );
             g_high_pass_prev_result[j] = sample;
 
-            out_buff[index] = sample * 0x200; /* scale back from 23-bit to 32 */
-
             /*
              * in the end, do the volume adjustment.
              * don't confuse this with overdrive,
@@ -128,6 +124,8 @@ static void modify_buffers(
             if (g_volume_factor[j]) {
                 sample = sample * (int)g_volume_factor[j] / VOLUME_NORMAL_LEVEL;
             }
+
+            out_buff[index] = sample * 0x200; /* scale back from 23-bit to 32 */
         }
 
         // take care of other parameters too
