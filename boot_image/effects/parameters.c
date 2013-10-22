@@ -77,7 +77,7 @@ void parameters_set()
     /* test - remove later */
     tmp = lradc_read_channel(LRADC_CHANNEL);
     for (j = 0; j < NUM_CHANNELS; j++) {
-        g_low_pass_level[j] = tmp / 4;
+        g_low_pass_level[j] = tmp / 16;
     }
 }
 
