@@ -18,6 +18,7 @@
  */
 
 #include "platform/imx233/serial.h"
+#include "platform/imx233/pinctrl.h"
 #include "serial.h"
 
 #define isprint(x) (x>=0x20 && x<=0x7e)
@@ -56,8 +57,8 @@ void serial_init (void)
     // for GPIO.
     // Disable UART
 //    REG_WR(DBGUART_BASE + UARTDBGCR, 0);
-    HW_PINCTRL_MUXSEL3_CLR((1<<20)|(1<<22));
-    HW_PINCTRL_MUXSEL3_SET((2<<20)|(2<<22));
+    __REG_CLR(HW_PINCTRL_MUXSEL(3)) = ((1<<20)|(1<<22));
+    __REG_SET(HW_PINCTRL_MUXSEL(3)) = ((2<<20)|(2<<22));
 
 
     // Disable UART
