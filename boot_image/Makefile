@@ -37,7 +37,7 @@ CFLAGS += -fPIC
 # Generic code
 UTILS_OBJS = str.o
 PLATFORM_OBJS = entry.o mmu-arm.o serial.o lradc.o dma.o icoll.o system.o audio_dma.o
-EFFECTS_OBJS = fx_main.o math.o parameters.o
+EFFECTS_OBJS = fx_main.o math.o parameters.o metronome.o
 
 
 # IMPORTANT! entry.o should appear first - this is where execution starts

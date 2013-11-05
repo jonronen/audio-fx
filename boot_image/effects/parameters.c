@@ -1,4 +1,5 @@
 #include "effects/parameters.h"
+#include "effects/metronome.h"
 #include "lradc.h"
 
 
@@ -313,5 +314,6 @@ void parameters_set()
 
 void parameters_counter_increment()
 {
+    tick();
 }
 
