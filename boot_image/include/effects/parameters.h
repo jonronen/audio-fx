@@ -20,6 +20,7 @@ extern unsigned short g_overdrive_level[NUM_CHANNELS];
 
 /* TODO: distortion units */
 extern unsigned short g_distortion_level[NUM_CHANNELS];
+#define DISTORTION_NORMAL_LEVEL 1
 
 
 /*
@@ -37,6 +38,7 @@ extern unsigned short g_low_pass_level[NUM_CHANNELS];
  */
 extern unsigned short g_resonance_level[NUM_CHANNELS];
 #define RESONANCE_MAX_LEVEL 0x100
+#define RESONANCE_NORMAL_LEVEL 0
 
 
 /*
@@ -69,6 +71,7 @@ extern unsigned short g_flanger_low_freq_limit[NUM_CHANNELS];
 extern unsigned short g_flanger_high_freq_limit[NUM_CHANNELS];
 extern unsigned short g_flanger_frequency[NUM_CHANNELS];
 extern unsigned short g_flanger_mix_level[NUM_CHANNELS];
+#define FLANGER_NORMAL_MIX_LEVEL 0
 
 
 

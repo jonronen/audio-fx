@@ -11,21 +11,37 @@
 
 
 typedef enum _metronome_op_t {
-    CONST_NONE,
-    CONST_FULL,
-    LINEAR_RISE,
-    LINEAR_FALL,
-    SINE_RISE,
-    SINE_FALL,
-    EXP_RISE,
-    EXP_FALL,
+    METRONOME_OP_CONST_NONE,
+    METRONOME_OP_CONST_FULL,
+    METRONOME_OP_LINEAR_RISE,
+    METRONOME_OP_LINEAR_FALL,
+    METRONOME_OP_SINE_RISE,
+    METRONOME_OP_SINE_FALL,
+    METRONOME_OP_EXP_RISE,
+    METRONOME_OP_EXP_FALL,
     METRONOME_OP_MAX
 } metronome_op_t;
 
+typedef enum _metronome_op_type_t {
+    OP_TYPE_VOLUME,
+    OP_TYPE_LOW_PASS,
+    OP_TYPE_RESONANCE,
+    OP_TYPE_HIGH_PASS,
+    OP_TYPE_FLANGER,
+    OP_TYPE_DISTORTION,
+    OP_TYPE_MAX
+} metronome_op_type_t;
 
-void set_frequency(unsigned short freq);
-void set_ops(metronome_op_t ops[], unsigned char num_ops);
-void tick();
+
+void metronome_set_frequency(unsigned short freq, unsigned char num_ops);
+void metronome_set_ops(
+    metronome_op_type_t type,
+    metronome_op_t ops[],
+    unsigned short levels[]
+);
+void metronome_tick();
+void metronome_start();
+void metronome_stop();
 
 
 #endif /* __METRONOME_H__ */

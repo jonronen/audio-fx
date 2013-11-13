@@ -284,15 +284,15 @@ void parameters_setup()
     /* clear all the parameters at start */
     for (j=0; j<NUM_CHANNELS; j++) {
         g_overdrive_level[j] = OVERDRIVE_NORMAL_LEVEL;
-        g_distortion_level[j] = 1;
+        g_distortion_level[j] = DISTORTION_NORMAL_LEVEL;
         g_low_pass_level[j] = LOW_PASS_MAX_LEVEL;
-        g_resonance_level[j] = 0;
+        g_resonance_level[j] = RESONANCE_NORMAL_LEVEL;
         g_high_pass_level[j] = HIGH_PASS_MAX_LEVEL;
         g_volume_factor[j] = VOLUME_NORMAL_LEVEL;
         g_flanger_low_freq_limit[j] = 1;
         g_flanger_high_freq_limit[j] = 1;
         g_flanger_frequency[j] = 1;
-        g_flanger_mix_level[j] = 0;
+        g_flanger_mix_level[j] = FLANGER_NORMAL_MIX_LEVEL;
     }
 
     lradc_setup_channel_for_polling(LRADC_CHANNEL);
@@ -314,6 +314,6 @@ void parameters_set()
 
 void parameters_counter_increment()
 {
-    tick();
+    metronome_tick();
 }
 
