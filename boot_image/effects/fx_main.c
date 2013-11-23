@@ -12,6 +12,7 @@
 #include "audio_dma.h"
 #include "math.h"
 #include "effects/parameters.h"
+#include "effects/metronome.h"
 
 
 /*
@@ -121,9 +122,7 @@ static void modify_buffers(
              * don't confuse this with overdrive,
              * this is for effects like tremolo.
              */
-            if (g_volume_factor[j]) {
-                sample = sample * (int)g_volume_factor[j] / VOLUME_NORMAL_LEVEL;
-            }
+            sample = sample * (int)g_volume_factor[j] / VOLUME_NORMAL_LEVEL;
 
             out_buff[index] = sample * 0x200; /* scale back from 23-bit to 32 */
         }
@@ -153,6 +152,7 @@ int fx_main()
     }
 
     parameters_setup();
+    metronome_setup(140, 16, 4);
 
     serial_puts("initialisations complete\n");
 

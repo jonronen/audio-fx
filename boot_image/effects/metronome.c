@@ -32,13 +32,20 @@ static unsigned char g_op_index;
 static unsigned char g_unit_index;
 static unsigned int g_f_active;
 
-void metronome_setup(unsigned short freq, unsigned char num_ops)
+void metronome_setup(
+    unsigned short freq,
+    unsigned char num_ops,
+    unsigned char pattern_units
+)
 {
     int i;
 
     g_f_active = 0;
+
+    /* TODO: limit (and check correctness of) the following values */
     g_bpm = freq;
     g_num_ops = num_ops;
+    g_pattern_units = pattern_units;
 
     for (i = 0; i < MAX_DIVISION_FACTOR * MAX_PATTERN_UNITS; i++) {
         g_levels[OP_TYPE_VOLUME][i] = VOLUME_NORMAL_LEVEL;
@@ -60,7 +67,7 @@ void metronome_set_ops(
 {
     int i;
 
-    for (i=0; i<g_num_ops; i++) {
+    for (i=0; i<g_num_ops*g_pattern_units; i++) {
         g_ops[type][i] = ops[i];
         g_levels[type][i] = levels[i];
     }

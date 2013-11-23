@@ -33,7 +33,11 @@ typedef enum _metronome_op_type_t {
 } metronome_op_type_t;
 
 
-void metronome_set_frequency(unsigned short freq, unsigned char num_ops);
+void metronome_setup(
+    unsigned short freq,
+    unsigned char num_ops,
+    unsigned char pattern_units
+);
 void metronome_set_ops(
     metronome_op_type_t type,
     metronome_op_t ops[],
