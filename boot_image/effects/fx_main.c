@@ -86,11 +86,13 @@ static void modify_buffers(
                 sample * (int)g_overdrive_level[j] / OVERDRIVE_NORMAL_LEVEL
             );
 
-            /* distortion */
+            /* distortion (TODO: doesn't work properly...) */
+            /*
             sample = (
                 (sample + (int)g_distortion_level[j]/2) /
                 (int)g_distortion_level[j]
             ) * (int)g_distortion_level[j];
+            */
 
             /*
              * low-pass first, high-pass next.
@@ -156,7 +158,13 @@ int fx_main()
 
     serial_puts("initialisations complete\n");
 
+    // test - initialise the metronome with some fixed parameters
+    metronome_setup(120, 2, 1);
+
     audio_dma_start();
+
+    // test - start the metronome
+    metronome_start();
 
     while(1) {
         parameters_set();

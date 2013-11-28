@@ -81,5 +81,15 @@ void parameters_counter_increment();
 
 
 
+/* parameter manipulation */
+unsigned short two_exp_12bit_to_8bit(unsigned short raw_value);
+unsigned short phase_to_sine_wave(unsigned char phase);
+unsigned short phase_to_sawtooth_wave(unsigned char phase);
+unsigned short phase_to_reverse_sawtooth_wave(unsigned char phase);
+unsigned short phase_to_triangular_wave(unsigned char phase);
+unsigned short phase_to_square_wave(unsigned char phase);
+
+
+
 #endif /* __PARAMETERS_H__ */
 

@@ -115,7 +115,7 @@ static const unsigned short g_two_exp_fraction[] = {
     506, 507, 507, 508, 509, 509, 510, 511,
 };
 
-static unsigned short two_exp_12bit_to_8bit(unsigned short raw_value)
+unsigned short two_exp_12bit_to_8bit(unsigned short raw_value)
 {
     unsigned int tmp = 1 << (raw_value/512);
     tmp *= g_two_exp_fraction[raw_value % 512];
@@ -164,7 +164,7 @@ static const unsigned short g_square_phase[] = {
     0,     0,     0,     0,     0,     0,     0,     0,
 };
 
-static unsigned short phase_to_square_wave(unsigned char phase)
+unsigned short phase_to_square_wave(unsigned char phase)
 {
     return g_square_phase[phase];
 }
@@ -208,7 +208,7 @@ static const unsigned short g_triangular_phase[] = {
     0xf0,  0xf2,  0xf4,  0xf6,  0xf8,  0xfa,  0xfc,  0xfe,
 };
 
-static unsigned short phase_to_triangular_wave(unsigned char phase)
+unsigned short phase_to_triangular_wave(unsigned char phase)
 {
     return g_triangular_phase[phase];
 }
@@ -217,7 +217,7 @@ static unsigned short phase_to_triangular_wave(unsigned char phase)
 /*
  * saw tooth (linear fade-out with a discontinuity upwards)
  */
-static unsigned short phase_to_sawtooth_wave(unsigned char phase)
+unsigned short phase_to_sawtooth_wave(unsigned char phase)
 {
     return phase+1;
 }
@@ -226,7 +226,7 @@ static unsigned short phase_to_sawtooth_wave(unsigned char phase)
 /*
  * reverse saw tooth (linear fade-out with a discontinuity upwards)
  */
-static unsigned short phase_to_reverse_sawtooth_wave(unsigned char phase)
+unsigned short phase_to_reverse_sawtooth_wave(unsigned char phase)
 {
     return 0x100 - phase;
 }
@@ -267,7 +267,7 @@ static const unsigned short g_sine_phase[] = {
     0xfd, 0xfe, 0xfe, 0xff, 0xff, 0xff, 0xff, 0xff
 };
 
-static unsigned short phase_to_sine_wave(unsigned char phase)
+unsigned short phase_to_sine_wave(unsigned char phase)
 {
     return g_sine_phase[phase];
 }
@@ -286,7 +286,7 @@ void parameters_setup()
         g_overdrive_level[j] = OVERDRIVE_NORMAL_LEVEL;
         g_distortion_level[j] = DISTORTION_NORMAL_LEVEL;
         g_low_pass_level[j] = LOW_PASS_MAX_LEVEL;
-        g_resonance_level[j] = RESONANCE_NORMAL_LEVEL;
+        g_resonance_level[j] = 250; // test (TODO: restore this)
         g_high_pass_level[j] = HIGH_PASS_MAX_LEVEL;
         g_volume_factor[j] = VOLUME_NORMAL_LEVEL;
         g_flanger_low_freq_limit[j] = 1;
@@ -304,11 +304,20 @@ void parameters_set()
     unsigned int tmp;
     int j;
 
-    /* test - remove later */
+    /*
+     * test - control the low pass level with the potentiometer
     tmp = lradc_read_channel(LRADC_CHANNEL);
     for (j = 0; j < NUM_CHANNELS; j++) {
         g_low_pass_level[j] = two_exp_12bit_to_8bit(tmp);
     }
+    */
+    /*
+     * TODO: set globals that determine how we control the parameters.
+     * options are:
+     * - with metronome operations (assign a metronome operation "set")
+     * - with pots
+     * - with values from the outside (UART/MIDI?)
+     */
 }
 
 

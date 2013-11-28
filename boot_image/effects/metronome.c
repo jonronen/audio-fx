@@ -96,6 +96,8 @@ void metronome_stop()
 
 void metronome_tick()
 {
+    int j;
+
     if (!g_f_active) return;
 
     g_phase_cnt += (g_bpm * g_num_ops * PHASES_PER_OP);
@@ -118,6 +120,10 @@ void metronome_tick()
         }
 
         /* TODO: set the parameters according to the phase and the op */
+        /* test - set the low-pass to change linearly from one to zero */
+        for (j=0; j<NUM_CHANNELS; j++) {
+            g_low_pass_level[j] = two_exp_12bit_to_8bit((0x100-g_phase)*16);
+        }
     }
 }
 
