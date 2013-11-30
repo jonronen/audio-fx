@@ -2,7 +2,57 @@
 #define __PARAMETERS_H__
 
 
+#include "lradc.h"
+
+
 #define NUM_CHANNELS 2
+
+
+/*
+ * each parameter has a variable that describes
+   how it is controlled:
+ ** MANUAL - level controlled by a potentiometer
+        (other variables describe which potentiometer)
+ ** LFO - level controlled by a low-frequency oscillator
+        with one potentiometer that controls the frequency
+        and another potentiometer that controls the level
+ ** METRONOME - with metronome operators (see metronome.h and metronome.c)
+ ** METRONOME_WITH_MANUAL_LEVEL - metronome operators
+        with manual level control
+ ** EXTERNAL - level is set by an external force (UART/USB/MIDI/aliens)
+ ** FIXED - don't touch this!
+ */
+typedef enum _param_ctrl_t {
+    PARAM_CTRL_MANUAL,
+    PARAM_CTRL_LFO,
+    PARAM_CTRL_METRONOME,
+    PARAM_CTRL_METRONOME_WITH_MANUAL_LEVEL,
+    PARAM_CTRL_EXTERNAL,
+    PARAM_CTRL_FIXED,
+    PARAM_CTRL_MAX
+} param_ctrl_t;
+
+
+typedef enum _pot_assign_t {
+    POT_ASSIGN_NONE,
+    POT_ASSIGN_DISTORTION_LEVEL,
+    POT_ASSIGN_DISTORTION_LFO,
+    POT_ASSIGN_OVERDRIVE_LEVEL,
+    POT_ASSIGN_OVERDRIVE_LFO,
+    POT_ASSIGN_LOW_PASS_LEVEL,
+    POT_ASSIGN_LOW_PASS_LFO,
+    POT_ASSIGN_RESONANCE_LEVEL,
+    POT_ASSIGN_RESONANCE_LFO,
+    POT_ASSIGN_HIGH_PASS_LEVEL,
+    POT_ASSIGN_HIGH_PASS_LFO,
+    POT_ASSIGN_VOLUME_LEVEL,
+    POT_ASSIGN_VOLUME_LFO,
+    POT_ASSIGN_FLANGER_LEVEL,
+    POT_ASSIGN_FLANGER_LFO,
+} pot_assign_t;
+
+
+extern pot_assign_t g_pot_assignments[MAX_LRADC_CHANNEL];
 
 
 /*
@@ -16,10 +66,12 @@
  * but this is not the intention of this effect.
  */
 extern unsigned short g_overdrive_level[NUM_CHANNELS];
+extern param_ctrl_t g_overdrive_ctrl;
 #define OVERDRIVE_NORMAL_LEVEL 0x40
 
 /* TODO: distortion units */
 extern unsigned short g_distortion_level[NUM_CHANNELS];
+extern param_ctrl_t g_distortion_ctrl;
 #define DISTORTION_NORMAL_LEVEL 1
 
 
@@ -30,6 +82,7 @@ extern unsigned short g_distortion_level[NUM_CHANNELS];
  * TODO: scale the units properly (exponential?)
  */
 extern unsigned short g_low_pass_level[NUM_CHANNELS];
+extern param_ctrl_t g_low_pass_ctrl;
 #define LOW_PASS_MAX_LEVEL 0x100
 
 /*
@@ -37,6 +90,7 @@ extern unsigned short g_low_pass_level[NUM_CHANNELS];
  * units are from zero (no resonance) to 0x100 (TODO: consider more)
  */
 extern unsigned short g_resonance_level[NUM_CHANNELS];
+extern param_ctrl_t g_resonance_ctrl;
 #define RESONANCE_MAX_LEVEL 0x100
 #define RESONANCE_NORMAL_LEVEL 0
 
@@ -48,6 +102,7 @@ extern unsigned short g_resonance_level[NUM_CHANNELS];
  * TODO: scale the units properly (exponential?)
  */
 extern unsigned short g_high_pass_level[NUM_CHANNELS];
+extern param_ctrl_t g_high_pass_ctrl;
 #define HIGH_PASS_MAX_LEVEL 0x100
 
 
@@ -61,6 +116,7 @@ extern unsigned short g_high_pass_level[NUM_CHANNELS];
  * do not use this to turn up the volume. use overdrive instead.
  */
 extern unsigned short g_volume_factor[NUM_CHANNELS];
+extern param_ctrl_t g_volume_ctrl;
 #define VOLUME_NORMAL_LEVEL 0x100
 
 
@@ -71,6 +127,7 @@ extern unsigned short g_flanger_low_freq_limit[NUM_CHANNELS];
 extern unsigned short g_flanger_high_freq_limit[NUM_CHANNELS];
 extern unsigned short g_flanger_frequency[NUM_CHANNELS];
 extern unsigned short g_flanger_mix_level[NUM_CHANNELS];
+extern param_ctrl_t g_flanger_ctrl;
 #define FLANGER_NORMAL_MIX_LEVEL 0
 
 

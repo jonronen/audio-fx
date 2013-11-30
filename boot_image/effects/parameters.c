@@ -1,7 +1,12 @@
+#include "effects/effect_base.h"
 #include "effects/parameters.h"
 #include "effects/metronome.h"
 #include "lradc.h"
+#include "serial.h"
 
+
+
+pot_assign_t g_pot_assignments[MAX_LRADC_CHANNEL];
 
 
 /*
@@ -9,30 +14,35 @@
  */
 unsigned short g_overdrive_level[NUM_CHANNELS];
 unsigned short g_distortion_level[NUM_CHANNELS];
+param_ctrl_t g_overdrive_ctrl;
+param_ctrl_t g_distortion_ctrl;
 
 
 /*
  * low-pass level
  */
 unsigned short g_low_pass_level[NUM_CHANNELS];
+param_ctrl_t g_low_pass_ctrl;
 
 /*
  * resonance (goes together with low-pass filter)
  */
 unsigned short g_resonance_level[NUM_CHANNELS];
+param_ctrl_t g_resonance_ctrl;
 
 
 /*
  * high-pass level
- * TODO: units!
  */
 unsigned short g_high_pass_level[NUM_CHANNELS];
+param_ctrl_t g_high_pass_ctrl;
 
 
 /*
  * volume
  */
 unsigned short g_volume_factor[NUM_CHANNELS];
+param_ctrl_t g_volume_ctrl;
 
 
 /*
@@ -42,6 +52,7 @@ unsigned short g_flanger_low_freq_limit[NUM_CHANNELS];
 unsigned short g_flanger_high_freq_limit[NUM_CHANNELS];
 unsigned short g_flanger_frequency[NUM_CHANNELS];
 unsigned short g_flanger_mix_level[NUM_CHANNELS];
+param_ctrl_t g_flanger_ctrl;
 
 
 
@@ -273,13 +284,34 @@ unsigned short phase_to_sine_wave(unsigned char phase)
 }
 
 
+int assign_pot(unsigned char pot_index, pot_assign_t assignment)
+{
+    if ((pot_index < 0) || (pot_index >= MAX_LRADC_CHANNEL)) {
+        return -1;
+    }
 
-#define LRADC_CHANNEL 4
+    /* TODO: disable interrupts? lock mutex? */
+    g_pot_assignments[pot_index] = assignment;
+
+    return 0;
+}
 
 
 void parameters_setup()
 {
     int j;
+
+    for (j=0; j<MAX_LRADC_CHANNEL; j++) {
+        g_pot_assignments[j] = POT_ASSIGN_NONE;
+    }
+
+    g_overdrive_ctrl = PARAM_CTRL_FIXED;
+    g_distortion_ctrl = PARAM_CTRL_FIXED;
+    g_low_pass_ctrl = PARAM_CTRL_FIXED;
+    g_resonance_ctrl = PARAM_CTRL_FIXED;
+    g_high_pass_ctrl = PARAM_CTRL_FIXED;
+    g_volume_ctrl = PARAM_CTRL_FIXED;
+    g_flanger_ctrl = PARAM_CTRL_FIXED;
 
     /* clear all the parameters at start */
     for (j=0; j<NUM_CHANNELS; j++) {
@@ -295,18 +327,27 @@ void parameters_setup()
         g_flanger_mix_level[j] = FLANGER_NORMAL_MIX_LEVEL;
     }
 
-    lradc_setup_channel_for_polling(LRADC_CHANNEL);
+    lradc_setup_channels_for_polling();
 }
 
 
 void parameters_set()
 {
-    unsigned int tmp;
+    int tmp;
     int j;
 
-    /*
-     * test - control the low pass level with the potentiometer
-    tmp = lradc_read_channel(LRADC_CHANNEL);
+    for (j=0; j<MAX_LRADC_CHANNEL; j++) {
+        tmp = lradc_read_channel(j);
+        if (tmp != -1) {
+            serial_puts("lradc #");
+            serial_puthex(j);
+            serial_puts(": ");
+            serial_puthex(tmp);
+            serial_puts("\n");
+        }
+    }
+
+    /* test only
     for (j = 0; j < NUM_CHANNELS; j++) {
         g_low_pass_level[j] = two_exp_12bit_to_8bit(tmp);
     }
