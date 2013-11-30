@@ -20,16 +20,15 @@ CROSS_COMPILE ?= arm-linux-
 
 AS	= $(CROSS_COMPILE)as
 CC	= $(CROSS_COMPILE)g++
-LD	= $(CROSS_COMPILE)ld
+LD	= $(CROSS_COMPILE)g++
 CPP	= $(CROSS_COMPILE)cpp
 STRIP	= $(CROSS_COMPILE)strip
 OBJCOPY	= $(CROSS_COMPILE)objcopy
 OBJDUMP	= $(CROSS_COMPILE)objdump
 
 LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
-CFLAGS 	= -Wall -I$(INCLUDEDIR) -fno-exceptions -fno-builtin -O2 -DMEMORYSIZE=64
-LDFLAGS = -static -nostdlib -T $(BOOT_LAYOUT_OUT) -L$(LIBGCCDIR) -lgcc
-#LDFLAGS = -static -nostdlib -nolibc -T $(BOOT_LAYOUT_OUT)
+CFLAGS 	= -Wall -I$(INCLUDEDIR) -fno-common -fno-exceptions -fno-non-call-exceptions -fno-weak -fno-rtti -fno-builtin -O2 -DMEMORYSIZE=64
+LDFLAGS = -static -nostdlib -T $(BOOT_LAYOUT_OUT) -L$(LIBGCCDIR)
 
 CFLAGS += -fPIC
 
@@ -37,7 +36,7 @@ CFLAGS += -fPIC
 # Generic code
 UTILS_OBJS = str.o
 PLATFORM_OBJS = entry.o serial.o lradc.o dma.o mmu-arm.o icoll.o system.o audio_dma.o
-EFFECTS_OBJS = fx_main.o math.o parameters.o metronome.o
+EFFECTS_OBJS = fx_main.o math.o parameters.o metronome.o effect_base.o
 
 
 # IMPORTANT! entry.o should appear first - this is where execution starts

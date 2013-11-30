@@ -5,10 +5,6 @@
 isr_t isr_table[INT_SRC_NR_SOURCES*2] CACHEALIGN_ATTR IBSS_ATTR;
 
 
-isr_t isr_table[INT_SRC_NR_SOURCES*2] =
-{0};
-
-
 /*
  * IRQ handling
  */

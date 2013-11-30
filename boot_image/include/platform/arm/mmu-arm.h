@@ -9,6 +9,11 @@
 #define CACHE_NONE  0
 #define BUFFERED    0x04
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void memory_init(void);
 void ttb_init(void);
 void enable_mmu(void);
@@ -51,5 +56,9 @@ void discard_dcache_range(const void *base, unsigned int size);
 
 /* Discards the entire ICache, and commit+discards the entire DCache */
 void commit_discard_idcache(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* MMU_ARM_H */
