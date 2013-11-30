@@ -15,6 +15,14 @@
 #include "effects/metronome.h"
 
 
+#ifdef __cplusplus
+extern "C" {
+int fx_main();
+}
+#endif
+
+
+
 /*
  * low pass filter - we have the previous results and the deltas
  * (this enables us to do resonance as well)
@@ -50,8 +58,8 @@ static void modify_buffers(
     unsigned int num_channels
 )
 {
-    int i, j, sample;
-    unsigned int index;
+    int sample;
+    unsigned int i, j, index;
 
     // TODO: remove this min-max computation and print
     int min, max, curr;

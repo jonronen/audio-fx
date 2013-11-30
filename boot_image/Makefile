@@ -19,7 +19,7 @@ CHUMBY_BOOT_ROM	= $(OUTPUTDIR)/chumby_fx.rom
 CROSS_COMPILE ?= arm-linux-
 
 AS	= $(CROSS_COMPILE)as
-CC	= $(CROSS_COMPILE)gcc
+CC	= $(CROSS_COMPILE)g++
 LD	= $(CROSS_COMPILE)ld
 CPP	= $(CROSS_COMPILE)cpp
 STRIP	= $(CROSS_COMPILE)strip
@@ -27,7 +27,7 @@ OBJCOPY	= $(CROSS_COMPILE)objcopy
 OBJDUMP	= $(CROSS_COMPILE)objdump
 
 LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
-CFLAGS 	= -Wall -I$(INCLUDEDIR) -fno-builtin -O2 -nostdinc -DMEMORYSIZE=64
+CFLAGS 	= -Wall -I$(INCLUDEDIR) -fno-exceptions -fno-builtin -O2 -DMEMORYSIZE=64
 LDFLAGS = -static -nostdlib -T $(BOOT_LAYOUT_OUT) -L$(LIBGCCDIR) -lgcc
 #LDFLAGS = -static -nostdlib -nolibc -T $(BOOT_LAYOUT_OUT)
 
@@ -36,7 +36,7 @@ CFLAGS += -fPIC
 
 # Generic code
 UTILS_OBJS = str.o
-PLATFORM_OBJS = entry.o mmu-arm.o serial.o lradc.o dma.o icoll.o system.o audio_dma.o
+PLATFORM_OBJS = entry.o serial.o lradc.o dma.o mmu-arm.o icoll.o system.o audio_dma.o
 EFFECTS_OBJS = fx_main.o math.o parameters.o metronome.o
 
 
