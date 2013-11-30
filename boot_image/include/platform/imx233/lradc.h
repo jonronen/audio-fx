@@ -4,6 +4,9 @@
 #include "system.h"
 #include "system-target.h"
 
+
+#define MAX_USER_LRADC      5
+
 #define HW_LRADC_BASE       0x80050000
 
 #define HW_LRADC_CTRL0      (*(volatile uint32_t *)(HW_LRADC_BASE + 0x0))

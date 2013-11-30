@@ -26,6 +26,8 @@ define_cb(5)
 define_cb(6)
 define_cb(7)
 
+static unsigned int g_f_is_initialised = 0;
+
 void imx233_lradc_set_channel_irq_callback(int channel, lradc_irq_fn_t cb)
 {
     irq_cb[channel] = cb;
@@ -95,6 +97,10 @@ void imx233_lradc_wait_channel(int channel)
 
 int lradc_read_channel(int channel)
 {
+    /* check the channel index */
+    if ((channel < 0) || (channel > MAX_USER_LRADC)) {
+        return -1;
+    }
     return __XTRACT_EX(HW_LRADC_CHx(channel), HW_LRADC_CHx__VALUE);
 }
 
@@ -105,28 +111,40 @@ void imx233_lradc_clear_channel(int channel)
 
 void imx233_lradc_init(void)
 {
-    // enable block
-    imx233_reset_block(&HW_LRADC_CTRL0);
-    // disable ground ref
-    __REG_CLR(HW_LRADC_CTRL0) = HW_LRADC_CTRL0__ONCHIP_GROUNDREF;
-    // disable temperature sensors
-    __REG_CLR(HW_LRADC_CTRL2) = HW_LRADC_CTRL2__TEMP_SENSOR_IENABLE0 |
-        HW_LRADC_CTRL2__TEMP_SENSOR_IENABLE1;
-    __REG_SET(HW_LRADC_CTRL2) = HW_LRADC_CTRL2__TEMPSENSE_PWD;
-    // set frequency
-    __REG_CLR(HW_LRADC_CTRL3) = HW_LRADC_CTRL3__CYCLE_TIME_BM;
-    __REG_SET(HW_LRADC_CTRL3) = HW_LRADC_CTRL3__CYCLE_TIME__6MHz;
+    if (!g_f_is_initialised) {
+        g_f_is_initialised = 1;
+        // enable block
+        imx233_reset_block(&HW_LRADC_CTRL0);
+        // disable ground ref
+        __REG_CLR(HW_LRADC_CTRL0) = HW_LRADC_CTRL0__ONCHIP_GROUNDREF;
+        // disable temperature sensors
+        __REG_CLR(HW_LRADC_CTRL2) = HW_LRADC_CTRL2__TEMP_SENSOR_IENABLE0 |
+            HW_LRADC_CTRL2__TEMP_SENSOR_IENABLE1;
+        __REG_SET(HW_LRADC_CTRL2) = HW_LRADC_CTRL2__TEMPSENSE_PWD;
+        // set frequency
+        __REG_CLR(HW_LRADC_CTRL3) = HW_LRADC_CTRL3__CYCLE_TIME_BM;
+        __REG_SET(HW_LRADC_CTRL3) = HW_LRADC_CTRL3__CYCLE_TIME__6MHz;
+    }
 }
 
 
 #define LRADC_DELAY_INDEX 0
-void lradc_setup_channel_for_polling(unsigned char channel_index)
+void lradc_setup_channels_for_polling()
 {
+    unsigned char i;
+    int trigger_bitmap = 0; 
+
     imx233_lradc_init();
-    imx233_lradc_setup_channel(channel_index, 1, 0, 0, channel_index);
-    imx233_lradc_enable_channel_irq(channel_index, false);
-    imx233_lradc_clear_channel_irq(channel_index);
-    imx233_lradc_setup_delay(LRADC_DELAY_INDEX, 1<<channel_index, 1<<LRADC_DELAY_INDEX, 0, 100);
+
+    for (i=0; i<MAX_USER_LRADC; i++) {
+        imx233_lradc_setup_channel(i, 1, 0, 0, i);
+        imx233_lradc_enable_channel_irq(i, false);
+        imx233_lradc_clear_channel_irq(i);
+
+        trigger_bitmap |= 1<<i;
+    }
+
+    imx233_lradc_setup_delay(LRADC_DELAY_INDEX, trigger_bitmap, 1<<LRADC_DELAY_INDEX, 0, 100);
     imx233_lradc_kick_delay(LRADC_DELAY_INDEX);
 }
 
