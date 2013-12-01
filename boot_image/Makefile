@@ -34,14 +34,16 @@ CFLAGS += -fPIC
 
 
 # Generic code
-UTILS_OBJS = str.o
+UTILS_OBJS = str.o math.o
 PLATFORM_OBJS = entry.o serial.o lradc.o dma.o mmu-arm.o icoll.o system.o audio_dma.o
-EFFECTS_OBJS = fx_main.o math.o parameters.o metronome.o effect_base.o
+ENGINE_OBJS = fx_main.o parameters.o metronome.o
+EFFECTS_OBJS = effect_base.o
 
 
 # IMPORTANT! entry.o should appear first - this is where execution starts
 CHUMBY_BOOT_OBJS = $(addprefix $(PLATFORMDIR)/, $(PLATFORM_OBJS)) \
 		  $(addprefix utils/, $(UTILS_OBJS)) \
+		  $(addprefix engine/, $(ENGINE_OBJS)) \
 		  $(addprefix effects/, $(EFFECTS_OBJS))
 
 
