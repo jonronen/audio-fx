@@ -8,6 +8,10 @@
 #define NUM_CHANNELS 2
 
 
+/* allow up to 64 effects in parallel */
+#define MAX_EFFECT_COUNT 64
+
+
 /*
  * each parameter has a variable that describes
    how it is controlled:
@@ -32,27 +36,6 @@ typedef enum _param_ctrl_t {
     PARAM_CTRL_MAX
 } param_ctrl_t;
 
-
-typedef enum _pot_assign_t {
-    POT_ASSIGN_NONE,
-    POT_ASSIGN_DISTORTION_LEVEL,
-    POT_ASSIGN_DISTORTION_LFO,
-    POT_ASSIGN_OVERDRIVE_LEVEL,
-    POT_ASSIGN_OVERDRIVE_LFO,
-    POT_ASSIGN_LOW_PASS_LEVEL,
-    POT_ASSIGN_LOW_PASS_LFO,
-    POT_ASSIGN_RESONANCE_LEVEL,
-    POT_ASSIGN_RESONANCE_LFO,
-    POT_ASSIGN_HIGH_PASS_LEVEL,
-    POT_ASSIGN_HIGH_PASS_LFO,
-    POT_ASSIGN_VOLUME_LEVEL,
-    POT_ASSIGN_VOLUME_LFO,
-    POT_ASSIGN_FLANGER_LEVEL,
-    POT_ASSIGN_FLANGER_LFO,
-} pot_assign_t;
-
-
-extern pot_assign_t g_pot_assignments[MAX_LRADC_CHANNEL];
 
 
 /*

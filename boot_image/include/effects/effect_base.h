@@ -2,8 +2,8 @@
 #define __EFFECT_BASE_H__
 
 
-#include "effects/parameters.h"
-#include "effects/metronome.h"
+#include "engine/parameters.h"
+#include "engine/metronome.h"
 
 
 class effect_base_t {

@@ -1,5 +1,5 @@
-#include "effects/metronome.h"
-#include "effects/parameters.h"
+#include "engine/metronome.h"
+#include "engine/parameters.h"
 
 
 #define PHASES_PER_OP 256

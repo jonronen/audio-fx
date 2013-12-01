@@ -1,6 +1,6 @@
 #include "effects/effect_base.h"
-#include "effects/parameters.h"
-#include "effects/metronome.h"
+#include "engine/parameters.h"
+#include "engine/metronome.h"
 #include "lradc.h"
 
 

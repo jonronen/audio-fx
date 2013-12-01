@@ -1,12 +1,12 @@
 #include "effects/effect_base.h"
-#include "effects/parameters.h"
-#include "effects/metronome.h"
+#include "engine/parameters.h"
+#include "engine/metronome.h"
 #include "lradc.h"
 #include "serial.h"
 
 
 
-pot_assign_t g_pot_assignments[MAX_LRADC_CHANNEL];
+static effect_base_t* g_effects[MAX_EFFECT_COUNT];
 
 
 /*
@@ -284,26 +284,9 @@ unsigned short phase_to_sine_wave(unsigned char phase)
 }
 
 
-int assign_pot(unsigned char pot_index, pot_assign_t assignment)
-{
-    if ((pot_index < 0) || (pot_index >= MAX_LRADC_CHANNEL)) {
-        return -1;
-    }
-
-    /* TODO: disable interrupts? lock mutex? */
-    g_pot_assignments[pot_index] = assignment;
-
-    return 0;
-}
-
-
 void parameters_setup()
 {
     int j;
-
-    for (j=0; j<MAX_LRADC_CHANNEL; j++) {
-        g_pot_assignments[j] = POT_ASSIGN_NONE;
-    }
 
     g_overdrive_ctrl = PARAM_CTRL_FIXED;
     g_distortion_ctrl = PARAM_CTRL_FIXED;

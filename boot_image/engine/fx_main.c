@@ -11,8 +11,8 @@
 #include "system.h"
 #include "audio_dma.h"
 #include "math.h"
-#include "effects/parameters.h"
-#include "effects/metronome.h"
+#include "engine/parameters.h"
+#include "engine/metronome.h"
 
 
 #ifdef __cplusplus
