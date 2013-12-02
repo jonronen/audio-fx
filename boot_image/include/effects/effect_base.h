@@ -14,6 +14,7 @@ public:
         unsigned char phase_index,
         unsigned short op_index
     );
+    virtual unsigned short translate_level(unsigned short level);
 
     /* methods that use the parameters for modifying samples */
     virtual int process_sample(int sample, unsigned char channel);
@@ -27,6 +28,7 @@ protected:
         unsigned short levels[],
         unsigned short cnt
     );
+    effect_base_t();
 
 
 private:
@@ -39,7 +41,6 @@ private:
 
     bool m_updating_params;
 
-    effect_base_t();
     effect_base_t(const effect_base_t& other);
 };
 

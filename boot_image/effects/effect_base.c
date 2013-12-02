@@ -27,9 +27,14 @@ void effect_base_t::set_levels(unsigned short levels[NUM_CHANNELS])
     /* TODO: lock a mutex? disable interrupts? */
     m_updating_params = true;
     for (i=0; i<NUM_CHANNELS; i++) {
-        m_levels[i] = levels[i];
+        m_levels[i] = translate_level(levels[i]);
     }
     m_updating_params = false;
+}
+
+unsigned short effect_base_t::translate_level(unsigned short level)
+{
+    return level;
 }
 
 void effect_base_t::set_metronome_ops(
