@@ -37,7 +37,7 @@ CFLAGS += -fPIC
 UTILS_OBJS = str.o math.o
 PLATFORM_OBJS = entry.o serial.o lradc.o dma.o mmu-arm.o icoll.o system.o audio_dma.o
 ENGINE_OBJS = fx_main.o parameters.o metronome.o
-EFFECTS_OBJS = effect_base.o low_pass.o
+EFFECTS_OBJS = effect_base.o low_pass.o resonance.o
 
 
 # IMPORTANT! entry.o should appear first - this is where execution starts

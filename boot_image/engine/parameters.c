@@ -14,35 +14,29 @@ static effect_base_t* g_effects[MAX_EFFECT_COUNT];
  */
 unsigned short g_overdrive_level[NUM_CHANNELS];
 unsigned short g_distortion_level[NUM_CHANNELS];
-param_ctrl_t g_overdrive_ctrl;
-param_ctrl_t g_distortion_ctrl;
 
 
 /*
  * low-pass level
  */
 unsigned short g_low_pass_level[NUM_CHANNELS];
-param_ctrl_t g_low_pass_ctrl;
 
 /*
  * resonance (goes together with low-pass filter)
  */
 unsigned short g_resonance_level[NUM_CHANNELS];
-param_ctrl_t g_resonance_ctrl;
 
 
 /*
  * high-pass level
  */
 unsigned short g_high_pass_level[NUM_CHANNELS];
-param_ctrl_t g_high_pass_ctrl;
 
 
 /*
  * volume
  */
 unsigned short g_volume_factor[NUM_CHANNELS];
-param_ctrl_t g_volume_ctrl;
 
 
 /*
@@ -52,7 +46,6 @@ unsigned short g_flanger_low_freq_limit[NUM_CHANNELS];
 unsigned short g_flanger_high_freq_limit[NUM_CHANNELS];
 unsigned short g_flanger_frequency[NUM_CHANNELS];
 unsigned short g_flanger_mix_level[NUM_CHANNELS];
-param_ctrl_t g_flanger_ctrl;
 
 
 
@@ -287,14 +280,6 @@ unsigned short phase_to_sine_wave(unsigned char phase)
 void parameters_setup()
 {
     int j;
-
-    g_overdrive_ctrl = PARAM_CTRL_FIXED;
-    g_distortion_ctrl = PARAM_CTRL_FIXED;
-    g_low_pass_ctrl = PARAM_CTRL_FIXED;
-    g_resonance_ctrl = PARAM_CTRL_FIXED;
-    g_high_pass_ctrl = PARAM_CTRL_FIXED;
-    g_volume_ctrl = PARAM_CTRL_FIXED;
-    g_flanger_ctrl = PARAM_CTRL_FIXED;
 
     /* clear all the parameters at start */
     for (j=0; j<NUM_CHANNELS; j++) {

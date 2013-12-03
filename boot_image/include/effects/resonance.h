@@ -11,6 +11,12 @@
 
 
 class resonance_t : public effect_base_t {
+    friend class low_pass_t;
+
+public:
+    resonance_t();
+    unsigned short translate_level(unsigned short level);
+    int process_sample(int sample, unsigned char channel);
 };
 
 

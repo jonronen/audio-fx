@@ -49,12 +49,10 @@ typedef enum _param_ctrl_t {
  * but this is not the intention of this effect.
  */
 extern unsigned short g_overdrive_level[NUM_CHANNELS];
-extern param_ctrl_t g_overdrive_ctrl;
 #define OVERDRIVE_NORMAL_LEVEL 0x40
 
 /* TODO: distortion units */
 extern unsigned short g_distortion_level[NUM_CHANNELS];
-extern param_ctrl_t g_distortion_ctrl;
 #define DISTORTION_NORMAL_LEVEL 1
 
 
@@ -65,7 +63,6 @@ extern param_ctrl_t g_distortion_ctrl;
  * TODO: scale the units properly (exponential?)
  */
 extern unsigned short g_low_pass_level[NUM_CHANNELS];
-extern param_ctrl_t g_low_pass_ctrl;
 #define LOW_PASS_MAX_LEVEL 0x100
 
 /*
@@ -73,7 +70,6 @@ extern param_ctrl_t g_low_pass_ctrl;
  * units are from zero (no resonance) to 0x100 (TODO: consider more)
  */
 extern unsigned short g_resonance_level[NUM_CHANNELS];
-extern param_ctrl_t g_resonance_ctrl;
 #define RESONANCE_MAX_LEVEL 0x100
 #define RESONANCE_NORMAL_LEVEL 0
 
@@ -85,7 +81,6 @@ extern param_ctrl_t g_resonance_ctrl;
  * TODO: scale the units properly (exponential?)
  */
 extern unsigned short g_high_pass_level[NUM_CHANNELS];
-extern param_ctrl_t g_high_pass_ctrl;
 #define HIGH_PASS_MAX_LEVEL 0x100
 
 
@@ -99,7 +94,6 @@ extern param_ctrl_t g_high_pass_ctrl;
  * do not use this to turn up the volume. use overdrive instead.
  */
 extern unsigned short g_volume_factor[NUM_CHANNELS];
-extern param_ctrl_t g_volume_ctrl;
 #define VOLUME_NORMAL_LEVEL 0x100
 
 
@@ -110,7 +104,6 @@ extern unsigned short g_flanger_low_freq_limit[NUM_CHANNELS];
 extern unsigned short g_flanger_high_freq_limit[NUM_CHANNELS];
 extern unsigned short g_flanger_frequency[NUM_CHANNELS];
 extern unsigned short g_flanger_mix_level[NUM_CHANNELS];
-extern param_ctrl_t g_flanger_ctrl;
 #define FLANGER_NORMAL_MIX_LEVEL 0
 
 

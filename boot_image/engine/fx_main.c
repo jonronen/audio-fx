@@ -150,7 +150,7 @@ int fx_main()
     audio_setup();
     audio_dma_init(modify_buffers);
 
-    /* g_print_cnt = 0; */
+    g_print_cnt = 0;
 
     for (j=0; j<NUM_CHANNELS; j++) {
         g_low_pass_prev_result[j] = 0;

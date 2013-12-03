@@ -13,12 +13,14 @@
 class low_pass_t : public effect_base_t {
 public:
     low_pass_t(const resonance_t* reso);
-    virtual unsigned short translate_level(unsigned short level);
-    virtual int process_sample(int sample, unsigned char channel);
+    unsigned short translate_level(unsigned short level);
+    int process_sample(int sample, unsigned char channel);
 
 
 private:
     const resonance_t* m_p_resonance;
+    int m_prev_result[NUM_CHANNELS];
+    int m_prev_delta[NUM_CHANNELS];
 };
 
 
