@@ -30,11 +30,11 @@ protected:
     );
     effect_base_t();
 
+    unsigned short m_levels[NUM_CHANNELS];
 
 private:
     param_ctrl_t m_param_ctrl;
     unsigned short m_pot_index;
-    unsigned short m_levels[NUM_CHANNELS];
 
     metronome_op_t m_metronome_ops[MAX_DIVISION_FACTOR*MAX_PATTERN_UNITS];
     unsigned short m_metronome_levels[MAX_DIVISION_FACTOR*MAX_PATTERN_UNITS];
