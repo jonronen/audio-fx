@@ -11,6 +11,9 @@ low_pass_t::low_pass_t(const resonance_t* reso)
     int i;
     for (i=0; i<NUM_CHANNELS; i++) {
         levels[i] = LOW_PASS_MAX_LEVEL;
+
+        m_prev_result[i] = 0;
+        m_prev_delta[i] = 0;
     }
     set_levels(levels);
 }
