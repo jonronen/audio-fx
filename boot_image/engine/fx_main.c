@@ -13,6 +13,7 @@
 #include "math.h"
 #include "engine/parameters.h"
 #include "engine/metronome.h"
+#include "effects/effect_base.h"
 
 
 #ifdef __cplusplus
@@ -20,31 +21,6 @@ extern "C" {
 int fx_main();
 }
 #endif
-
-
-
-/*
- * low pass filter - we have the previous results and the deltas
- * (this enables us to do resonance as well)
- */
-static int g_low_pass_prev_result[NUM_CHANNELS];
-static int g_low_pass_prev_delta[NUM_CHANNELS];
-
-/*
- * high pass - we have the previous cleans and the previous results
- */
-static int g_high_pass_prev_result[NUM_CHANNELS];
-static int g_high_pass_prev_clean[NUM_CHANNELS];
-
-/*
- * flanger - we're keeping the current phase
- */
-static unsigned int g_flanger_phase[NUM_CHANNELS];
-
-/*
- * tremolo - a semi-phase
- */
-static unsigned int g_tremolo_phase[NUM_CHANNELS];
 
 
 /* for debugging - remove later */
@@ -59,7 +35,7 @@ static void modify_buffers(
 )
 {
     int sample;
-    unsigned int i, j, index;
+    unsigned int i, j, k, index;
 
     // TODO: remove this min-max computation and print
     int min, max, curr;
@@ -89,50 +65,10 @@ static void modify_buffers(
             index = i*num_channels + j;
             sample = in_buff[index] / 0x200; /* 23-bit is enough */
 
-            /* overdrive */
-            sample = limit_value_of_sample(
-                sample * (int)g_overdrive_level[j] / OVERDRIVE_NORMAL_LEVEL
-            );
-
-            /* distortion (TODO: doesn't work properly...) */
-            /*
-            sample = (
-                (sample + (int)g_distortion_level[j]/2) /
-                (int)g_distortion_level[j]
-            ) * (int)g_distortion_level[j];
-            */
-
-            /*
-             * low-pass first, high-pass next.
-             * low-pass result is high-pass clean
-            */
-            g_high_pass_prev_clean[j] = g_low_pass_prev_result[j];
-
-            /* low-pass with resonance */
-            g_low_pass_prev_delta[j] *= g_resonance_level[j];
-            g_low_pass_prev_delta[j] /= RESONANCE_MAX_LEVEL;
-            g_low_pass_prev_delta[j] +=
-                (((sample - g_low_pass_prev_result[j]) *
-                  (int)g_low_pass_level[j]) / LOW_PASS_MAX_LEVEL);
-            g_low_pass_prev_delta[j] = limit_value_of_delta(g_low_pass_prev_delta[j]);
-            sample = limit_value_of_sample(
-                g_low_pass_prev_result[j] + g_low_pass_prev_delta[j]
-            );
-            g_low_pass_prev_result[j] = sample;
-
-            /* high-pass */
-            sample = limit_value_of_sample(
-                (g_high_pass_prev_result[j] + sample-g_high_pass_prev_clean[j]) *
-                (int)g_high_pass_level[j] / HIGH_PASS_MAX_LEVEL
-            );
-            g_high_pass_prev_result[j] = sample;
-
-            /*
-             * in the end, do the volume adjustment.
-             * don't confuse this with overdrive,
-             * this is for effects like tremolo.
-             */
-            sample = sample * (int)g_volume_factor[j] / VOLUME_NORMAL_LEVEL;
+            for (k=0; k<MAX_EFFECT_COUNT; k++) {
+                if (g_effects[k] == NULL) break;
+                sample = g_effects[k]->process_sample(sample, j);
+            }
 
             out_buff[index] = sample * 0x200; /* scale back from 23-bit to 32 */
         }
@@ -144,25 +80,13 @@ static void modify_buffers(
 
 int fx_main()
 {
-    int j;
-
     system_init();
     audio_setup();
     audio_dma_init(modify_buffers);
 
     g_print_cnt = 0;
 
-    for (j=0; j<NUM_CHANNELS; j++) {
-        g_low_pass_prev_result[j] = 0;
-        g_low_pass_prev_delta[j] = 0;
-        g_high_pass_prev_result[j] = 0;
-        g_high_pass_prev_clean[j] = 0;
-        g_flanger_phase[j] = 0;
-        g_tremolo_phase[j] = 0;
-    }
-
     parameters_setup();
-    metronome_setup(140, 16, 4);
 
     serial_puts("initialisations complete\n");
 

@@ -44,6 +44,20 @@ void effect_base_t::set_levels(unsigned short levels[NUM_CHANNELS])
     m_updating_params = false;
 }
 
+void effect_base_t::set_fixed_level(unsigned short level)
+{
+    if (m_param_ctrl == PARAM_CTRL_FIXED) {
+        set_level(level);
+    }
+}
+
+void effect_base_t::set_fixed_levels(unsigned short levels[NUM_CHANNELS])
+{
+    if (m_param_ctrl == PARAM_CTRL_FIXED) {
+        set_levels(levels);
+    }
+}
+
 unsigned short effect_base_t::get_channel_level(unsigned char channel) const
 {
     return m_levels[channel];
@@ -81,7 +95,6 @@ void effect_base_t::set_metronome_ops(
 void effect_base_t::params_update()
 {
     int tmp;
-    int j;
 
     if ((m_param_ctrl == PARAM_CTRL_FIXED) ||
         (m_param_ctrl == PARAM_CTRL_EXTERNAL) ||
@@ -102,8 +115,17 @@ void effect_base_t::params_update()
         if (m_pot_index == MAX_LRADC_CHANNEL) return;
         tmp = lradc_read_channel(m_pot_index);
         if (tmp == -1) return;
+        m_lfo_freq = translate_lfo(tmp);
+    }
+}
+
+void effect_base_t::params_tick()
+{
+    int j;
+
+    if (m_param_ctrl == PARAM_CTRL_LFO) {
         for (j=0; j<NUM_CHANNELS; j++) {
-            m_lfo_cnt[j] += translate_lfo(tmp);
+            m_lfo_cnt[j] += m_lfo_freq;
             if (m_lfo_cnt[j] >= TICK_FREQUENCY) {
                 m_lfo_cnt[j] -= TICK_FREQUENCY;
                 m_lfo_phase[j]++;
@@ -118,12 +140,27 @@ void effect_base_t::metronome_phase(
     unsigned short op_index
 )
 {
+    unsigned short level;
+
+    if ((m_param_ctrl != PARAM_CTRL_METRONOME) &&
+        (m_param_ctrl != PARAM_CTRL_METRONOME_WITH_MANUAL_LEVEL))
+        return;
+
     /* get the raw level as an output from the metronome */
     unsigned short metronome_result =
         phase_perform_op(m_metronome_ops[op_index], phase_index);
 
-    /* the final level is a convex combination of the metronome and the default */
-    metronome_result = metronome_result * m_metronome_levels[op_index] / EFFECT_MAX_LEVEL;
+    /*
+     * the final level is a convex combination
+     * of the metronome/manual level and the default level
+     */
+    if (m_param_ctrl == PARAM_CTRL_METRONOME) {
+        level = m_metronome_levels[op_index];
+    }
+    else {
+        level = m_levels[0]; // assuming all channels are at the same level...
+    }
+    metronome_result = metronome_result * level / EFFECT_MAX_LEVEL;
     set_level(metronome_result);
 }
 
@@ -134,6 +171,7 @@ effect_base_t::effect_base_t()
 
     m_param_ctrl = PARAM_CTRL_FIXED;
     m_pot_index = MAX_LRADC_CHANNEL;
+    m_lfo_freq = 1;
 
     for (i=0; i<MAX_DIVISION_FACTOR*MAX_PATTERN_UNITS; i++) {
         m_metronome_ops[i] = METRONOME_OP_CONST_FULL;

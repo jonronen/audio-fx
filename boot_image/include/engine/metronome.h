@@ -38,11 +38,6 @@ void metronome_setup(
     unsigned char num_ops,
     unsigned char pattern_units
 );
-void metronome_set_ops(
-    metronome_op_type_t type,
-    metronome_op_t ops[],
-    unsigned short levels[]
-);
 void metronome_tick();
 void metronome_start();
 void metronome_stop();

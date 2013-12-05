@@ -75,6 +75,11 @@ SECTIONS
        *(.got.plt)
     } > DRAM
 
+    .init_array :
+    {
+       *(.init_array)
+    } > DRAM
+
     .stack (NOLOAD) :
     {
         *(.stack)

@@ -1,12 +1,27 @@
-#include "effects/effect_base.h"
 #include "engine/parameters.h"
 #include "engine/metronome.h"
 #include "lradc.h"
+#include "stdint.h"
 #include "serial.h"
+#include "utils/str.h"
+
+/* effects */
+#include "effects/effect_base.h"
+#include "effects/low_pass.h"
+#include "effects/high_pass.h"
+#include "effects/tremolo.h"
+#include "effects/overdrive.h"
+//#include "effects/distortion.h"
+#include "effects/flanger.h"
+#include "effects/resonance.h"
 
 
+effect_base_t* g_effects[MAX_EFFECT_COUNT];
 
-static effect_base_t* g_effects[MAX_EFFECT_COUNT];
+static resonance_t g_reso0;
+static resonance_t g_reso1;
+static low_pass_t  g_low_pass0(&g_reso0);
+static low_pass_t  g_low_pass1(&g_reso1);
 
 
 /*
@@ -302,21 +317,13 @@ unsigned short phase_perform_op(metronome_op_t op, unsigned char phase)
 
 void parameters_setup()
 {
-    int j;
+    memset(g_effects, 0x00, sizeof(g_effects));
 
-    /* clear all the parameters at start */
-    for (j=0; j<NUM_CHANNELS; j++) {
-        g_overdrive_level[j] = OVERDRIVE_NORMAL_LEVEL;
-        g_distortion_level[j] = DISTORTION_NORMAL_LEVEL;
-        g_low_pass_level[j] = LOW_PASS_MAX_LEVEL;
-        g_resonance_level[j] = 250; // test (TODO: restore this)
-        g_high_pass_level[j] = HIGH_PASS_MAX_LEVEL;
-        g_volume_factor[j] = VOLUME_NORMAL_LEVEL;
-        g_flanger_low_freq_limit[j] = 1;
-        g_flanger_high_freq_limit[j] = 1;
-        g_flanger_frequency[j] = 1;
-        g_flanger_mix_level[j] = FLANGER_NORMAL_MIX_LEVEL;
-    }
+    /* test - initialise the effects with a basic setup */
+    g_effects[0] = &g_reso0;
+    g_effects[0]->set_fixed_level(200);
+    g_effects[1] = &g_low_pass0;
+    g_effects[1]->set_ctrl(PARAM_CTRL_METRONOME);
 
     lradc_setup_channels_for_polling();
 }
@@ -324,37 +331,23 @@ void parameters_setup()
 
 void parameters_set()
 {
-    int tmp;
-    int j;
+    int i;
 
-    for (j=0; j<MAX_LRADC_CHANNEL; j++) {
-        tmp = lradc_read_channel(j);
-        if (tmp != -1) {
-            serial_puts("lradc #");
-            serial_puthex(j);
-            serial_puts(": ");
-            serial_puthex(tmp);
-            serial_puts("\n");
-        }
+    for (i=0; i<MAX_EFFECT_COUNT; i++) {
+        if (g_effects[i] == NULL) break;
+        g_effects[i]->params_update();
     }
-
-    /* test only
-    for (j = 0; j < NUM_CHANNELS; j++) {
-        g_low_pass_level[j] = two_exp_12bit_to_8bit(tmp);
-    }
-    */
-    /*
-     * TODO: set globals that determine how we control the parameters.
-     * options are:
-     * - with metronome operations (assign a metronome operation "set")
-     * - with pots
-     * - with values from the outside (UART/MIDI?)
-     */
 }
 
 
 void parameters_counter_increment()
 {
+    int i;
+
+    for (i=0; i<MAX_EFFECT_COUNT; i++) {
+        if (g_effects[i] == NULL) break;
+        g_effects[i]->params_tick();
+    }
     metronome_tick();
 }
 

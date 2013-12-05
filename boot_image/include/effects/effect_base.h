@@ -6,6 +6,7 @@
 #include "engine/metronome.h"
 
 
+
 /*
  * our levels are 12-bit unsigned integers
  * zero means no effect at all,
@@ -16,13 +17,24 @@
 
 class effect_base_t {
 public:
-    /* methods that update the parameters */
+    /*
+     * methods that update the parameters
+     */
+
+    /* update at ease :) */
     virtual void params_update();
+    /* update with a timer in mind */
+    virtual void params_tick();
+    /* update according to the metronome phase and operation */
     virtual void metronome_phase(
         unsigned char phase_index,
         unsigned short op_index
     );
 
+    /*
+     * the following methods are setup methods.
+     * try not to call them too much, only when really changing the setup
+     */
     void set_ctrl(param_ctrl_t ctrl);
     void set_pot_index(unsigned char index);
     void set_metronome_ops(
@@ -30,12 +42,14 @@ public:
         unsigned short levels[],
         unsigned short cnt
     );
+    void set_fixed_levels(unsigned short levels[NUM_CHANNELS]);
+    void set_fixed_level(unsigned short level);
 
     /* methods that use the parameters for modifying samples */
     virtual int process_sample(int sample, unsigned char channel);
 
 protected:
-    /* set levels on a per-channel bases. units are before translating: 12-bit */
+    /* set levels per-channel. units are before translating: 12-bit */
     void set_levels(unsigned short levels[NUM_CHANNELS]);
     /* set levels for all channels. units are before translating: 12-bit */
     void set_level(unsigned short level);
@@ -66,6 +80,7 @@ private:
     metronome_op_t m_metronome_ops[MAX_DIVISION_FACTOR*MAX_PATTERN_UNITS];
     unsigned short m_metronome_levels[MAX_DIVISION_FACTOR*MAX_PATTERN_UNITS];
 
+    unsigned short m_lfo_freq;
     unsigned char m_lfo_phase[NUM_CHANNELS];
     unsigned short m_lfo_cnt[NUM_CHANNELS];
     metronome_op_t m_lfo_op[NUM_CHANNELS];
@@ -76,6 +91,12 @@ private:
 
     effect_base_t(const effect_base_t& other);
 };
+
+
+
+/* allow up to 64 effects in parallel */
+#define MAX_EFFECT_COUNT 64
+extern effect_base_t* g_effects[MAX_EFFECT_COUNT];
 
 
 
