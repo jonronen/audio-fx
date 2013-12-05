@@ -14,8 +14,8 @@ int strlen(const char *s);
 char *strcpy(char *s1, const char *s2);
 int strncmp(const char *str1, const char *str2, int n);
 int strcmp(const char *str1, const char *str2);
-void *memcpy(void *s1, const void *s2, int n);
-void *memset(void *s, int c, int count);
+void *memcpy(void *s1, const void *s2, unsigned int n);
+void *memset(void *s, int c, unsigned int count);
 
 #define TOLOWER(x) ((x) | 0x20)
 /*

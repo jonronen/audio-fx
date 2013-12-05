@@ -1,6 +1,15 @@
 #include "utils/str.h"
 
-void *memset(void *s, int c, int count) {
+void *memcpy(void *dst, void *src, unsigned int count) {
+    char *xdst = (char*)dst;
+    char *xsrc = (char*)src;
+
+    while (count--)
+        *xdst++ = *xsrc++;
+    return dst;
+}   
+
+void *memset(void *s, int c, unsigned int count) {
     char *xs = (char*)s;
 
     while (count--)

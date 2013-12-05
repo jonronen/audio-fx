@@ -17,6 +17,11 @@ static inline int limit_value_of_delta(const int delta_value)
 }
 
 int scaled_sine_8_bit(const unsigned int degrees);
+unsigned int scaled_shifted_sine(
+    unsigned int min,
+    unsigned int max,
+    unsigned char phase
+);
 
 
 #endif /* __MATH_H__ */
