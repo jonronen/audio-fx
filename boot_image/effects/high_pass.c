@@ -6,15 +6,12 @@
 high_pass_t::high_pass_t()
     : effect_base_t()
 {
-    unsigned short levels[NUM_CHANNELS];
     int i;
     for (i=0; i<NUM_CHANNELS; i++) {
-        levels[i] = HIGH_PASS_MAX_LEVEL;
-
         m_prev_clean[i] = 0;
         m_prev_result[i] = 0;
     }
-    set_levels(levels);
+    set_level(HIGH_PASS_MAX_LEVEL);
 }
 
 
@@ -30,7 +27,7 @@ int high_pass_t::process_sample(int sample, unsigned char channel)
 
     sample = limit_value_of_sample(
         (m_prev_result[channel] + sample - m_prev_clean[channel]) *
-        (int)m_levels[channel] / HIGH_PASS_MAX_LEVEL
+        (int)get_channel_level(channel) / HIGH_PASS_MAX_LEVEL
     );
     m_prev_result[channel] = sample;
     m_prev_clean[channel] = saved_sample;

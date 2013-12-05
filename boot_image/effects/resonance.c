@@ -5,12 +5,7 @@
 resonance_t::resonance_t()
     : effect_base_t()
 {
-    unsigned short levels[NUM_CHANNELS];
-    int i;
-    for (i=0; i<NUM_CHANNELS; i++) {
-        levels[i] = RESONANCE_MAX_LEVEL;
-    }
-    set_levels(levels);
+    set_level(RESONANCE_MAX_LEVEL);
 }
 
 

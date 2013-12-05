@@ -6,12 +6,7 @@
 overdrive_t::overdrive_t()
     : effect_base_t()
 {
-    unsigned short levels[NUM_CHANNELS];
-    int i;
-    for (i=0; i<NUM_CHANNELS; i++) {
-        levels[i] = OVERDRIVE_NORMAL_LEVEL;
-    }
-    set_levels(levels);
+    set_level(OVERDRIVE_NORMAL_LEVEL);
 }
 
 
@@ -24,7 +19,7 @@ unsigned short overdrive_t::translate_level(unsigned short level)
 int overdrive_t::process_sample(int sample, unsigned char channel)
 {
     return limit_value_of_sample(
-        sample * (int)m_levels[channel] / OVERDRIVE_MAX_LEVEL
+        sample * (int)get_channel_level(channel) / OVERDRIVE_MAX_LEVEL
     );
 }
 

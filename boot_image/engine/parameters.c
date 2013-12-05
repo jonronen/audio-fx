@@ -134,38 +134,38 @@ unsigned short two_exp_12bit_to_8bit(unsigned short raw_value)
  * square wave (either min or max)
  */
 static const unsigned short g_square_phase[] = {
-    0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100,
-    0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100,
-    0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100,
-    0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100,
-    0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100,
-    0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100,
-    0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100,
-    0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100,
-    0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100,
-    0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100,
-    0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100,
-    0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100,
-    0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100,
-    0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100,
-    0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100,
-    0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100,
-    0,     0,     0,     0,     0,     0,     0,     0,
-    0,     0,     0,     0,     0,     0,     0,     0,
-    0,     0,     0,     0,     0,     0,     0,     0,
-    0,     0,     0,     0,     0,     0,     0,     0,
-    0,     0,     0,     0,     0,     0,     0,     0,
-    0,     0,     0,     0,     0,     0,     0,     0,
-    0,     0,     0,     0,     0,     0,     0,     0,
-    0,     0,     0,     0,     0,     0,     0,     0,
-    0,     0,     0,     0,     0,     0,     0,     0,
-    0,     0,     0,     0,     0,     0,     0,     0,
-    0,     0,     0,     0,     0,     0,     0,     0,
-    0,     0,     0,     0,     0,     0,     0,     0,
-    0,     0,     0,     0,     0,     0,     0,     0,
-    0,     0,     0,     0,     0,     0,     0,     0,
-    0,     0,     0,     0,     0,     0,     0,     0,
-    0,     0,     0,     0,     0,     0,     0,     0,
+    0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000,
+    0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000,
+    0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000,
+    0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000,
+    0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000,
+    0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000,
+    0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000,
+    0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000,
+    0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000,
+    0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000,
+    0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000,
+    0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000,
+    0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000,
+    0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000,
+    0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000,
+    0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000,
+    0,      0,      0,      0,      0,      0,      0,      0,
+    0,      0,      0,      0,      0,      0,      0,      0,
+    0,      0,      0,      0,      0,      0,      0,      0,
+    0,      0,      0,      0,      0,      0,      0,      0,
+    0,      0,      0,      0,      0,      0,      0,      0,
+    0,      0,      0,      0,      0,      0,      0,      0,
+    0,      0,      0,      0,      0,      0,      0,      0,
+    0,      0,      0,      0,      0,      0,      0,      0,
+    0,      0,      0,      0,      0,      0,      0,      0,
+    0,      0,      0,      0,      0,      0,      0,      0,
+    0,      0,      0,      0,      0,      0,      0,      0,
+    0,      0,      0,      0,      0,      0,      0,      0,
+    0,      0,      0,      0,      0,      0,      0,      0,
+    0,      0,      0,      0,      0,      0,      0,      0,
+    0,      0,      0,      0,      0,      0,      0,      0,
+    0,      0,      0,      0,      0,      0,      0,      0,
 };
 
 unsigned short phase_to_square_wave(unsigned char phase)
@@ -177,6 +177,7 @@ unsigned short phase_to_square_wave(unsigned char phase)
 /*
  * triangular wave (linear fade-out, then linear fade-in)
  */
+/* TODO: change this to 12-bit instead of 8-bit */
 static const unsigned short g_triangular_phase[] = {
     0x100, 0xfe,  0xfc,  0xfa,  0xf8,  0xf6,  0xf4,  0xf2,
     0xf0,  0xee,  0xec,  0xea,  0xe8,  0xe6,  0xe4,  0xe2,
@@ -223,7 +224,7 @@ unsigned short phase_to_triangular_wave(unsigned char phase)
  */
 unsigned short phase_to_sawtooth_wave(unsigned char phase)
 {
-    return phase+1;
+    return (phase+1)*16;
 }
 
 
@@ -232,10 +233,11 @@ unsigned short phase_to_sawtooth_wave(unsigned char phase)
  */
 unsigned short phase_to_reverse_sawtooth_wave(unsigned char phase)
 {
-    return 0x100 - phase;
+    return 0x1000 - (phase*16);
 }
 
 
+/* TODO: change this to 12-bit instead of 8-bit */
 static const unsigned short g_sine_phase[] = {
     0x100, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0xfe,
     0xfd, 0xfc, 0xfc, 0xfb, 0xfa, 0xf9, 0xf8, 0xf7,
@@ -274,6 +276,27 @@ static const unsigned short g_sine_phase[] = {
 unsigned short phase_to_sine_wave(unsigned char phase)
 {
     return g_sine_phase[phase];
+}
+
+unsigned short phase_perform_op(metronome_op_t op, unsigned char phase)
+{
+    switch(op) {
+      case METRONOME_OP_CONST_NONE:
+        return 0;
+      case METRONOME_OP_CONST_FULL:
+        return 0x1000;
+      case METRONOME_OP_LINEAR_RISE:
+        return phase_to_sawtooth_wave(phase); 
+      case METRONOME_OP_LINEAR_FALL:
+        return phase_to_reverse_sawtooth_wave(phase);
+      case METRONOME_OP_SINE_RISE:
+        /* TODO */
+      case METRONOME_OP_SINE_FALL:
+      case METRONOME_OP_EXP_RISE:
+      case METRONOME_OP_EXP_FALL:
+      default:
+        return 0;
+    }
 }
 
 
