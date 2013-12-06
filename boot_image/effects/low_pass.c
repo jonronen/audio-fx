@@ -12,7 +12,6 @@ low_pass_t::low_pass_t(const resonance_t* reso)
         m_prev_result[i] = 0;
         m_prev_delta[i] = 0;
     }
-    set_level(LOW_PASS_MAX_LEVEL);
 }
 
 

@@ -9,6 +9,7 @@ void effect_base_t::set_ctrl(param_ctrl_t ctrl)
     /* TODO: lock a mutex? disable interrupts? */
     m_updating_params = true;
     m_param_ctrl = ctrl;
+    /* TODO: based on the ctrl, set the level (MAX, etc.) */
     m_updating_params = false;
 }
 
@@ -65,7 +66,7 @@ unsigned short effect_base_t::get_channel_level(unsigned char channel) const
 
 unsigned short effect_base_t::translate_level(unsigned short level) const
 {
-    return level;
+    return level/0x10;
 }
 
 unsigned short effect_base_t::translate_lfo(unsigned short lfo) const
@@ -160,7 +161,10 @@ void effect_base_t::metronome_phase(
     else {
         level = m_levels[0]; // assuming all channels are at the same level...
     }
-    metronome_result = metronome_result * level / EFFECT_MAX_LEVEL;
+    metronome_result = (unsigned short)(
+        (unsigned int)metronome_result * (unsigned int)level /
+        EFFECT_MAX_LEVEL
+    );
     set_level(metronome_result);
 }
 
@@ -173,10 +177,18 @@ effect_base_t::effect_base_t()
     m_pot_index = MAX_LRADC_CHANNEL;
     m_lfo_freq = 1;
 
+    for (i=0; i<NUM_CHANNELS; i++) {
+        m_lfo_op[i] = METRONOME_OP_CONST_FULL;
+        m_lfo_cnt[i] = 0;
+        m_lfo_phase[i] = 0;
+    }
+
     for (i=0; i<MAX_DIVISION_FACTOR*MAX_PATTERN_UNITS; i++) {
         m_metronome_ops[i] = METRONOME_OP_CONST_FULL;
         m_metronome_levels[i] = 0;
     }
+
+    set_level(0);
 
     m_updating_params = false;
 }

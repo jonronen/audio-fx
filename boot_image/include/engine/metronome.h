@@ -22,16 +22,6 @@ typedef enum _metronome_op_t {
     METRONOME_OP_MAX
 } metronome_op_t;
 
-typedef enum _metronome_op_type_t {
-    OP_TYPE_VOLUME,
-    OP_TYPE_LOW_PASS,
-    OP_TYPE_RESONANCE,
-    OP_TYPE_HIGH_PASS,
-    OP_TYPE_FLANGER,
-    OP_TYPE_DISTORTION,
-    OP_TYPE_MAX
-} metronome_op_type_t;
-
 
 void metronome_setup(
     unsigned short freq,

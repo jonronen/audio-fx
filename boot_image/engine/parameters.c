@@ -18,10 +18,10 @@
 
 effect_base_t* g_effects[MAX_EFFECT_COUNT];
 
-static resonance_t g_reso0;
-static resonance_t g_reso1;
-static low_pass_t  g_low_pass0(&g_reso0);
-static low_pass_t  g_low_pass1(&g_reso1);
+//static resonance_t g_reso0;
+//static resonance_t g_reso1;
+//static low_pass_t  g_low_pass0(&g_reso0);
+//static low_pass_t  g_low_pass1(&g_reso1);
 
 
 /*
@@ -320,10 +320,11 @@ void parameters_setup()
     memset(g_effects, 0x00, sizeof(g_effects));
 
     /* test - initialise the effects with a basic setup */
-    g_effects[0] = &g_reso0;
-    g_effects[0]->set_fixed_level(200);
-    g_effects[1] = &g_low_pass0;
-    g_effects[1]->set_ctrl(PARAM_CTRL_METRONOME);
+    //g_effects[0] = &g_reso0;
+    //g_effects[0]->set_fixed_level(200);
+    //g_effects[1] = &g_low_pass0;
+    //g_effects[1]->set_ctrl(PARAM_CTRL_METRONOME);
+    //g_effects[2] = (effect_base_t*)NULL;
 
     lradc_setup_channels_for_polling();
 }
