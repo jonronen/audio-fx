@@ -83,14 +83,6 @@ static void modify_buffers(
 
 int fx_main()
 {
-    resonance_t reso0;
-    low_pass_t low_pass0(&reso0);
-
-    metronome_op_t metr_ops[2] = {
-        METRONOME_OP_LINEAR_FALL, METRONOME_OP_LINEAR_FALL
-    };
-    unsigned short metr_levels[2] = {0x1000, 0x1000};
-
     system_init();
     audio_setup();
     audio_dma_init(modify_buffers);
@@ -105,14 +97,6 @@ int fx_main()
     metronome_setup(120, 2, 1);
 
     audio_dma_start();
-
-    g_effects[0] = &reso0;
-    g_effects[1] = &low_pass0;
-    g_effects[2] = (effect_base_t*)NULL;
-
-    g_effects[0]->set_fixed_level(3200);
-    g_effects[1]->set_ctrl(PARAM_CTRL_METRONOME);
-    g_effects[1]->set_metronome_ops(metr_ops, metr_levels, 2);
 
     // test - start the metronome
     metronome_start();

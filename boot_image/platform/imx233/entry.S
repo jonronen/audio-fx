@@ -40,6 +40,7 @@ start:
 
     bl    copy_iram
     bl    clear_ibss
+    bl    clear_bss
 
     /* Set up stack for IRQ mode */ 
     msr     cpsr_c, #0xd2
@@ -68,8 +69,21 @@ start:
     cmp     sp, r2
     strhi   r3, [r2], #4
     bhi     1b
-    
-    /* Enter the Chumby boot shell */
+
+    /* call the c++ static constructors */
+    ldr     r4, =init_array_end
+    ldr     r5, =init_array_begin
+2:
+    cmp     r4, r5
+    bhi     3f
+    b       4f
+3:
+    ldr     r3, [r5], #4
+    blx     r3
+    b       2b
+4:
+
+    /* time to go maaaain! */
     bl fx_main
 
     .pool
@@ -94,11 +108,23 @@ copy_iram:
 
 
 /*
- * This function clears out the .bss section.
+ * This function clears out the .ibss section.
  */
 clear_ibss:
     ldr    r0, =_ibss_start
     ldr    r1, =_ibss_end
+    mov    r2, #0
+1:    str    r2, [r0], #4
+    cmp    r0, r1
+    blo    1b
+    mov    pc, lr
+
+/*
+ * This function clears out the .bss section.
+ */
+clear_bss:
+    ldr    r0, =_bss_start
+    ldr    r1, =_bss_end
     mov    r2, #0
 1:    str    r2, [r0], #4
     cmp    r0, r1

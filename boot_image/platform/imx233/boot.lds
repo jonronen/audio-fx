@@ -75,6 +75,13 @@ SECTIONS
        *(.got.plt)
     } > DRAM
 
+    .init_array :
+    {
+       init_array_begin = .;
+       *(.init_array)
+       init_array_end = .;
+    } > DRAM
+
     .stack (NOLOAD) :
     {
         *(.stack)
@@ -94,7 +101,7 @@ SECTIONS
     /* treat .bss and .ncbss as a single section */
     .bss (NOLOAD) :
     {
-        _edata = .;
+        _bss_start = .;
         *(.bss*);
     } > DRAM
 
@@ -108,6 +115,6 @@ SECTIONS
 
     .bssendadr (NOLOAD) :
     {
-        _end = .;
+        _bss_end = .;
     } > DRAM
 }
