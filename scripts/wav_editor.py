@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import struct, sys, math
 from optparse import OptionParser
 from collections import namedtuple
@@ -203,8 +204,19 @@ if __name__ == "__main__":
     
     outfile.write(hdr)
     
-    WaveHdr = namedtuple('WaveHdr', 'tag total_len fmt_tag bits a b rate c d e data_tag data_len')
+    WaveHdr = namedtuple(
+        'WaveHdr',
+        'tag total_len fmt_tag bits a ch rate bt algn bps data_tag data_len'
+    )
     unpacked_hdr = WaveHdr._make(struct.unpack("<4sI8sIHHIIHH4sI", hdr))
+    if unpacked_hdr.tag != "RIFF" or \
+            unpacked_hdr.fmt_tag != "WAVEfmt " or \
+            unpacked_hdr.data_tag != "data":
+        print "input file is not a wav file"
+        sys.exit()
+    if unpacked_hdr.bits != 16 or unpacked_hdr.bps != 16:
+        print "expected 16-bit wav file"
+        sys.exit()
     
     prev_buff_left = [0]*NUM_SAMPLES
     prev_buff_right = [0]*NUM_SAMPLES
@@ -219,23 +231,38 @@ if __name__ == "__main__":
     
     data_len = unpacked_hdr.data_len
     
-    while data_len >= NUM_SAMPLES*2*2:
-        curr_buff = infile.read(NUM_SAMPLES*2*2)
+    while data_len >= NUM_SAMPLES*2*unpacked_hdr.ch:
+        curr_buff = infile.read(NUM_SAMPLES*2*unpacked_hdr.ch)
         data_len -= len(curr_buff)
         
-        # turn into numbers, separating left and right
-        curr_buff_left = list(struct.unpack("<" + "hxx"*NUM_SAMPLES, curr_buff))
-        curr_buff_right = list(struct.unpack("<" + "xxh"*NUM_SAMPLES, curr_buff))
+        # turn into numbers, separating left and right if needed
+        if unpacked_hdr.ch == 1:
+            curr_buff_left = list(struct.unpack(
+                "<" + "h"*NUM_SAMPLES, curr_buff
+            ))
+            curr_buff_right = [0] * NUM_SAMPLES
+        else:
+            curr_buff_left = list(struct.unpack(
+                "<" + "hxx"*NUM_SAMPLES, curr_buff
+            ))
+            curr_buff_right = list(struct.unpack(
+                "<" + "xxh"*NUM_SAMPLES, curr_buff
+            ))
         mod_buff_left = modify_data(
             curr_buff_left, prev_buff_left,
-            prev_mod_buff_left, prevv_mod_buff_left, prevvv_mod_buff_left, prevvvv_mod_buff_left,
+            prev_mod_buff_left, prevv_mod_buff_left,
+            prevvv_mod_buff_left, prevvvv_mod_buff_left,
             options, 0
         )
-        mod_buff_right = modify_data(
-            curr_buff_right, prev_buff_right,
-            prev_mod_buff_right, prevv_mod_buff_right, prevvv_mod_buff_right, prevvvv_mod_buff_right,
-            options, 1
-        )
+        if unpacked_hdr.ch > 1:
+            mod_buff_right = modify_data(
+                curr_buff_right, prev_buff_right,
+                prev_mod_buff_right, prevv_mod_buff_right,
+                prevvv_mod_buff_right, prevvvv_mod_buff_right,
+                options, 1
+            )
+        else:
+            mod_buff_right = [0] * NUM_SAMPLES
         
         # current -> previous
         prev_buff_left = curr_buff_left
@@ -249,14 +276,22 @@ if __name__ == "__main__":
         prev_mod_buff_left = mod_buff_left
         prev_mod_buff_right = mod_buff_right
         
-        # interleave the modified buffers and write them to the output file
-        mod_buff = zip(mod_buff_left, mod_buff_right)
-        mod_buff = map(list, mod_buff)
-        mod_buff = reduce(lambda x,y: x+y, mod_buff, [])
-        mod_buff = struct.pack("<" + "hh"*NUM_SAMPLES, *mod_buff)
+        if unpacked_hdr.ch > 1:
+            # interleave the modified buffers and write them to the output file
+            mod_buff = zip(mod_buff_left, mod_buff_right)
+            mod_buff = map(list, mod_buff)
+            mod_buff = reduce(lambda x,y: x+y, mod_buff, [])
+        else:
+            mod_buff = mod_buff_left
+
+        if unpacked_hdr.ch == 1:
+            mod_buff = struct.pack("<" + "h"*NUM_SAMPLES, *mod_buff)
+        else:
+            mod_buff = struct.pack("<" + "hh"*NUM_SAMPLES, *mod_buff)
         outfile.write(mod_buff)
     
     # handle the remainder
     outfile.write(infile.read())
     outfile.close()
     infile.close()
+
