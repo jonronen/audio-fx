@@ -98,7 +98,7 @@ int fx_main()
 
     audio_dma_start();
 
-    // test - start the metronome
+    // start the metronome
     metronome_start();
 
     while(1) {

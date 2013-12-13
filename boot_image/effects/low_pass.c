@@ -23,11 +23,11 @@ unsigned short low_pass_t::translate_level(unsigned short level)
 
 int low_pass_t::process_sample(int sample, unsigned char channel)
 {
-    m_prev_delta[channel] *= m_p_resonance->get_channel_level(channel);
-    m_prev_delta[channel] /= RESONANCE_MAX_LEVEL;
+    m_prev_delta[channel] *= (int)m_p_resonance->get_channel_level(channel);
+    m_prev_delta[channel] /= (int)RESONANCE_MAX_LEVEL;
     m_prev_delta[channel] +=
-        (((sample - m_prev_result[channel]) *
-          (int)get_channel_level(channel)) / LOW_PASS_MAX_LEVEL);
+        (int)(((sample - m_prev_result[channel]) *
+               (int)get_channel_level(channel)) / LOW_PASS_MAX_LEVEL);
     m_prev_delta[channel] = limit_value_of_delta(m_prev_delta[channel]);
     sample = limit_value_of_sample(
         m_prev_result[channel] + m_prev_delta[channel]

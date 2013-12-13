@@ -2,6 +2,7 @@
 #include "engine/parameters.h"
 #include "engine/metronome.h"
 #include "lradc.h"
+#include "serial.h"
 
 
 void effect_base_t::set_ctrl(param_ctrl_t ctrl)
@@ -107,6 +108,11 @@ void effect_base_t::params_update()
         if (m_pot_index != MAX_LRADC_CHANNEL) {
             tmp = lradc_read_channel(m_pot_index);
             if (tmp != -1) {
+                serial_puts("pot #");
+                serial_puthex(m_pot_index);
+                serial_puts(": ");
+                serial_puthex(tmp);
+                serial_puts("\n");
                 set_level(tmp);
             }
         }

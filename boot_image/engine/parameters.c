@@ -326,11 +326,17 @@ void parameters_setup()
 
     /* test - initialise the effects with a basic setup */
     g_effects[0] = &g_reso0;
-    g_effects[0]->set_fixed_level(3200);
-    g_effects[1] = &g_low_pass0;
-    g_effects[1]->set_ctrl(PARAM_CTRL_METRONOME);
-    g_effects[1]->set_metronome_ops(metr_ops, metr_levels, 2);
-    g_effects[2] = (effect_base_t*)NULL;
+    //g_effects[0]->set_fixed_level(3200);
+    g_effects[0]->set_fixed_level(0);
+    g_effects[1] = (effect_base_t*)NULL;
+
+    //g_effects[1] = &g_low_pass0;
+    //g_effects[1]->set_ctrl(PARAM_CTRL_METRONOME);
+    //g_effects[1]->set_metronome_ops(metr_ops, metr_levels, 2);
+    //g_effects[1]->set_ctrl(PARAM_CTRL_MANUAL);
+    //g_effects[1]->set_pot_index(4);
+
+    //g_effects[2] = (effect_base_t*)NULL;
 
     lradc_setup_channels_for_polling();
 }
