@@ -16,7 +16,7 @@ CFLAGS = -Wall -I$(INCLUDEDIR) -O2
 LDFLAGS = -lasound
 
 
-PLATFORM_OBJS = system
+PLATFORM_OBJS = system nonsense
 
 ALSA_OBJS = $(addsuffix .$(PLATFORM).o, \
 	      $(addprefix $(PLATFORMDIR)/, $(PLATFORM_OBJS))) \

@@ -2,6 +2,14 @@
 #define __system_h__
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+int fx_main();
+#ifdef __cplusplus
+}
+#endif
+
 void system_init();
 
 void udelay(unsigned int us);
