@@ -1,7 +1,7 @@
-chumby-multi-fx
-===============
+Audio-FX
+========
 
-An audio effects platform based on the Chumby Hacker Board.
+An audio effects platform based on the Chumby Hacker Board (and soon on other platforms as well :).
 
 See http://wiki.chumby.com/index.php?title=Chumby_hacker_board_beta for more information on the Chumby Hacker Board.
 
