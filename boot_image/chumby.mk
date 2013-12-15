@@ -1,6 +1,6 @@
 CURRENTDIR	= .
 PLATFORMDIR	= $(CURRENTDIR)/platform/imx233
-OUTPUTDIR	= $(CURRENTDIR)/output
+OUTPUTDIR	= $(CURRENTDIR)/output_chumby
 
 INCLUDEDIR	= $(CURRENTDIR)/include
 
@@ -27,24 +27,18 @@ OBJCOPY	= $(CROSS_COMPILE)objcopy
 OBJDUMP	= $(CROSS_COMPILE)objdump
 
 LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
-CFLAGS 	= -Wall -I$(INCLUDEDIR) -fno-common -fno-exceptions -fno-non-call-exceptions -fno-weak -fno-rtti -fno-builtin -O2 -DMEMORYSIZE=64
+CFLAGS	= -Wall -I$(INCLUDEDIR)
+CFLAGS	+= -fno-common -fno-exceptions -fno-non-call-exceptions -fno-weak -fno-rtti -fno-builtin
+CFLAGS	+= -O2 -DMEMORYSIZE=64 -fPIC
 LDFLAGS = -static -nostdlib -T $(BOOT_LAYOUT_OUT) -L$(LIBGCCDIR)
 
-CFLAGS += -fPIC
 
-
-# Generic code
-UTILS_OBJS = str.o math.o
-PLATFORM_OBJS = entry.o serial.o lradc.o dma.o mmu-arm.o icoll.o system.o audio_dma.o
-ENGINE_OBJS = fx_main.o parameters.o metronome.o
-EFFECTS_OBJS = effect_base.o flanger.o overdrive.o tremolo.o high_pass.o low_pass.o resonance.o
-
+PLATFORM_OBJS = entry serial lradc dma mmu-arm icoll system audio_dma
 
 # IMPORTANT! entry.o should appear first - this is where execution starts
-CHUMBY_BOOT_OBJS = $(addprefix $(PLATFORMDIR)/, $(PLATFORM_OBJS)) \
-		  $(addprefix utils/, $(UTILS_OBJS)) \
-		  $(addprefix engine/, $(ENGINE_OBJS)) \
-		  $(addprefix effects/, $(EFFECTS_OBJS))
+CHUMBY_BOOT_OBJS = $(addsuffix .$(PLATFORM).o, \
+			 $(addprefix $(PLATFORMDIR)/, $(PLATFORM_OBJS))) \
+		   $(GENERIC_OBJS)
 
 
 # Default goal
@@ -57,10 +51,10 @@ all: build
 # Define an implicit rule for assembler files
 # to run them through C preprocessor
 #
-%.o: %.S
+%.$(PLATFORM).o: %.S
 	$(CC) -c $(CFLAGS) -D__ASSEMBLY__ -o $@ $<
 
-%.o: %.c
+%.$(PLATFORM).o: %.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 #
