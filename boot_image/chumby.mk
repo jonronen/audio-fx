@@ -73,8 +73,8 @@ clean:
 	rm -rf $(CHUMBY_BOOT_OBJS) $(BOOT_LAYOUT_OUT)
 	@echo Build output:
 	rm -rf $(OUTPUTDIR)
-	@echo Build system:
-	rm -rf $(INCLUDEDIR)/arch
+	@echo Image:
+	rm -rf startup.img
 
 ##
 ## Rules to build linux_prep image
