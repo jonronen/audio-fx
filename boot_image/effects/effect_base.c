@@ -106,14 +106,17 @@ void effect_base_t::params_update()
     else if ((m_param_ctrl == PARAM_CTRL_MANUAL) ||
              (m_param_ctrl == PARAM_CTRL_METRONOME_WITH_MANUAL_LEVEL)) {
         if (m_pot_index != MAX_LRADC_CHANNEL) {
+            //serial_puts("pot #");
+            //serial_puthex(m_pot_index);
             tmp = lradc_read_channel(m_pot_index);
             if (tmp != -1) {
-                serial_puts("pot #");
-                serial_puthex(m_pot_index);
-                serial_puts(": ");
-                serial_puthex(tmp);
-                serial_puts("\n");
+                //serial_puts(": ");
+                //serial_puthex(tmp);
+                //serial_puts("\n");
                 set_level(tmp);
+            }
+            else {
+                //serial_puts(" returned -1\n");
             }
         }
     }

@@ -93,9 +93,6 @@ int fx_main()
 
     serial_puts("initialisations complete\n");
 
-    // test - initialise the metronome with some fixed parameters
-    metronome_setup(120, 2, 1);
-
     audio_dma_start();
 
     // start the metronome
