@@ -83,6 +83,12 @@ start:
     b       2b
 4:
 
+    /*
+     * now that everything is in place, enable the caches
+     * (the function says enable MMU, but we don't really need the MMU...
+     */
+    bl enable_mmu
+
     /* time to go maaaain! */
     bl fx_main
 

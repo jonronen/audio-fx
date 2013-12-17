@@ -112,7 +112,7 @@ enable_mmu:
     mcr     p15, 0, r0, c8, c7, 0   @ invalidate TLB
     mcr     p15, 0, r0, c7, c7,0    @ invalidate both i and dcache
     mrc     p15, 0, r0, c1, c0, 0   @
-    orr     r0, r0, #1              @ enable mmu bit, i and dcache
+    /* orr     r0, r0, #1              @ enable mmu bit, i and dcache */
     orr     r0, r0, #1<<2           @ enable dcache
     orr     r0, r0, #1<<12          @ enable icache
     mcr     p15, 0, r0, c1, c0, 0   @

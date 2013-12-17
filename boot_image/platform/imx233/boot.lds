@@ -88,11 +88,11 @@ SECTIONS
         stackbegin = .;
         . += 0x2000;
         stackend = .;
-        . += 0x400;
+        . += 0x2000;
         irq_stack = .;
-        . += 0x400;
+        . += 0x2000;
         fiq_stack = .;
-        . += 0x400;
+        . += 0x2000;
     } > DRAM
 
     /* physical address of the stack */
