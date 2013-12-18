@@ -33,7 +33,7 @@ CFLAGS	+= -O2 -DMEMORYSIZE=64 -fPIC
 LDFLAGS = -static -nostdlib -T $(BOOT_LAYOUT_OUT) -L$(LIBGCCDIR)
 
 
-PLATFORM_OBJS = entry serial lradc dma mmu-arm icoll system audio_dma
+PLATFORM_OBJS = entry serial lradc dma mmu-arm icoll system audio_dma gpio
 
 # IMPORTANT! entry.o should appear first - this is where execution starts
 CHUMBY_BOOT_OBJS = $(addsuffix .$(PLATFORM).o, \

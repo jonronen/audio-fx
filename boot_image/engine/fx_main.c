@@ -10,6 +10,7 @@
 #include "lradc.h"
 #include "system.h"
 #include "audio_dma.h"
+#include "gpio.h"
 #include "math.h"
 #include "utils/str.h"
 #include "engine/parameters.h"
@@ -86,6 +87,8 @@ int fx_main()
     system_init();
     audio_setup();
     audio_dma_init(modify_buffers);
+
+    gpio_setup();
 
     g_print_cnt = 0;
 

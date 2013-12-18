@@ -2,6 +2,7 @@
 #include "engine/metronome.h"
 #include "engine/parameters.h"
 #include "effects/effect_base.h"
+#include "gpio.h"
 
 
 #define PHASES_PER_OP 256
@@ -41,8 +42,6 @@ void metronome_setup(
     g_bpm = freq;
     g_num_ops = num_ops;
     g_pattern_units = pattern_units;
-
-    /* TODO: setup the LEDs and clear them */
 }
 
 void metronome_start()
@@ -55,7 +54,8 @@ void metronome_start()
 
         g_f_active = 1;
 
-        /* TODO: turn on the primary LED */
+        gpio_set_metronome_output(true, true);
+
         /* TODO: set parameters according to the first pattern ops */
     }
 }
@@ -63,7 +63,8 @@ void metronome_start()
 void metronome_stop()
 {
     g_f_active = 0;
-    /* TODO: turn off the LEDs */
+    gpio_set_metronome_output(true, false);
+    gpio_set_metronome_output(false, false);
 }
 
 void metronome_tick()
@@ -83,12 +84,16 @@ void metronome_tick()
                 g_unit_index++;
                 if (g_unit_index >= g_pattern_units) {
                     g_unit_index = 0;
-                    /* TODO: set the primary metronome led */
+                    gpio_set_metronome_output(true, true);
                 }
                 else {
-                    /* TODO: set the secondary metronome led */
+                    gpio_set_metronome_output(false, true);
                 }
             }
+        }
+        else if (g_phase == 0x80) {
+            gpio_set_metronome_output(true, false);
+            gpio_set_metronome_output(false, false);
         }
 
         /* set the parameters according to the phase and the op */
