@@ -15,6 +15,7 @@ CHUMBY_BOOT	= $(OUTPUTDIR)/chumby_fx
 
 # Output binary image
 CHUMBY_BOOT_ROM	= $(OUTPUTDIR)/chumby_fx.rom
+CHUMBY_IMAGE_FILE = $(OUTPUTDIR)/startup.img
 
 CROSS_COMPILE ?= arm-linux-
 
@@ -73,8 +74,6 @@ clean:
 	rm -rf $(CHUMBY_BOOT_OBJS) $(BOOT_LAYOUT_OUT)
 	@echo Build output:
 	rm -rf $(OUTPUTDIR)
-	@echo Image:
-	rm -rf startup.img
 
 ##
 ## Rules to build linux_prep image
@@ -93,5 +92,6 @@ $(BOOT_LAYOUT_OUT): $(BOOT_LAYOUT_IN)
 	$(CPP) -P -DMEMORY_SIZE=64 -DBASE_ADDR=$(BASE_ADDR) -o $@ $<
 
 image: build_prep $(CHUMBY_BOOT_ROM)
-	cp startup.img.orig startup.img
-	dd if=$(CHUMBY_BOOT_ROM) seek=132 of=./startup.img
+	cp $(PLATFORMDIR)/startup.img.orig $(CHUMBY_IMAGE_FILE)
+	dd if=$(CHUMBY_BOOT_ROM) seek=132 of=$(CHUMBY_IMAGE_FILE)
+
