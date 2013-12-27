@@ -1,3 +1,7 @@
+unsigned int g_timer_cnt;
+int g_rcv_buff[1024];
+unsigned int g_rcv_buff_index;
+
 // Make sure that data is first pin in the list.
 const PinDescription SSCTXPins[]=
 {
@@ -17,8 +21,11 @@ const PinDescription SSCRXPins[]=
 
 void setup()
 {
+  // enable clocks for the peripherals we're using
   pmc_enable_periph_clk(ID_SSC);
+  pmc_enable_periph_clk(ID_TC0);
   
+  // set the relevant SSC pins for I2S (not analog or digital I/Os)
   for (int i=0; i<3; i++) {
     PIO_Configure(SSCTXPins[i].pPort,
       SSCTXPins[i].ulPinType,
@@ -30,6 +37,26 @@ void setup()
       SSCRXPins[i].ulPinConfiguration);
   }
   
+  //
+  // setup timer0 for an interrupt with 48KHz frequency
+  //
+  
+  // use TC0 with timer #0 and clock #1, which means base freq is F_CPU/2
+  TC_Configure(TC0, 0, TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC | TC_CMR_TCCLKS_TIMER_CLOCK1);
+  TC_SetRC(TC0, 0, 875); // 84MHz / 48KHz / 2
+  // Enable the RC Compare Interrupt...
+  TC0->TC_CHANNEL[0].TC_IER=TC_IER_CPCS;
+  // ... and disable all others.
+  TC0->TC_CHANNEL[0].TC_IDR=~TC_IER_CPCS;
+  
+  // clear the interrupt
+  NVIC_ClearPendingIRQ(TC0_IRQn);
+  NVIC_EnableIRQ(TC0_IRQn);
+  
+  //
+  // setup SSC for I2S master, 24-bit stereo, simultaneous send/receive
+  //
+  
   SSC->SSC_CR = SSC_CR_SWRST;
   SSC->SSC_CMR = 0;
   SSC->SSC_RCMR = 0;
@@ -38,7 +65,7 @@ void setup()
   SSC->SSC_TFMR = 0;
   
   // set the clock divider to provide ~1MHz
-  SSC->SSC_CMR = 40;
+  SSC->SSC_CMR = 10;
   
   SSC->SSC_TCMR = SSC_TCMR_STTDLY(1) | SSC_TCMR_START_CONTINUOUS | SSC_TCMR_CKG_CONTINUOUS | SSC_TCMR_CKO_TRANSFER | SSC_TCMR_PERIOD(23);
   SSC->SSC_RCMR = SSC_RCMR_STTDLY(1) | SSC_RCMR_START_TRANSMIT | SSC_RCMR_CKS_TK | SSC_RCMR_CKO_NONE | SSC_RCMR_PERIOD(23);
@@ -47,20 +74,53 @@ void setup()
   
   Serial.begin(115200);
   
+  g_rcv_buff_index = 0;
+  
+  // enable the SSC send/receive
   SSC->SSC_CR = SSC_CR_RXEN;
   SSC->SSC_CR = SSC_CR_TXEN;
+  
+  // and start the timer
+  TC_Start(TC0, 0);
 }
 
 void loop()
 {
-  *((uint32_t*)&SSC->SSC_THR) = 0x55AA5A;
-  while ((SSC->SSC_SR & SSC_SR_TXRDY) == 0);
-  *((uint32_t*)&SSC->SSC_THR) = 0x123456;
-  while ((SSC->SSC_SR & SSC_SR_TXRDY) == 0);
-  *((uint32_t*)&SSC->SSC_THR) = 0x789ABC;
-  while ((SSC->SSC_SR & SSC_SR_TXRDY) == 0);
-  *((uint32_t*)&SSC->SSC_THR) = 0xFFFFFF;
-  Serial.println((int)SSC->SSC_RHR);
+  int mx = -0x7ffff;
+  int mn = 0x7ffff;
+  int i;
+  
+  for (i=0; i<1024; i++) {
+    if (g_rcv_buff[i] > mx) mx = g_rcv_buff[i];
+    if (g_rcv_buff[i] < mn) mn = g_rcv_buff[i];
+  }
+  Serial.println(mx, HEX);
+  Serial.println(mn, HEX);
+  Serial.println(" ");
   delay(500);
+}
+
+void TC0_Handler()
+{
+  int val = 0;
+  
+  // clear the interrupt bit
+  TC_GetStatus(TC0, 0);
+  
+  // just a test to see we're in business
+  g_timer_cnt++;
+  if (g_timer_cnt & 0x20) {
+    val = 0x3ffff;
+  }
+  
+  // write the value twice
+  while ((SSC->SSC_SR & SSC_SR_TXRDY) == 0);
+  SSC->SSC_THR = val;
+  g_rcv_buff[g_rcv_buff_index++] = SSC->SSC_RHR;
+  while ((SSC->SSC_SR & SSC_SR_TXRDY) == 0);
+  SSC->SSC_THR = val;
+  g_rcv_buff[g_rcv_buff_index++] = SSC->SSC_RHR;
+  
+  if (g_rcv_buff_index >= 1024) g_rcv_buff_index = 0;
 }
 
