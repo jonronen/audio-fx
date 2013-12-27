@@ -1,6 +1,15 @@
-unsigned int g_timer_cnt;
-int g_rcv_buff[1024];
+#define NUM_CHANNELS 2
+
+int g_recieve[NUM_CHANNELS];
+int g_send[NUM_CHANNELS];
+
+// test
+int g_rcv_buff[NUM_CHANNELS][1024];
 unsigned int g_rcv_buff_index;
+unsigned char g_channel_index;
+unsigned char g_phase_cnt;
+unsigned char g_volumes[NUM_CHANNELS];
+unsigned char g_volume_cnt;
 
 // Make sure that data is first pin in the list.
 const PinDescription SSCTXPins[]=
@@ -64,17 +73,24 @@ void setup()
   SSC->SSC_TCMR = 0;
   SSC->SSC_TFMR = 0;
   
-  // set the clock divider to provide ~1MHz
-  SSC->SSC_CMR = 10;
+  // set the clock divider to provide 5.25MHz
+  SSC->SSC_CMR = 8;
   
-  SSC->SSC_TCMR = SSC_TCMR_STTDLY(1) | SSC_TCMR_START_CONTINUOUS | SSC_TCMR_CKG_CONTINUOUS | SSC_TCMR_CKO_TRANSFER | SSC_TCMR_PERIOD(23);
-  SSC->SSC_RCMR = SSC_RCMR_STTDLY(1) | SSC_RCMR_START_TRANSMIT | SSC_RCMR_CKS_TK | SSC_RCMR_CKO_NONE | SSC_RCMR_PERIOD(23);
-  SSC->SSC_TFMR = SSC_TFMR_DATLEN(23) | SSC_TFMR_MSBF | SSC_TFMR_DATNB(1) | SSC_TFMR_FSOS_TOGGLING;
-  SSC->SSC_RFMR = SSC_RFMR_DATLEN(23) | SSC_RFMR_MSBF | SSC_RFMR_DATNB(1) | SSC_RFMR_FSOS_TOGGLING;
+  SSC->SSC_TCMR = SSC_TCMR_STTDLY(1) | SSC_TCMR_START_CONTINUOUS | SSC_TCMR_CKI | SSC_TCMR_CKG_TRANSFER | SSC_TCMR_CKO_TRANSFER;
+  SSC->SSC_RCMR = SSC_RCMR_STTDLY(1) | SSC_RCMR_START_TRANSMIT | SSC_RCMR_CKI | SSC_RCMR_CKS_TK;
+  SSC->SSC_TFMR = SSC_TFMR_DATLEN(23) | SSC_TFMR_MSBF | SSC_TFMR_FSOS_TOGGLING;
+  SSC->SSC_RFMR = SSC_RFMR_DATLEN(23) | SSC_RFMR_MSBF | SSC_TFMR_FSOS_TOGGLING;
   
   Serial.begin(115200);
   
   g_rcv_buff_index = 0;
+  g_channel_index = 0;
+  g_volume_cnt = 0;
+  g_phase_cnt = 0;
+  
+  for (int i=0; i<NUM_CHANNELS; i++) {
+    g_volumes[i] = 0;
+  }
   
   // enable the SSC send/receive
   SSC->SSC_CR = SSC_CR_RXEN;
@@ -86,40 +102,59 @@ void setup()
 
 void loop()
 {
-  int mx = -0x7ffff;
-  int mn = 0x7ffff;
+  int mx[NUM_CHANNELS] = {-0x7ffff, -0x7ffff};
+  int mn[NUM_CHANNELS] = {0x7ffff, 0x7ffff};
   int i;
   
   for (i=0; i<1024; i++) {
-    if (g_rcv_buff[i] > mx) mx = g_rcv_buff[i];
-    if (g_rcv_buff[i] < mn) mn = g_rcv_buff[i];
+    if (g_rcv_buff[0][i] > mx[0]) mx[0] = g_rcv_buff[0][i];
+    if (g_rcv_buff[1][i] > mx[1]) mx[1] = g_rcv_buff[1][i];
+    if (g_rcv_buff[0][i] < mn[0]) mn[0] = g_rcv_buff[0][i];
+    if (g_rcv_buff[1][i] < mn[1]) mn[1] = g_rcv_buff[1][i];
   }
-  Serial.println(mx, HEX);
-  Serial.println(mn, HEX);
+  Serial.println(mx[0], HEX);
+  Serial.println(mn[0], HEX);
+  Serial.println(mx[1], HEX);
+  Serial.println(mn[1], HEX);
   Serial.println(" ");
   delay(500);
 }
 
 void TC0_Handler()
 {
-  int val = 0;
+  int vals[NUM_CHANNELS] = {0,0};
   
   // clear the interrupt bit
   TC_GetStatus(TC0, 0);
   
+  // prepare the values for each channel
+  vals[0] = 0;
+  vals[1] = 0;
+  
   // just a test to see we're in business
-  g_timer_cnt++;
-  if (g_timer_cnt & 0x20) {
-    val = 0x3ffff;
+  if (g_phase_cnt & 0x20) {
+    vals[0] = 0x1ffff;
+    vals[1] = 0x1ffff;
   }
   
-  // write the value twice
+  g_volumes[0] = g_volume_cnt;
+  g_volumes[1] = 0xff - g_volumes[0];
+  
+  g_phase_cnt++;
+  if (g_phase_cnt == 0) g_volume_cnt++;
+  
+  vals[0] = vals[0] * g_volumes[0] / 256;
+  vals[1] = vals[1] * g_volumes[1] / 256;
+  
+  // write the value twice (once for each channel)
   while ((SSC->SSC_SR & SSC_SR_TXRDY) == 0);
-  SSC->SSC_THR = val;
-  g_rcv_buff[g_rcv_buff_index++] = SSC->SSC_RHR;
+  SSC->SSC_THR = vals[0];
+  while ((SSC->SSC_SR & SSC_SR_RXRDY) == 0);
+  g_rcv_buff[0][g_rcv_buff_index] = SSC->SSC_RHR;
   while ((SSC->SSC_SR & SSC_SR_TXRDY) == 0);
-  SSC->SSC_THR = val;
-  g_rcv_buff[g_rcv_buff_index++] = SSC->SSC_RHR;
+  SSC->SSC_THR = vals[1];
+  while ((SSC->SSC_SR & SSC_SR_RXRDY) == 0);
+  g_rcv_buff[1][g_rcv_buff_index++] = SSC->SSC_RHR;
   
   if (g_rcv_buff_index >= 1024) g_rcv_buff_index = 0;
 }
