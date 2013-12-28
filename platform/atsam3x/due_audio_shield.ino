@@ -73,13 +73,13 @@ void setup()
   SSC->SSC_TCMR = 0;
   SSC->SSC_TFMR = 0;
   
-  // set the clock divider to provide 5.25MHz
-  SSC->SSC_CMR = 8;
+  // set the clock divider to provide 4.66MHz
+  SSC->SSC_CMR = 9;
   
-  SSC->SSC_TCMR = SSC_TCMR_STTDLY(1) | SSC_TCMR_START_CONTINUOUS | SSC_TCMR_CKI | SSC_TCMR_CKG_TRANSFER | SSC_TCMR_CKO_TRANSFER;
-  SSC->SSC_RCMR = SSC_RCMR_STTDLY(1) | SSC_RCMR_START_TRANSMIT | SSC_RCMR_CKI | SSC_RCMR_CKS_TK;
+  SSC->SSC_TCMR = SSC_TCMR_START_CONTINUOUS | SSC_TCMR_CKI | SSC_TCMR_CKG_CONTINUOUS | SSC_TCMR_CKO_TRANSFER | SSC_TCMR_PERIOD(1);
+  SSC->SSC_RCMR = SSC_RCMR_START_TRANSMIT | SSC_RCMR_CKI | SSC_RCMR_CKS_TK | SSC_RCMR_PERIOD(1);
   SSC->SSC_TFMR = SSC_TFMR_DATLEN(23) | SSC_TFMR_MSBF | SSC_TFMR_FSOS_TOGGLING;
-  SSC->SSC_RFMR = SSC_RFMR_DATLEN(23) | SSC_RFMR_MSBF | SSC_TFMR_FSOS_TOGGLING;
+  SSC->SSC_RFMR = SSC_RFMR_DATLEN(23) | SSC_RFMR_MSBF | SSC_RFMR_FSOS_TOGGLING;
   
   Serial.begin(115200);
   
@@ -102,8 +102,9 @@ void setup()
 
 void loop()
 {
-  int mx[NUM_CHANNELS] = {-0x7ffff, -0x7ffff};
-  int mn[NUM_CHANNELS] = {0x7ffff, 0x7ffff};
+  int mx[NUM_CHANNELS] = {-0x1000000, -0x1000000};
+  int mn[NUM_CHANNELS] = {0x1000000, 0x1000000};
+  int avg[NUM_CHANNELS] = {0,0};
   int i;
   
   for (i=0; i<1024; i++) {
@@ -111,11 +112,16 @@ void loop()
     if (g_rcv_buff[1][i] > mx[1]) mx[1] = g_rcv_buff[1][i];
     if (g_rcv_buff[0][i] < mn[0]) mn[0] = g_rcv_buff[0][i];
     if (g_rcv_buff[1][i] < mn[1]) mn[1] = g_rcv_buff[1][i];
+    avg[0] += g_rcv_buff[0][i] / 256;
+    avg[1] += g_rcv_buff[1][i] / 256;
   }
   Serial.println(mx[0], HEX);
   Serial.println(mn[0], HEX);
   Serial.println(mx[1], HEX);
   Serial.println(mn[1], HEX);
+  Serial.println(avg[0]/4, HEX);
+  Serial.println(avg[1]/4, HEX);
+  Serial.println(SSC->SSC_SR, HEX);
   Serial.println(" ");
   delay(500);
 }
@@ -148,11 +154,13 @@ void TC0_Handler()
   
   // write the value twice (once for each channel)
   while ((SSC->SSC_SR & SSC_SR_TXRDY) == 0);
-  SSC->SSC_THR = vals[0];
+  //SSC->SSC_THR = vals[0];
+  SSC->SSC_THR = g_rcv_buff[0][g_rcv_buff_index];
   while ((SSC->SSC_SR & SSC_SR_RXRDY) == 0);
   g_rcv_buff[0][g_rcv_buff_index] = SSC->SSC_RHR;
   while ((SSC->SSC_SR & SSC_SR_TXRDY) == 0);
-  SSC->SSC_THR = vals[1];
+  //SSC->SSC_THR = vals[1];
+  SSC->SSC_THR = g_rcv_buff[1][g_rcv_buff_index];
   while ((SSC->SSC_SR & SSC_SR_RXRDY) == 0);
   g_rcv_buff[1][g_rcv_buff_index++] = SSC->SSC_RHR;
   
