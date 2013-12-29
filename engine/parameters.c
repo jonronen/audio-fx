@@ -12,7 +12,7 @@
 #include "effects/tremolo.h"
 #include "effects/overdrive.h"
 //#include "effects/distortion.h"
-#include "effects/flanger.h"
+#include "effects/delay.h"
 #include "effects/resonance.h"
 
 
@@ -23,46 +23,7 @@ static resonance_t g_reso1;
 static low_pass_t  g_low_pass0(&g_reso0);
 static low_pass_t  g_low_pass1(&g_reso1);
 static tremolo_t   g_trem;
-
-
-/*
- * overdrive and distortion
- */
-unsigned short g_overdrive_level[NUM_CHANNELS];
-unsigned short g_distortion_level[NUM_CHANNELS];
-
-
-/*
- * low-pass level
- */
-unsigned short g_low_pass_level[NUM_CHANNELS];
-
-/*
- * resonance (goes together with low-pass filter)
- */
-unsigned short g_resonance_level[NUM_CHANNELS];
-
-
-/*
- * high-pass level
- */
-unsigned short g_high_pass_level[NUM_CHANNELS];
-
-
-/*
- * volume
- */
-unsigned short g_volume_factor[NUM_CHANNELS];
-
-
-/*
- * flanger
- */
-unsigned short g_flanger_low_freq_limit[NUM_CHANNELS];
-unsigned short g_flanger_high_freq_limit[NUM_CHANNELS];
-unsigned short g_flanger_frequency[NUM_CHANNELS];
-unsigned short g_flanger_mix_level[NUM_CHANNELS];
-
+static delay_t     g_reverb(true, 8000, 8000);
 
 
 /*
@@ -380,9 +341,13 @@ void parameters_setup()
     g_trem.set_pot_index(4);
     //g_trem.set_metronome_ops(metr_ops, metr_levels, 2);
 
-    g_effects[i++] = &g_reso0;
-    g_effects[i++] = &g_low_pass0;
+    g_reverb.set_ctrl(PARAM_CTRL_MANUAL);
+    g_reverb.set_pot_index(4);
+
+    //g_effects[i++] = &g_reso0;
+    //g_effects[i++] = &g_low_pass0;
     //g_effects[i++] = &g_trem;
+    g_effects[i++] = &g_reverb;
     g_effects[i] = (effect_base_t*)NULL;
 
     lradc_setup_channels_for_polling();

@@ -1,21 +1,21 @@
-#ifndef __FLANGER_H__
-#define __FLANGER_H__
+#ifndef __DELAY_H__
+#define __DELAY_H__
 
 
 #include "effects/effect_base.h"
 #include "engine/parameters.h"
 
 
-#define FLANGER_MIN_MIN_OFFSET 40
-#define FLANGER_HISTORY_SIZE 512
-#define FLANGER_MAX_LEVEL 0x100
-#define FLANGER_MIN_LFO_FREQ 16
-#define FLANGER_MAX_LFO_FREQ 3*256
+#define DELAY_MIN_MIN_OFFSET 40
+#define DELAY_HISTORY_SIZE 50000
+#define DELAY_MAX_LEVEL 0x100
+#define DELAY_MIN_LFO_FREQ 16
+#define DELAY_MAX_LFO_FREQ 3*256
 
 
-class flanger_t : public effect_base_t {
+class delay_t : public effect_base_t {
 public:
-    flanger_t();
+    delay_t(bool with_feedback, unsigned int mn, unsigned int mx);
     int process_sample(int sample, unsigned char channel);
 
 
@@ -27,10 +27,11 @@ protected:
 private:
     unsigned char m_lfo_phase[NUM_CHANNELS];
     unsigned int m_lfo_cnt[NUM_CHANNELS];
-    int m_history[NUM_CHANNELS][FLANGER_HISTORY_SIZE];
+    int m_history[NUM_CHANNELS][DELAY_HISTORY_SIZE];
     unsigned short m_history_offset;
+    bool m_f_feedback;
 };
 
 
-#endif /* __FLANGER_H__ */
+#endif /* __DELAY_H__ */
 
