@@ -99,7 +99,10 @@ void metronome_tick()
         /* set the parameters according to the phase and the op */
         for (j=0; j<NUM_CHANNELS; j++) {
             if (g_effects[j] == NULL) break;
-            g_effects[j]->metronome_phase(g_phase, g_op_index);
+            g_effects[j]->metronome_phase(
+                g_phase,
+                g_unit_index * g_num_ops + g_op_index
+            );
         }
     }
 }

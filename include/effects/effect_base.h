@@ -79,6 +79,7 @@ private:
 
     metronome_op_t m_metronome_ops[MAX_DIVISION_FACTOR*MAX_PATTERN_UNITS];
     unsigned short m_metronome_levels[MAX_DIVISION_FACTOR*MAX_PATTERN_UNITS];
+    unsigned short m_metronome_op_cnt;
 
     unsigned short m_lfo_freq;
     unsigned char m_lfo_phase[NUM_CHANNELS];

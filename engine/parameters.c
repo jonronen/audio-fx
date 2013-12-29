@@ -294,58 +294,96 @@ unsigned short phase_to_sine_wave(unsigned char phase)
     return g_sine_phase[phase];
 }
 
-unsigned short phase_perform_op(metronome_op_t op, unsigned char phase)
+unsigned short phase_perform_op(
+    metronome_op_t op,
+    unsigned char phase,
+    unsigned short curr_level,
+    unsigned short next_level
+)
 {
+    unsigned short res = 0;
+
     switch(op) {
       case METRONOME_OP_CONST_NONE:
-        return 0;
+        res = 0;
+        break;
       case METRONOME_OP_CONST_FULL:
-        return 0x1000;
+        res = 0x1000;
+        break;
       case METRONOME_OP_LINEAR_RISE:
-        return phase_to_sawtooth_wave(phase); 
+        res = phase_to_sawtooth_wave(phase); 
+        break;
       case METRONOME_OP_LINEAR_FALL:
-        return phase_to_reverse_sawtooth_wave(phase);
+        res = phase_to_reverse_sawtooth_wave(phase);
+        break;
       case METRONOME_OP_SINE_RISE:
         /* TODO */
+        break;
       case METRONOME_OP_SINE_FALL:
+        /* TODO */
+        break;
       case METRONOME_OP_EXP_RISE:
+        /* TODO */
+        break;
       case METRONOME_OP_EXP_FALL:
+        /* TODO */
+        break;
       default:
-        return 0;
+        res = 0;
     }
+
+    res = (unsigned short)(
+        (unsigned int)res * (unsigned int)curr_level /
+        EFFECT_MAX_LEVEL
+    );
+
+    return res;
 }
 
 
 void parameters_setup()
 {
+    int i=0;
+
+    /*
     metronome_op_t metr_ops[2] = {
         METRONOME_OP_LINEAR_FALL, METRONOME_OP_LINEAR_RISE
     };
     unsigned short metr_levels[2] = {0x1000, 0x1000};
+    */
+    metronome_op_t metr_ops[4] = {
+        METRONOME_OP_CONST_FULL, METRONOME_OP_CONST_FULL,
+        METRONOME_OP_CONST_FULL, METRONOME_OP_CONST_FULL
+    };
+    unsigned short metr_levels_lpf[4] = {0x100, 0x400, 0x900, 0x1000};
+    unsigned short metr_levels_reso[4] = {0x100, 0x400, 0x900, 0xC00};
 
     memset(g_effects, 0x00, sizeof(g_effects));
 
     // test - initialise the metronome with some fixed parameters
-    metronome_setup(240, 2, 1);
+    metronome_setup(120, 1, 4);
 
     /* test - initialise the effects with a basic setup */
-    g_effects[0] = &g_reso0;
-    g_effects[0]->set_fixed_level(3200);
-    //g_effects[0]->set_fixed_level(0);
+    //g_reso0.set_fixed_level(3200);
+    //g_reso0.set_fixed_level(0);
+    g_reso0.set_ctrl(PARAM_CTRL_METRONOME);
+    g_reso0.set_metronome_ops(metr_ops, metr_levels_reso, 4);
 
-    g_effects[1] = &g_low_pass0;
-    g_effects[1]->set_ctrl(PARAM_CTRL_METRONOME);
-    g_effects[1]->set_metronome_ops(metr_ops, metr_levels, 2);
-    //g_effects[1]->set_ctrl(PARAM_CTRL_MANUAL);
-    //g_effects[1]->set_pot_index(4);
-    //g_effects[1]->set_ctrl(PARAM_CTRL_FIXED);
-    //g_effects[1]->set_fixed_level(0x800);
+    g_low_pass0.set_ctrl(PARAM_CTRL_METRONOME);
+    g_low_pass0.set_metronome_ops(metr_ops, metr_levels_lpf, 4);
+    //g_low_pass0.set_ctrl(PARAM_CTRL_MANUAL);
+    //g_low_pass0.set_pot_index(4);
+    //g_low_pass0.set_ctrl(PARAM_CTRL_FIXED);
+    //g_low_pass0.set_fixed_level(0x800);
 
-    //g_effects[1] = &g_trem;
-    //g_effects[1]->set_ctrl(PARAM_CTRL_METRONOME);
-    //g_effects[1]->set_metronome_ops(metr_ops, metr_levels, 2);
+    g_trem.set_ctrl(PARAM_CTRL_LFO);
+    g_trem.set_pot_index(4);
+    //g_trem.set_metronome_ops(metr_ops, metr_levels, 2);
 
-    g_effects[2] = (effect_base_t*)NULL;
+    g_effects[i++] = &g_reso0;
+    g_effects[i++] = &g_low_pass0;
+    //g_effects[i++] = &g_trem;
+    g_effects[i] = (effect_base_t*)NULL;
 
     lradc_setup_channels_for_polling();
 }

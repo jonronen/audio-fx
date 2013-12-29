@@ -54,7 +54,12 @@ unsigned short phase_to_sawtooth_wave(unsigned char phase);
 unsigned short phase_to_reverse_sawtooth_wave(unsigned char phase);
 unsigned short phase_to_triangular_wave(unsigned char phase);
 unsigned short phase_to_square_wave(unsigned char phase);
-unsigned short phase_perform_op(metronome_op_t op, unsigned char phase);
+unsigned short phase_perform_op(
+    metronome_op_t op,
+    unsigned char phase,
+    unsigned short curr_level,
+    unsigned short next_level
+);
 
 
 

@@ -16,7 +16,7 @@ public:
 
 
 private:
-    unsigned int m_phase[NUM_CHANNELS];
+    virtual unsigned short translate_lfo(unsigned short lfo_level) const;
 };
 
 

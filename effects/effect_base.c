@@ -89,6 +89,7 @@ void effect_base_t::set_metronome_ops(
         m_metronome_ops[i] = ops[i];
         m_metronome_levels[i] = levels[i];
     }
+    m_metronome_op_cnt = cnt;
     m_updating_params = false;
 }
 
@@ -123,8 +124,18 @@ void effect_base_t::params_update()
 
     else if (m_param_ctrl == PARAM_CTRL_LFO) {
         if (m_pot_index == MAX_LRADC_CHANNEL) return;
+
+        //serial_puts("pot #");
+        //serial_puthex(m_pot_index);
+
         tmp = lradc_read_channel(m_pot_index);
+
         if (tmp == -1) return;
+
+        //serial_puts(": ");
+        //serial_puthex(tmp);
+        //serial_puts("\n");
+
         m_lfo_freq = translate_lfo(tmp);
     }
 }
@@ -139,7 +150,14 @@ void effect_base_t::params_tick()
             if (m_lfo_cnt[j] >= TICK_FREQUENCY) {
                 m_lfo_cnt[j] -= TICK_FREQUENCY;
                 m_lfo_phase[j]++;
-                m_levels[j] = translate_level(phase_perform_op(m_lfo_op[j], m_lfo_phase[j]));
+                m_levels[j] = translate_level(
+                    phase_perform_op(
+                        m_lfo_op[j],
+                        m_lfo_phase[j],
+                        EFFECT_MAX_LEVEL,
+                        EFFECT_MAX_LEVEL
+                    )
+                );
             }
         }
     }
@@ -150,30 +168,37 @@ void effect_base_t::metronome_phase(
     unsigned short op_index
 )
 {
-    unsigned short level;
+    unsigned short curr_level, next_level;
 
     if ((m_param_ctrl != PARAM_CTRL_METRONOME) &&
         (m_param_ctrl != PARAM_CTRL_METRONOME_WITH_MANUAL_LEVEL))
         return;
-
-    /* get the raw level as an output from the metronome */
-    unsigned short metronome_result =
-        phase_perform_op(m_metronome_ops[op_index], phase_index);
 
     /*
      * the final level is a convex combination
      * of the metronome/manual level and the default level
      */
     if (m_param_ctrl == PARAM_CTRL_METRONOME) {
-        level = m_metronome_levels[op_index];
+        curr_level = m_metronome_levels[op_index];
+        next_level = m_metronome_levels[
+            op_index+1 > m_metronome_op_cnt ? 0 : op_index+1
+        ];
     }
     else {
-        level = m_levels[0]; // assuming all channels are at the same level...
+        // assuming all channels are at the same level...
+        curr_level = m_levels[0];
+        next_level = m_levels[0];
     }
-    metronome_result = (unsigned short)(
-        (unsigned int)metronome_result * (unsigned int)level /
-        EFFECT_MAX_LEVEL
-    );
+
+    /* get the raw level as an output from the metronome */
+    unsigned short metronome_result =
+        phase_perform_op(
+            m_metronome_ops[op_index],
+            phase_index,
+            curr_level,
+            next_level
+        );
+
     set_level(metronome_result);
 }
 
@@ -187,7 +212,8 @@ effect_base_t::effect_base_t()
     m_lfo_freq = 1;
 
     for (i=0; i<NUM_CHANNELS; i++) {
-        m_lfo_op[i] = METRONOME_OP_CONST_FULL;
+        /* TODO: change this to something less rude */
+        m_lfo_op[i] = METRONOME_OP_LINEAR_FALL;
         m_lfo_cnt[i] = 0;
         m_lfo_phase[i] = 0;
     }

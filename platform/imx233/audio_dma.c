@@ -97,7 +97,7 @@ void audio_setup()
     __REG_CLR(HW_AUDIOOUT_HPVOL) = HW_AUDIOOUT_HPVOL__MUTE;
     __REG_CLR(HW_AUDIOOUT_HPVOL) = 0x00007f7f;
     //__REG_SET(HW_AUDIOOUT_HPVOL) = 0x00014040; // test only - line1->HP
-    __REG_SET(HW_AUDIOOUT_HPVOL) = 0x00008080; // volume shouldn't be too high
+    // leave the volume as 0x00 for left and right channels, this is the max
 
     // write some shit to the data to make sure it's not stuck
     HW_AUDIOOUT_DATA = 0x00000000;
