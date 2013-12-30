@@ -16,13 +16,18 @@
 class delay_t : public effect_base_t {
 public:
     delay_t(bool with_feedback, unsigned int mn, unsigned int mx);
-    int process_sample(int sample, unsigned char channel);
+    virtual int process_sample(int sample, unsigned char channel);
+    void set_pot_indices(unsigned char mix_index, unsigned char lfo_index);
+    void set_lfo(unsigned short lfo);
+    virtual void params_update();
 
 
 protected:
+    virtual unsigned short translate_level(unsigned short level) const;
     unsigned int m_lfo_freq[NUM_CHANNELS];
     unsigned int m_max_offset[NUM_CHANNELS];
     unsigned int m_min_offset[NUM_CHANNELS];
+    unsigned char m_lfo_index;
 
 private:
     unsigned char m_lfo_phase[NUM_CHANNELS];

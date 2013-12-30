@@ -71,24 +71,23 @@ protected:
     /* get the translated channel level (for performing effects on it) */
     unsigned short get_channel_level(unsigned char channel) const;
 
+    param_ctrl_t m_param_ctrl;
+    unsigned short m_pot_index;
+    unsigned short m_lfo_freq;
+    bool m_updating_params;
+
     effect_base_t();
 
 private:
-    param_ctrl_t m_param_ctrl;
-    unsigned short m_pot_index;
-
     metronome_op_t m_metronome_ops[MAX_DIVISION_FACTOR*MAX_PATTERN_UNITS];
     unsigned short m_metronome_levels[MAX_DIVISION_FACTOR*MAX_PATTERN_UNITS];
     unsigned short m_metronome_op_cnt;
 
-    unsigned short m_lfo_freq;
     unsigned char m_lfo_phase[NUM_CHANNELS];
     unsigned short m_lfo_cnt[NUM_CHANNELS];
     metronome_op_t m_lfo_op[NUM_CHANNELS];
 
     unsigned short m_levels[NUM_CHANNELS];
-
-    bool m_updating_params;
 
     effect_base_t(const effect_base_t& other);
 };
