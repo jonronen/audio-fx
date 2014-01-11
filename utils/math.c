@@ -1,31 +1,36 @@
 #include "math.h"
 
 
-int scaled_sine_8_bit(const unsigned int degrees)
+static int sine_8_bit(const unsigned char degrees)
 {
     int tmp = (int)(degrees & 0x7f);
-    unsigned int is_negative = (degrees & 0x80);
+    unsigned char is_negative = (degrees & 0x80);
 
     tmp *= (0x80-tmp);
-    tmp /= 32;
 
     return is_negative ? -tmp : tmp;
 }
 
-unsigned int scaled_shifted_sine(
-    unsigned int min,
-    unsigned int max,
+int scaled_sine_8_bit(const unsigned char degrees)
+{
+    return sine_8_bit(degrees) / 32;
+}
+
+unsigned short scaled_shifted_sine(
+    unsigned short min,
+    unsigned short max,
     unsigned char phase
 )
 {
-    unsigned int diff = max-min;
-    long long int scaled_sin = scaled_sine_8_bit(phase);
+    unsigned int diff = (int)max-(int)min;
+    int scaled_sin = sine_8_bit(phase);
 
+    // deal with overflows
     if ((diff == 0) || (diff > max)) return max;
 
-    scaled_sin = scaled_sin * (long long int) diff / 2 / 0x100;
+    scaled_sin = scaled_sin * (int) diff / 64 / 0x100;
     scaled_sin += diff/2;
 
-    return (unsigned int)scaled_sin + min;
+    return (unsigned short)scaled_sin + min;
 }
 

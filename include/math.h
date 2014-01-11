@@ -16,10 +16,10 @@ static inline int limit_value_of_delta(const int delta_value)
     else return delta_value;
 }
 
-int scaled_sine_8_bit(const unsigned int degrees);
-unsigned int scaled_shifted_sine(
-    unsigned int min,
-    unsigned int max,
+int scaled_sine_8_bit(const unsigned char degrees);
+unsigned short scaled_shifted_sine(
+    unsigned short min,
+    unsigned short max,
     unsigned char phase
 );
 
