@@ -25,8 +25,8 @@ public:
 protected:
     virtual unsigned short translate_level(unsigned short level) const;
     unsigned int m_lfo_freq[NUM_CHANNELS];
-    unsigned int m_max_offset[NUM_CHANNELS];
-    unsigned int m_min_offset[NUM_CHANNELS];
+    unsigned short m_max_offset[NUM_CHANNELS];
+    unsigned short m_min_offset[NUM_CHANNELS];
     unsigned char m_lfo_index;
 
 private:

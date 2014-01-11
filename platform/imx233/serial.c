@@ -187,7 +187,7 @@ int serial_getc (void)
     int data = 0;
     while(!data) {
 
-        // Wait while TX FIFO is empty
+        // Wait while RX FIFO is empty
         while (REG_RD(DBGUART_BASE + UARTDBGFR) & RXFE);
 
         data = REG_RD(DBGUART_BASE + UARTDBGDR);
@@ -210,6 +210,4 @@ void serial_puthex(unsigned int c) {
     for(i=7; i>=0; i--)
         serial_putc(hex[(c>>(4*i))&0x0f]);
 }
-
-
 
