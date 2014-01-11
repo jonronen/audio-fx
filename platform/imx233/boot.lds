@@ -26,11 +26,7 @@ SECTIONS
     _loadaddressend = BASE_ADDR + RAM_HOLE;
 
     . = BASE_ADDR;
-    .dramcopystart (NOLOAD) :
-    {
-        _dramcopystart = .;
-    } > DRAM
-    
+
     .start :
     {
         *(.start*)
@@ -42,21 +38,6 @@ SECTIONS
         *(.data*)
         *(.rodata*)
     } > DRAM
-
-    .dramcopyend (NOLOAD) :
-    {
-        _dramcopyend = .;
-    } > DRAM
-
-    .itext :
-    {
-        _iramstart = .; // always 0
-        *(.vectors)
-        KEEP(*(.vectors));// otherwise there are no references to it and the linker strip it
-        _iramend = .;
-    } > IRAM AT> DRAM
-
-    _iramcopy = LOADADDR(.itext);
 
     .ibss (NOLOAD) :
     {
@@ -104,14 +85,6 @@ SECTIONS
         _bss_start = .;
         *(.bss*);
     } > DRAM
-
-    /* align on cache size boundary to avoid mixing cached and noncached stuff */
-    .ncbss . - CACHED_DRAM_ADDR + UNCACHED_DRAM_ADDR (NOLOAD) :
-    {
-        . = ALIGN(CACHEALIGN_SIZE);
-        *(.ncbss*)
-        . = ALIGN(CACHEALIGN_SIZE);
-    } AT> DRAM
 
     .bssendadr (NOLOAD) :
     {

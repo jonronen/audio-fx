@@ -1,44 +1,9 @@
-/*
- * linux_prep entry code.
- *
- * Entered twice:
- *
- * - Before loading Linux kernel image to SDRAM to check
- *   if CPU is being taken out of standby mode and resume
- *   sleeping kernel.
- * 
- * - After loading Linux kernel image to prepare Linux boot
- *   paramteters and jump to the kernel
- *
- * Vladislav Buzov <vbuzov@embeddedalley.com>
- *
- * Copyright 2008 SigmaTel, Inc
- * Copyright 2008 Embedded Alley Solutions, Inc
- *
- * This file is licensed under the terms of the GNU General Public License
- * version 2.  This program  is licensed "as is" without any warranty of any
- * kind, whether express or implied.
- */
 #include "platform/imx233/imx233.h"
-
-.section .vectors,"ax",%progbits
-.code 32
-    /* most handlers are in DRAM which is too far away for a relative jump */
-    ldr     pc, =start
 
 .text
 .global start
 start:
 
-// Save our load address as the global base_address.
-    mov r0, pc
-    sub r0, r0, #8
-    sub r0, r0, #0x2000
-    ldr r1, =base_address
-    str r0, [r1]
-
-
-    bl    copy_iram
     bl    clear_ibss
     bl    clear_bss
 
@@ -83,6 +48,9 @@ start:
     b       2b
 4:
 
+    /* load from serial (if there's anything to load */
+    bl load_from_serial
+
     /*
      * now that everything is in place, enable the caches
      * (the function says enable MMU, but we don't really need the MMU...
@@ -93,25 +61,6 @@ start:
     bl fx_main
 
     .pool
-.global base_address
-base_address:
-    .long 0xc111b111
-
-
-    .pool
-
-copy_iram:
-    /* Copy the IRAM */
-    /* must be done before bss is zeroed */
-    ldr     r2, =_iramcopy
-    ldr     r3, =_iramstart
-    ldr     r4, =_iramend
-1:
-    cmp     r4, r3
-    ldrhi   r5, [r2], #4
-    strhi   r5, [r3], #4
-    bhi     1b
-
 
 /*
  * This function clears out the .ibss section.
@@ -148,3 +97,4 @@ __div0:
     .globl  raise
 raise:
     mov    pc, lr
+
