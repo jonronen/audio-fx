@@ -97,6 +97,8 @@ void load_from_serial()
 
         memcpy((char*)START_ADDR + BUFF_SIZE*curr_block, buff, BUFF_SIZE);
 
+        // TODO: indicate we received the buffer and copied it
+
         curr_block++;
     }
 
