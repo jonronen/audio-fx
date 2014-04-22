@@ -27,11 +27,10 @@ STRIP	= $(CROSS_COMPILE)strip
 OBJCOPY	= $(CROSS_COMPILE)objcopy
 OBJDUMP	= $(CROSS_COMPILE)objdump
 
-LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
 CFLAGS	= -Wall -I$(INCLUDEDIR)
 CFLAGS	+= -fno-common -fno-exceptions -fno-non-call-exceptions -fno-weak -fno-rtti -fno-builtin
 CFLAGS	+= -O2 -DMEMORYSIZE=64 -fPIC
-LDFLAGS = -static -nostdlib -T $(BOOT_LAYOUT_OUT) -L$(LIBGCCDIR)
+LDFLAGS = -static -nostdlib -T $(BOOT_LAYOUT_OUT)
 
 
 PLATFORM_OBJS = entry load_from_serial serial lradc dma \
