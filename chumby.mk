@@ -58,6 +58,9 @@ all: build
 %.$(PLATFORM).o: %.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
+%.$(PLATFORM).o: %.cpp
+	$(CC) -c $(CFLAGS) -o $@ $<
+
 #
 # Make targets
 #

@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "heap.h"
+#include "utils/heap.h"
 
 
 typedef struct _heap_header_t {
@@ -10,7 +10,7 @@ typedef struct _heap_header_t {
 } heap_header_t;
 
 /* THE heap */
-#define HEAP_SIZE (1024*1024)
+#define HEAP_SIZE (128*1024)
 static unsigned char g_heap[HEAP_SIZE];
 
 
