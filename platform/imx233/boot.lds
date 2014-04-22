@@ -56,6 +56,11 @@ SECTIONS
        *(.got.plt)
     } > DRAM
 
+    .note.gnu.build-id :
+    {
+        *(.note.gnu.build-id)
+    } > DRAM
+
     .init_array :
     {
        init_array_begin = .;
