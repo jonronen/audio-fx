@@ -7,10 +7,9 @@ INCLUDEDIR	= $(CURRENTDIR)/include
 # Output binary
 BIN = $(OUTPUTDIR)/alsa_fx
 
-AS	= $(CROSS_COMPILE)as
-CC	= $(CROSS_COMPILE)g++
+CC	= $(CROSS_COMPILE)gcc
+CPP	= $(CROSS_COMPILE)g++
 LD	= $(CROSS_COMPILE)g++
-CPP	= $(CROSS_COMPILE)cpp
 
 CFLAGS = -Wall -I$(INCLUDEDIR) -O2
 LDFLAGS = -lasound
@@ -29,12 +28,10 @@ all: build
 
 
 
-#
-# Define an implicit rule for assembler files
-# to run them through C preprocessor
-#
 %.$(PLATFORM).o: %.c
 	$(CC) -c $(CFLAGS) -o $@ $<
+%.$(PLATFORM).o: %.cpp
+	$(CPP) -c $(CFLAGS) -o $@ $<
 
 #
 # Make targets

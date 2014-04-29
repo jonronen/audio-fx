@@ -6,12 +6,13 @@
 
 
 #include "stdint.h"
+#include "stddef.h"
 #include "serial.h"
 #include "lradc.h"
 #include "system.h"
 #include "audio_dma.h"
 #include "gpio.h"
-#include "math.h"
+#include "fx_math.h"
 #include "utils/str.h"
 #include "engine/parameters.h"
 #include "engine/metronome.h"

@@ -2,6 +2,11 @@
 #define __MATH_H__
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 static inline int limit_value_of_sample(const int sample_value)
 {
     if (sample_value <= -0x3fffff) return -0x3fffff;
@@ -22,6 +27,11 @@ unsigned short scaled_shifted_sine(
     unsigned short max,
     unsigned char phase
 );
+
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 
 #endif /* __MATH_H__ */

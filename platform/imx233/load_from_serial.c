@@ -1,11 +1,6 @@
 #include "serial.h"
 #include "utils/str.h"
-
-#ifdef __cplusplus
-extern "C" {
-void load_from_serial();
-}
-#endif
+#include "stdbool.h"
 
 
 #define BUFF_SIZE 256

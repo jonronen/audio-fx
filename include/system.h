@@ -5,10 +5,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
 int fx_main();
-#ifdef __cplusplus
-}
-#endif
 
 void system_init();
 
@@ -17,6 +16,11 @@ static inline void mdelay(unsigned msecs)
 {
     udelay(1000 * msecs);
 }
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif /* __system_h__ */

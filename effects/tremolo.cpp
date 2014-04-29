@@ -1,6 +1,6 @@
 #include "effects/tremolo.h"
 #include "engine/parameters.h"
-#include "math.h"
+#include "fx_math.h"
 
 
 tremolo_t::tremolo_t()

@@ -2,6 +2,7 @@
 #include "engine/metronome.h"
 #include "lradc.h"
 #include "stdint.h"
+#include "stddef.h"
 #include "serial.h"
 #include "utils/str.h"
 

@@ -20,16 +20,18 @@ CHUMBY_IMAGE_FILE = $(OUTPUTDIR)/startup.img
 CROSS_COMPILE ?= arm-linux-
 
 AS	= $(CROSS_COMPILE)as
-CC	= $(CROSS_COMPILE)g++
+CC	= $(CROSS_COMPILE)gcc
+GPP	= $(CROSS_COMPILE)g++
 LD	= $(CROSS_COMPILE)g++
 CPP	= $(CROSS_COMPILE)cpp
 STRIP	= $(CROSS_COMPILE)strip
 OBJCOPY	= $(CROSS_COMPILE)objcopy
 OBJDUMP	= $(CROSS_COMPILE)objdump
 
-CFLAGS	= -Wall -I$(INCLUDEDIR)
-CFLAGS	+= -fno-common -fno-exceptions -fno-non-call-exceptions -fno-weak -fno-rtti -fno-builtin
+CFLAGS	= -Wall -I$(INCLUDEDIR) -I$(INCLUDEDIR)/bare
+CFLAGS	+= -fno-common -fno-exceptions -fno-non-call-exceptions -fno-builtin
 CFLAGS	+= -O2 -DMEMORYSIZE=64 -fPIC
+CPPFLAGS = $(CFLAGS) -fno-weak -fno-rtti
 LDFLAGS = -static -nostdlib -T $(BOOT_LAYOUT_OUT)
 
 
@@ -38,8 +40,9 @@ PLATFORM_OBJS = entry load_from_serial serial lradc dma \
 
 # IMPORTANT! entry.o should appear first - this is where execution starts
 CHUMBY_BOOT_OBJS = $(addsuffix .$(PLATFORM).o, \
-			 $(addprefix $(PLATFORMDIR)/, $(PLATFORM_OBJS))) \
-		   $(GENERIC_OBJS)
+                    $(addprefix $(PLATFORMDIR)/, $(PLATFORM_OBJS))) \
+                   $(GENERIC_OBJS) \
+                   $(BAREMETAL_OBJS)
 
 
 # Default goal
@@ -59,7 +62,7 @@ all: build
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 %.$(PLATFORM).o: %.cpp
-	$(CC) -c $(CFLAGS) -o $@ $<
+	$(GPP) -c $(CPPFLAGS) -o $@ $<
 
 #
 # Make targets

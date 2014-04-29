@@ -1,4 +1,5 @@
 #include "stdint.h"
+#include "stddef.h"
 #include "engine/metronome.h"
 #include "engine/parameters.h"
 #include "effects/effect_base.h"

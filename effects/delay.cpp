@@ -2,7 +2,7 @@
 #include "engine/parameters.h"
 #include "engine/metronome.h"
 #include "utils/str.h"
-#include "math.h"
+#include "fx_math.h"
 #include "serial.h"
 
 

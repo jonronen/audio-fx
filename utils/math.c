@@ -1,4 +1,4 @@
-#include "math.h"
+#include "fx_math.h"
 
 
 static int sine_8_bit(const unsigned char degrees)

@@ -1,7 +1,7 @@
 #include "effects/low_pass.h"
 #include "effects/resonance.h"
 #include "engine/parameters.h"
-#include "math.h"
+#include "fx_math.h"
 
 
 low_pass_t::low_pass_t(const resonance_t* reso)

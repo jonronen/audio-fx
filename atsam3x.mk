@@ -66,7 +66,8 @@ ATSAM3X_OBJS = $(addsuffix .$(PLATFORM).o, \
                  $(addprefix $(PLATFORMDIR)/, $(PLATFORM_OBJS)) \
                  $(addprefix $(SAM_FILES)/cores/arduino/, $(SAM_OBJS)) \
                ) \
-               $(GENERIC_OBJS)
+               $(GENERIC_OBJS) \
+               $(BAREMETAL_OBJS)
 
 
 # Default goal
@@ -91,7 +92,7 @@ build_prep:
 	mkdir -p $(OUTPUTDIR)
 
 $(BIN).elf: $(ATSAM3X_OBJS)
-	$(GPP) $(LDFLAGS) -Wl,-Map,$(BIN).map -o $(BIN).elf $(ATSAM3X_OBJS) $(SAM_FILES)/variants/arduino_due_x/libsam_sam3x8e_gcc_rel.a -Wl,--end-group
+	$(CPP) $(LDFLAGS) -Wl,-Map,$(BIN).map -o $(BIN).elf $(ATSAM3X_OBJS) $(SAM_FILES)/variants/arduino_due_x/libsam_sam3x8e_gcc_rel.a -Wl,--end-group
 
 
 clean:

@@ -1,6 +1,6 @@
 #include "effects/high_pass.h"
 #include "engine/parameters.h"
-#include "math.h"
+#include "fx_math.h"
 
 
 high_pass_t::high_pass_t()

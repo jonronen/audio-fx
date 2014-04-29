@@ -1,6 +1,6 @@
 #include "effects/overdrive.h"
 #include "engine/parameters.h"
-#include "math.h"
+#include "fx_math.h"
 
 
 overdrive_t::overdrive_t()

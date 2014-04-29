@@ -51,9 +51,4 @@
 #define uintptr_t   unsigned long
 
 
-#ifndef NULL
-#define NULL ((void*)0)
-#endif
-
-
 #endif /* __STDINT_H__ */
