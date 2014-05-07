@@ -15,7 +15,14 @@ static const char *device = "default";
 
 #define NUM_BUFFERS 6
 #define NUM_SAMPLES 128
-int g_buffers[NUM_BUFFERS][NUM_SAMPLES];
+int g_play_buffers[NUM_BUFFERS][NUM_SAMPLES];
+int g_rec_buffers[NUM_BUFFERS][NUM_SAMPLES];
+
+
+snd_pcm_t *g_handle_rec, *g_handle_play;
+
+pthread_t g_h_writer_thread;
+pthread_t g_h_reader_thread;
 
 
 static audio_dma_callback_t g_callback;
@@ -46,18 +53,24 @@ static void* writer_thread(void* param)
 {
     int i=0;
     snd_pcm_sframes_t frames;
-    snd_pcm_t *handle_play = (snd_pcm_t*)param;
 
     while (1) {
         sem_wait(&g_full_cnt_sem);
+
+        g_callback(
+            g_play_buffers[i],
+            g_rec_buffers[i],
+            NUM_SAMPLES,
+            1 /* we're MONO right now */
+        );
         
         frames = snd_pcm_writei(
-            handle_play,
-            g_buffers[(i+2)%NUM_BUFFERS],
+            g_handle_play,
+            g_play_buffers[i],
             NUM_SAMPLES
         );
         if (frames < 0)
-            frames = snd_pcm_recover(handle_play, frames, 0);
+            frames = snd_pcm_recover(g_handle_play, frames, 0);
         if (frames < 0) {
             printf("snd_pcm_writei failed: %s\n", snd_strerror(frames));
             break;
@@ -76,35 +89,65 @@ static void* writer_thread(void* param)
 }
 
 
+void* reader_thread(void* param)
+{
+    int i=0;
+    snd_pcm_sframes_t frames;
+
+    while (1) {
+        sem_wait(&g_empty_cnt_sem);
+
+        frames = snd_pcm_readi(
+            g_handle_rec,
+            g_rec_buffers[i],
+            NUM_SAMPLES
+        );
+        if (frames < 0)
+            frames = snd_pcm_recover(g_handle_rec, frames, 0);
+        if (frames < 0) {
+            printf("snd_pcm_readi failed: %s\n", snd_strerror(frames));
+            break;
+        }
+        if ((frames > 0) && (frames < NUM_SAMPLES))
+            printf("Short read (expected %d, read %li)\n", NUM_SAMPLES, frames);
+
+        sem_post(&g_full_cnt_sem);
+        
+        i = (i+1) % NUM_BUFFERS;
+    }
+
+    return NULL;
+}
+
+
+
 void audio_dma_start()
 {
     int err;
     unsigned int i, j;
-    int min, max;
 
-    snd_pcm_t *handle_cap, *handle_play;
-    snd_pcm_sframes_t frames;
+    for (i = 0; i < NUM_BUFFERS; i++) {
+        for (j = 0; j < NUM_SAMPLES; j++) {
+            g_rec_buffers[i][j] = 0;
+            g_play_buffers[i][j] = 0;
+        }
+    }
 
-    pthread_t h_writer_thread;
-
-    for (i = 0; i < NUM_BUFFERS; i++)
-        for (j = 0; j < NUM_SAMPLES; j++)
-            g_buffers[i][j] = 0;
     if ((err = snd_pcm_open(
-            &handle_cap, device, SND_PCM_STREAM_CAPTURE, 0
+            &g_handle_rec, device, SND_PCM_STREAM_CAPTURE, 0
         )) < 0)
     {
         printf("Capture open error: %s\n", snd_strerror(err));
         exit(EXIT_FAILURE);
     }
     if ((err = snd_pcm_open(
-            &handle_play, device, SND_PCM_STREAM_PLAYBACK, 0)
+            &g_handle_play, device, SND_PCM_STREAM_PLAYBACK, 0)
         ) < 0)
     {
         printf("Playback open error: %s\n", snd_strerror(err));
         exit(EXIT_FAILURE);
     }
-    if ((err = snd_pcm_set_params(handle_cap,
+    if ((err = snd_pcm_set_params(g_handle_rec,
                                   SND_PCM_FORMAT_S32_LE,
                                   SND_PCM_ACCESS_RW_INTERLEAVED,
                                   1,
@@ -114,7 +157,7 @@ void audio_dma_start()
         printf("Capture open error: %s\n", snd_strerror(err));
         exit(EXIT_FAILURE);
     }
-    if ((err = snd_pcm_set_params(handle_play,
+    if ((err = snd_pcm_set_params(g_handle_play,
                                   SND_PCM_FORMAT_S32_LE,
                                   SND_PCM_ACCESS_RW_INTERLEAVED,
                                   1,
@@ -137,53 +180,19 @@ void audio_dma_start()
     }
 
     err = pthread_create(
-        &h_writer_thread, NULL, writer_thread, (void*)handle_play
+        &g_h_reader_thread, NULL, reader_thread, NULL
     );
     if (err < 0) {
         printf("pthread_create error: %s\n", strerror(err));
         exit(EXIT_FAILURE);
     }
 
-    while (1) {
-        sem_wait(&g_empty_cnt_sem);
-
-        frames = snd_pcm_readi(
-            handle_cap,
-            g_buffers[i%NUM_BUFFERS],
-            NUM_SAMPLES
-        );
-        if (frames < 0)
-            frames = snd_pcm_recover(handle_cap, frames, 0);
-        if (frames < 0) {
-            printf("snd_pcm_readi failed: %s\n", snd_strerror(frames));
-            break;
-        }
-        if (frames > 0 && frames < NUM_SAMPLES)
-            printf("Short read (expected %d, read %li)\n", NUM_SAMPLES, frames);
-
-        /* TODO: insert the modifications here */
-
-        max = -0x7fffffff;
-        min = 0x7fffffff;
-        for (j=0; j<NUM_SAMPLES; j++) {
-            if (max < g_buffers[i%NUM_BUFFERS][j]) {
-                max = g_buffers[i%NUM_BUFFERS][j];
-            }
-            if (min > g_buffers[i%NUM_BUFFERS][j]) {
-                min = g_buffers[i%NUM_BUFFERS][j];
-            }
-        }
-        printf("read #%d: min=%d, max=%d\n", i, min, max);
-
-        sem_post(&g_full_cnt_sem);
-        
-        i = (i+1) % NUM_BUFFERS;
+    err = pthread_create(
+        &g_h_writer_thread, NULL, writer_thread, NULL
+    );
+    if (err < 0) {
+        printf("pthread_create error: %s\n", strerror(err));
+        exit(EXIT_FAILURE);
     }
-
-
-    pthread_join(h_writer_thread, NULL);
-
-    snd_pcm_close(handle_cap);
-    snd_pcm_close(handle_play);
 }
 
