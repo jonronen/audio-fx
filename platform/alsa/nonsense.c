@@ -9,7 +9,7 @@ void udelay(unsigned t)
 
 int lradc_read_channel(int channel)
 {
-    return -1;
+    return 0x800;
 }
 
 void lradc_setup_channels_for_polling()
