@@ -16,8 +16,8 @@ static inline int limit_value_of_sample(const int sample_value)
 
 static inline int limit_value_of_delta(const int delta_value)
 {
-    if (delta_value <= -0x7fffff) return -0x7fffff;
-    else if (delta_value >= 0x7fffff) return 0x7fffff;
+    if (delta_value <= (int)(-0x7fffff)) return (int)(-0x7fffff);
+    else if (delta_value >= (int)0x7fffff) return (int)0x7fffff;
     else return delta_value;
 }
 

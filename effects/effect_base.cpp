@@ -34,7 +34,7 @@ void effect_base_t::set_level(unsigned short level)
     m_updating_params = false;
 }
 
-void effect_base_t::set_levels(unsigned short levels[NUM_CHANNELS])
+void effect_base_t::set_levels(const unsigned short levels[NUM_CHANNELS])
 {
     int i;
 
@@ -53,7 +53,7 @@ void effect_base_t::set_fixed_level(unsigned short level)
     }
 }
 
-void effect_base_t::set_fixed_levels(unsigned short levels[NUM_CHANNELS])
+void effect_base_t::set_fixed_levels(const unsigned short levels[NUM_CHANNELS])
 {
     if (m_param_ctrl == PARAM_CTRL_FIXED) {
         set_levels(levels);
@@ -76,12 +76,15 @@ unsigned short effect_base_t::translate_lfo(unsigned short lfo) const
 }
 
 void effect_base_t::set_metronome_ops(
-    metronome_op_t ops[],
-    unsigned short levels[],
+    const metronome_op_t ops[],
+    const unsigned short levels[],
     unsigned short cnt
 )
 {
     int i;
+
+    // sanity check
+    if (cnt > MAX_DIVISION_FACTOR * MAX_PATTERN_UNITS) return;
 
     /* TODO: lock a mutex? disable interrupts? */
     m_updating_params = true;

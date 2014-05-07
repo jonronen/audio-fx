@@ -24,7 +24,7 @@ static resonance_t g_reso1;
 static low_pass_t  g_low_pass0(&g_reso0);
 static low_pass_t  g_low_pass1(&g_reso1);
 static tremolo_t   g_trem;
-static delay_t     g_reverb(true, 8000, 8000);
+static delay_t     g_reverb(true, 30000, 30000);
 
 
 /*
@@ -307,25 +307,27 @@ void parameters_setup()
 {
     int i=0;
 
-    /*
-    metronome_op_t metr_ops[2] = {
+    const metronome_op_t metr_ops[4] = {
+        METRONOME_OP_LINEAR_FALL, METRONOME_OP_LINEAR_RISE,
         METRONOME_OP_LINEAR_FALL, METRONOME_OP_LINEAR_RISE
     };
-    unsigned short metr_levels[2] = {0x1000, 0x1000};
-    */
+    unsigned short metr_levels[4] = {0x1000, 0x1000, 0x1000, 0x1000};
+    /*
     metronome_op_t metr_ops[4] = {
         METRONOME_OP_CONST_FULL, METRONOME_OP_CONST_FULL,
         METRONOME_OP_CONST_FULL, METRONOME_OP_CONST_FULL
     };
-    unsigned short metr_levels_lpf[4] = {0x100, 0x400, 0x900, 0x1000};
-    unsigned short metr_levels_reso[4] = {0x100, 0x400, 0x900, 0xC00};
+    */
+    const unsigned short metr_levels_lpf[4] = {0x1000, 0x1000, 0x1000, 0x1000};
+    const unsigned short metr_levels_reso[4] = {0xC00, 0xC00, 0xC00, 0xC00};
 
     memset(g_effects, 0x00, sizeof(g_effects));
 
     // test - initialise the metronome with some fixed parameters
-    metronome_setup(120, 1, 4);
+    metronome_setup(240, 2, 2);
 
     /* test - initialise the effects with a basic setup */
+    //g_reso0.set_ctrl(PARAM_CTRL_FIXED);
     //g_reso0.set_fixed_level(3200);
     //g_reso0.set_fixed_level(0);
     g_reso0.set_ctrl(PARAM_CTRL_METRONOME);
@@ -338,17 +340,20 @@ void parameters_setup()
     //g_low_pass0.set_ctrl(PARAM_CTRL_FIXED);
     //g_low_pass0.set_fixed_level(0x800);
 
-    g_trem.set_ctrl(PARAM_CTRL_LFO);
-    g_trem.set_pot_index(4);
-    //g_trem.set_metronome_ops(metr_ops, metr_levels, 2);
+    //g_trem.set_ctrl(PARAM_CTRL_LFO);
+    //g_trem.set_pot_index(4);
+    //g_trem.set_metronome_ops(metr_ops, metr_levels, 4);
 
-    g_reverb.set_ctrl(PARAM_CTRL_MANUAL);
-    g_reverb.set_pot_index(4);
+    //g_reverb.set_ctrl(PARAM_CTRL_MANUAL);
+    //g_reverb.set_pot_index(4);
+    g_reverb.set_ctrl(PARAM_CTRL_FIXED);
+    g_reverb.set_fixed_level(0x800);
 
-    //g_effects[i++] = &g_reso0;
-    //g_effects[i++] = &g_low_pass0;
+    i = 0;
+    g_effects[i++] = &g_reso0;
+    g_effects[i++] = &g_low_pass0;
     //g_effects[i++] = &g_trem;
-    g_effects[i++] = &g_reverb;
+    //g_effects[i++] = &g_reverb;
     g_effects[i] = (effect_base_t*)NULL;
 
     lradc_setup_channels_for_polling();

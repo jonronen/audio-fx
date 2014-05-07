@@ -12,7 +12,7 @@
 class tremolo_t : public effect_base_t {
 public:
     tremolo_t();
-    int process_sample(int sample, unsigned char channel);
+    virtual int process_sample(int sample, unsigned char channel);
 
 
 private:

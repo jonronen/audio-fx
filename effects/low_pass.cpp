@@ -29,9 +29,10 @@ int low_pass_t::process_sample(int sample, unsigned char channel)
         (int)(((sample - m_prev_result[channel]) *
                (int)get_channel_level(channel)) / LOW_PASS_MAX_LEVEL);
     m_prev_delta[channel] = limit_value_of_delta(m_prev_delta[channel]);
-    sample = limit_value_of_sample(
-        m_prev_result[channel] + m_prev_delta[channel]
-    );
+
+    sample = m_prev_result[channel] + m_prev_delta[channel];
+    sample = limit_value_of_sample(sample);
+
     m_prev_result[channel] = sample;
 
     return sample;

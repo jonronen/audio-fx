@@ -38,11 +38,11 @@ public:
     void set_ctrl(param_ctrl_t ctrl);
     void set_pot_index(unsigned char index);
     void set_metronome_ops(
-        metronome_op_t ops[],
-        unsigned short levels[],
+        const metronome_op_t ops[],
+        const unsigned short levels[],
         unsigned short cnt
     );
-    void set_fixed_levels(unsigned short levels[NUM_CHANNELS]);
+    void set_fixed_levels(const unsigned short levels[NUM_CHANNELS]);
     void set_fixed_level(unsigned short level);
 
     /* methods that use the parameters for modifying samples */
@@ -50,7 +50,7 @@ public:
 
 protected:
     /* set levels per-channel. units are before translating: 12-bit */
-    void set_levels(unsigned short levels[NUM_CHANNELS]);
+    void set_levels(const unsigned short levels[NUM_CHANNELS]);
     /* set levels for all channels. units are before translating: 12-bit */
     void set_level(unsigned short level);
 
