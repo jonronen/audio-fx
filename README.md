@@ -1,9 +1,13 @@
 Audio-FX
 ========
 
-An audio effects platform based on the Chumby Hacker Board (and soon on other platforms as well :).
+An audio effects framework, written in C++, for real-time audio processing with filters and sound effects.
 
-See http://wiki.chumby.com/index.php?title=Chumby_hacker_board_beta for more information on the Chumby Hacker Board.
+This projects is meant to be cross-platform, and currently supports the following platforms:
+
+1. iMX233-based systems like the Chumby Hacker Board (http://wiki.chumby.com/index.php?title=Chumby_hacker_board) and the oLinuXino (https://www.olimex.com/Products/OLinuXino/iMX233/)
+2. Arduino DUE with some codec shields (e.g. http://oshpark.com/shared_projects/O79Q55Fz)
+3. A PC or a laptop with Linux and ALSA utils installed.
 
 These sources contain two variants of the same idea:
 1. A Linux kernel module, meant to be built and loaded from the Chumby's OS.
@@ -22,5 +26,4 @@ How to build a Chumby image
 3. sudo dd if=output_chumby/startup.img of=/dev/<sd_card_dev>
 4. sudo eject /dev/<sd_card_dev>
 5. plug your sd card and start playing
-
 
