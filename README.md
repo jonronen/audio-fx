@@ -43,6 +43,7 @@ Building this project using ALSA is just for tests and experiments - don't expec
 However, for testing and debugging, this plaform is quite good. The only hardware you need is a PC (or a Laptop), a microphone, and some earphones or speakers.
 
 Build instructions:
+
 1. PLATFORM=alsa make
 2. output_alsa/alsa_fx
 
@@ -52,10 +53,12 @@ Arduino DUE
 Arduino DUE is based on an ARM processor clocked at 84MHz with plenty of headers for GPIOs, analog inputs, and I2S. It requires a decent codec (installed as an Arduino shield) if you want good quality audio out of it. Two such shields can be found at https://github.com/jonronen/geda-stuff/tree/master/audio_shield (schematics and design) and at http://www.oshpark.com/profiles/jronen (PCBs)
 
 Build instructions:
+
 1. PLATFORM=atsam3x make
 2. PLATFORM=atsam3x make upload
 
 Some notes:
+
 * Arduino DUE doesn't have enough RAM for effects like delay and reverb
 * It does have plenty of GPIOs which makes this platform very friendly for rotary encoders, potentiometers, buttons, and switches. Use that!
 
@@ -66,8 +69,8 @@ Raspberry PI (TBD)
 
 Chumby image
 ------------
-
 Build instructions:
+
 1. make image (this automatically compiles and builds an image for the chumby)
 2. insert a microSD card to your PC's card reader
 3. sudo dd if=output_chumby/startup.img of=/dev/<sd_card_dev>
