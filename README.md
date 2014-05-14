@@ -73,7 +73,7 @@ Build instructions:
 
 1. make image (this automatically compiles and builds an image for the chumby)
 2. insert a microSD card to your PC's card reader
-3. sudo dd if=output_chumby/startup.img of=/dev/<sd_card_dev>
-4. sudo eject /dev/<sd_card_dev>
+3. sudo dd if=output_chumby/startup.img of=/dev/{sd_card_dev}
+4. sudo eject /dev/{sd_card_dev}
 5. plug your sd card and start playing
 
