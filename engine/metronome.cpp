@@ -6,9 +6,6 @@
 #include "gpio.h"
 
 
-#define PHASES_PER_OP 256
-
-
 
 /*
  * "fixed" parameters

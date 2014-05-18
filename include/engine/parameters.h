@@ -44,16 +44,7 @@ void parameters_counter_increment();
 /* parameter manipulation */
 unsigned short two_exp_12bit_to_8bit(unsigned short raw_value);
 
-/*
- * phases translation functions
- * input: 8-bit phase
- * output: 12-bit level (zero means no effect, 0x1000 means full power)
- */
-unsigned short phase_to_sine_wave(unsigned char phase);
-unsigned short phase_to_sawtooth_wave(unsigned char phase);
-unsigned short phase_to_reverse_sawtooth_wave(unsigned char phase);
-unsigned short phase_to_triangular_wave(unsigned char phase);
-unsigned short phase_to_square_wave(unsigned char phase);
+
 unsigned short phase_perform_op(
     metronome_op_t op,
     unsigned char phase,
