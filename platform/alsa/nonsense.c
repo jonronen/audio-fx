@@ -2,9 +2,11 @@
 #include "stdbool.h"
 #include "lradc.h"
 #include <stdio.h>
+#include <unistd.h>
 
 void udelay(unsigned t)
 {
+    usleep(t);
 }
 
 int lradc_read_channel(int channel)
