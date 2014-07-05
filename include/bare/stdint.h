@@ -41,8 +41,8 @@
 #define INT64_MIN   LONG_MIN
 #define INT64_MAX   LONG_MAX
 #define UINT64_MAX  ULONG_MAX
-#define int64_t     long
-#define uint64_t    unsigned long
+#define int64_t     long long
+#define uint64_t    unsigned long long
 
 #define INTPTR_MIN  LONG_MIN
 #define INTPTR_MAX  LONG_MAX

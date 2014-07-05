@@ -32,7 +32,7 @@ CFLAGS	= -Wall -I$(INCLUDEDIR) -I$(INCLUDEDIR)/bare
 CFLAGS	+= -fno-common -fno-exceptions -fno-non-call-exceptions -fno-builtin
 CFLAGS	+= -O2 -DMEMORYSIZE=64 -fPIC
 CPPFLAGS = $(CFLAGS) -fno-weak -fno-rtti
-LDFLAGS = -static -nostdlib -T $(BOOT_LAYOUT_OUT)
+LDFLAGS = -static -nostdlib -O2 -T $(BOOT_LAYOUT_OUT)
 
 
 PLATFORM_OBJS = entry load_from_serial serial lradc dma \
