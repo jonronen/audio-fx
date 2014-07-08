@@ -15,7 +15,6 @@ class resonance_t : public effect_base_t {
 
 public:
     resonance_t();
-    virtual unsigned short translate_level(unsigned short level);
     virtual int process_sample(int sample, unsigned char channel);
 };
 

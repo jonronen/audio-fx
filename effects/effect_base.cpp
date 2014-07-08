@@ -65,7 +65,7 @@ unsigned short effect_base_t::get_channel_level(unsigned char channel) const
     return m_levels[channel];
 }
 
-unsigned short effect_base_t::translate_level(unsigned short level) const
+unsigned short effect_base_t::translate_level(unsigned short level)
 {
     return level/0x10;
 }

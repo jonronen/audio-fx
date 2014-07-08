@@ -5,7 +5,7 @@ PLATFORM ?= chumby
 UTILS_OBJS = str math
 ENGINE_OBJS = fx_main parameters metronome
 EFFECTS_OBJS = effect_base delay overdrive tremolo high_pass low_pass resonance
-EFFECTS_OBJS += band_pass
+EFFECTS_OBJS += band_pass distortion
 GENERIC_OBJS = $(addsuffix .$(PLATFORM).o, \
                 $(addprefix utils/, $(UTILS_OBJS)) \
                 $(addprefix engine/, $(ENGINE_OBJS)) \

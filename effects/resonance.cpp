@@ -9,12 +9,6 @@ resonance_t::resonance_t()
 }
 
 
-unsigned short resonance_t::translate_level(unsigned short level)
-{
-    return level;
-}
-
-
 int resonance_t::process_sample(int sample, unsigned char channel)
 {
     return sample;

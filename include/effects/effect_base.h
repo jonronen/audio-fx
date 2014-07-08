@@ -35,24 +35,26 @@ public:
      * the following methods are setup methods.
      * try not to call them too much, only when really changing the setup
      */
-    void set_ctrl(param_ctrl_t ctrl);
-    void set_pot_index(unsigned char index);
-    void set_metronome_ops(
+    virtual void set_ctrl(param_ctrl_t ctrl);
+    virtual void set_pot_index(unsigned char index);
+    virtual void set_metronome_ops(
         const metronome_op_t ops[],
         const unsigned short levels[],
         unsigned short cnt
     );
-    void set_fixed_levels(const unsigned short levels[NUM_CHANNELS]);
-    void set_fixed_level(unsigned short level);
+    virtual void set_fixed_levels(const unsigned short levels[NUM_CHANNELS]);
+    virtual void set_fixed_level(unsigned short level);
 
     /* methods that use the parameters for modifying samples */
     virtual int process_sample(int sample, unsigned char channel);
 
+    virtual ~effect_base_t() {}
+
 protected:
     /* set levels per-channel. units are before translating: 12-bit */
-    void set_levels(const unsigned short levels[NUM_CHANNELS]);
+    virtual void set_levels(const unsigned short levels[NUM_CHANNELS]);
     /* set levels for all channels. units are before translating: 12-bit */
-    void set_level(unsigned short level);
+    virtual void set_level(unsigned short level);
 
     /*
      * translate levels from generic levels to effect-specific levels.
@@ -60,7 +62,7 @@ protected:
      * input: 12-bit unsigned integer (0-0x1000, zero means no effect, 0x1000 means full)
      * output: effect-specific
      */
-    virtual unsigned short translate_level(unsigned short level) const;
+    virtual unsigned short translate_level(unsigned short level);
 
     /*
      * translate lfo frequency from 12-bit to an actual frequency in Hz
@@ -69,7 +71,7 @@ protected:
     virtual unsigned short translate_lfo(unsigned short lfo_level) const;
 
     /* get the translated channel level (for performing effects on it) */
-    unsigned short get_channel_level(unsigned char channel) const;
+    virtual unsigned short get_channel_level(unsigned char channel) const;
 
     param_ctrl_t m_param_ctrl;
     unsigned short m_pot_index;
