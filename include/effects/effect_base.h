@@ -48,7 +48,6 @@ public:
     /* methods that use the parameters for modifying samples */
     virtual int process_sample(int sample, unsigned char channel);
 
-    virtual ~effect_base_t() {}
 
 protected:
     /* set levels per-channel. units are before translating: 12-bit */

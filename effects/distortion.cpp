@@ -2,8 +2,6 @@
 #include "engine/parameters.h"
 #include "fx_math.h"
 
-#include <stdio.h>
-
 
 distortion_t::distortion_t()
     : effect_base_t()
@@ -15,7 +13,6 @@ unsigned short distortion_t::translate_level(unsigned short level)
 {
     // translate from 12-bit to 17-bit
     m_dist_level = (double)level / (double)(2080 - level/2);
-    printf("level: %f\n", (float)m_dist_level);
 
     return 0;
 }
