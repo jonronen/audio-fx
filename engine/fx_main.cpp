@@ -62,6 +62,11 @@ static void modify_buffers(
         serial_puts("\n");
     }
 
+    //
+    // TODO: add a synchronisation mechanism here
+    // indicate we're using the parameters
+    //
+
     // start modifying!
     for (i=0; i < num_samples; ++i) {
         for (j=0; j < num_channels; j++) {
@@ -71,8 +76,9 @@ static void modify_buffers(
             sample = in_buff[index] / 0x200; /* 23-bit is enough */
 
             for (k=0; k<MAX_EFFECT_COUNT; k++) {
-                if (g_effects[k] == NULL) break;
-                sample = g_effects[k]->process_sample(sample, j);
+                effect_base_t* p_curr = g_effects[g_preset_count][k];
+                if (p_curr == NULL) break;
+                sample = p_curr->process_sample(sample, j);
             }
 
             out_buff[index] = sample * 0x200; /* scale back from 23-bit to 32 */
@@ -81,6 +87,8 @@ static void modify_buffers(
         // take care of other parameters too
         parameters_counter_increment();
     }
+
+    // TODO: indicate we finished using the parameters
 }
 
 int fx_main()

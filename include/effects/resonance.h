@@ -3,8 +3,6 @@
 
 
 #include "effects/effect_base.h"
-#include "effects/resonance.h"
-#include "engine/parameters.h"
 
 
 #define RESONANCE_MAX_LEVEL 0x100

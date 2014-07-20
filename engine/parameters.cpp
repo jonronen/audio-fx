@@ -15,14 +15,15 @@
 #include "effects/distortion.h"
 #include "effects/delay.h"
 #include "effects/resonance.h"
+#include "effects/passthru.h"
 
 
-effect_base_t* g_effects[MAX_EFFECT_COUNT];
+effect_base_t* g_effects[MAX_PRESET_COUNT][MAX_EFFECT_COUNT];
+unsigned int g_preset_count;
 
+static pass_thru_t g_passthru;
 static resonance_t g_reso0;
-static resonance_t g_reso1;
 static low_pass_t  g_low_pass0(&g_reso0);
-static low_pass_t  g_low_pass1(&g_reso1);
 static tremolo_t   g_trem;
 static delay_t     g_reverb(true, 30000, 30000);
 static distortion_t g_dist;
@@ -327,15 +328,22 @@ void parameters_setup()
     g_reverb.set_fixed_level(0x800);
 
     g_dist.set_ctrl(PARAM_CTRL_FIXED);
-    g_dist.set_fixed_level(0x800);
+    g_dist.set_fixed_level(0xC00);
+
+    g_effects[0][0] = &g_passthru;
+    g_effects[0][1] = (effect_base_t*)NULL;
 
     i = 0;
-    g_effects[i++] = &g_reso0;
-    g_effects[i++] = &g_low_pass0;
-    //g_effects[i++] = &g_trem;
-    g_effects[i++] = &g_reverb;
-    g_effects[i++] = &g_dist;
-    g_effects[i] = (effect_base_t*)NULL;
+    g_effects[1][i++] = &g_reso0;
+    g_effects[1][i++] = &g_low_pass0;
+    //g_effects[1][i++] = &g_trem;
+    g_effects[1][i++] = &g_reverb;
+    //g_effects[1][i++] = &g_dist;
+    g_effects[1][i++] = new delay_t(true, 200, 500);
+    delete g_effects[1][--i];
+    g_effects[1][i] = (effect_base_t*)NULL;
+
+    g_preset_count = 1;
 
     lradc_setup_channels_for_polling();
 }
@@ -346,8 +354,8 @@ void parameters_set()
     int i;
 
     for (i=0; i<MAX_EFFECT_COUNT; i++) {
-        if (g_effects[i] == NULL) break;
-        g_effects[i]->params_update();
+        if (g_effects[g_preset_count][i] == NULL) break;
+        g_effects[g_preset_count][i]->params_update();
     }
 }
 
@@ -357,8 +365,8 @@ void parameters_counter_increment()
     int i;
 
     for (i=0; i<MAX_EFFECT_COUNT; i++) {
-        if (g_effects[i] == NULL) break;
-        g_effects[i]->params_tick();
+        if (g_effects[g_preset_count][i] == NULL) break;
+        g_effects[g_preset_count][i]->params_tick();
     }
     metronome_tick();
 }

@@ -96,8 +96,10 @@ private:
 
 
 /* allow up to 64 effects in parallel */
-#define MAX_EFFECT_COUNT 64
-extern effect_base_t* g_effects[MAX_EFFECT_COUNT];
+#define MAX_EFFECT_COUNT 16
+#define MAX_PRESET_COUNT 8
+extern effect_base_t* g_effects[MAX_PRESET_COUNT][MAX_EFFECT_COUNT];
+extern unsigned int g_preset_count;
 
 
 
