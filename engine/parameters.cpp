@@ -10,6 +10,7 @@
 #include "effects/effect_base.h"
 #include "effects/low_pass.h"
 #include "effects/high_pass.h"
+#include "effects/band_pass.h"
 #include "effects/tremolo.h"
 #include "effects/overdrive.h"
 #include "effects/distortion.h"
@@ -302,7 +303,7 @@ void parameters_setup()
     memset(g_effects, 0x00, sizeof(g_effects));
 
     // test - initialise the metronome with some fixed parameters
-    metronome_setup(240, 2, 2);
+    metronome_setup(120, 2, 2);
 
     /* test - initialise the effects with a basic setup */
     //g_reso0.set_ctrl(PARAM_CTRL_FIXED);
@@ -334,13 +335,22 @@ void parameters_setup()
     g_effects[0][1] = (effect_base_t*)NULL;
 
     i = 0;
-    g_effects[1][i++] = &g_reso0;
-    g_effects[1][i++] = &g_low_pass0;
+    //g_effects[1][i++] = &g_reso0;
+    //g_effects[1][i++] = &g_low_pass0;
     //g_effects[1][i++] = &g_trem;
-    g_effects[1][i++] = &g_reverb;
+    //g_effects[1][i++] = &g_reverb;
     //g_effects[1][i++] = &g_dist;
-    g_effects[1][i++] = new delay_t(true, 200, 500);
-    delete g_effects[1][--i];
+
+    //g_effects[1][i] = new delay_t(true, 200, 500);
+    //g_effects[1][i]->set_ctrl(PARAM_CTRL_METRONOME);
+    //g_effects[1][i]->set_metronome_ops(metr_ops, metr_levels_lpf, 4);
+    //i++;
+
+    g_effects[1][i] = new band_pass_t();
+    g_effects[1][i]->set_ctrl(PARAM_CTRL_METRONOME);
+    g_effects[1][i]->set_metronome_ops(metr_ops, metr_levels_lpf, 4);
+    i++;
+
     g_effects[1][i] = (effect_base_t*)NULL;
 
     g_preset_count = 1;
