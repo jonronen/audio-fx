@@ -21,7 +21,7 @@ CURRENTDIR      = .
 PLATFORMDIR     = $(CURRENTDIR)/platform/atsam3x
 OUTPUTDIR       = $(CURRENTDIR)/output_atsam3x
 
-FLAVOUR	?= uda1345
+FLAVOUR	?= pcm3060
 TARGET	=  due_$(FLAVOUR)_shield
 BIN 	=  $(OUTPUTDIR)/$(TARGET)
 
@@ -60,7 +60,7 @@ SAM_OBJS += WInterrupts itoa wiring_shift hooks wiring avr/dtostrf
 SAM_OBJS += iar_calls_sam3 RingBuffer USB/HID USB/USBCore USB/CDC wiring_pulse
 SAM_OBJS += WString Reset WMath Stream main UARTClass USARTClass
 SAM_OBJS += cxxabi-compat IPAddress Print ../../variants/arduino_due_x/variant
-PLATFORM_OBJS = $(TARGET)
+PLATFORM_OBJS = $(TARGET) hal stubs
 
 ATSAM3X_OBJS = $(addsuffix .$(PLATFORM).o, \
                  $(addprefix $(PLATFORMDIR)/, $(PLATFORM_OBJS)) \

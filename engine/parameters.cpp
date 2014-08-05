@@ -26,7 +26,7 @@ static pass_thru_t g_passthru;
 static resonance_t g_reso0;
 static low_pass_t  g_low_pass0(&g_reso0);
 static tremolo_t   g_trem;
-static delay_t     g_reverb(true, 30000, 30000);
+//static delay_t     g_reverb(true, 30000, 30000);
 static distortion_t g_dist;
 
 
@@ -326,7 +326,7 @@ void parameters_setup()
     //g_reverb.set_ctrl(PARAM_CTRL_MANUAL);
     //g_reverb.set_pot_index(4);
     //g_reverb.set_ctrl(PARAM_CTRL_FIXED);
-    g_reverb.set_fixed_level(0x800);
+    //g_reverb.set_fixed_level(0x800);
 
     g_dist.set_ctrl(PARAM_CTRL_FIXED);
     g_dist.set_fixed_level(0xC00);
