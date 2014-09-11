@@ -286,42 +286,59 @@ void parameters_setup()
 {
     int i=0;
 
-    const metronome_op_t metr_ops[4] = {
+    const metronome_op_t metr_ops[8] = {
+        METRONOME_OP_LINEAR_FALL, METRONOME_OP_LINEAR_RISE,
+        METRONOME_OP_LINEAR_FALL, METRONOME_OP_LINEAR_RISE,
         METRONOME_OP_LINEAR_FALL, METRONOME_OP_LINEAR_RISE,
         METRONOME_OP_LINEAR_FALL, METRONOME_OP_LINEAR_RISE
     };
-    unsigned short metr_levels[4] = {0x1000, 0x1000, 0x1000, 0x1000};
+    unsigned short metr_levels[8] = {
+        0x1000, 0x1000, 0x1000, 0x1000,
+        0x1000, 0x1000, 0x1000, 0x1000
+    };
     /*
     metronome_op_t metr_ops[4] = {
         METRONOME_OP_CONST_FULL, METRONOME_OP_CONST_FULL,
         METRONOME_OP_CONST_FULL, METRONOME_OP_CONST_FULL
     };
     */
-    const unsigned short metr_levels_lpf[4] = {0x1000, 0x1000, 0x1000, 0x1000};
+    const unsigned short metr_levels_lpf[8] = {
+		0x1000, 0x1000, 0x1000, 0x1000,
+		0x1000, 0x1000, 0x1000, 0x1000};
     const unsigned short metr_levels_reso[4] = {0xC00, 0xC00, 0xC00, 0xC00};
+
+    const unsigned short metr_levels_wah[8] = {
+		0xA00, 0xB00, 0xC00, 0xD00,
+		0xE00, 0xD00, 0xC00, 0xB00};
+    const metronome_op_t metr_ops_wah[8] = {
+        METRONOME_OP_LINEAR_TRANSITION, METRONOME_OP_LINEAR_TRANSITION,
+        METRONOME_OP_LINEAR_TRANSITION, METRONOME_OP_LINEAR_TRANSITION,
+        METRONOME_OP_LINEAR_TRANSITION, METRONOME_OP_LINEAR_TRANSITION,
+        METRONOME_OP_LINEAR_TRANSITION, METRONOME_OP_LINEAR_TRANSITION
+    };
 
     memset(g_effects, 0x00, sizeof(g_effects));
 
     // test - initialise the metronome with some fixed parameters
-    metronome_setup(120, 2, 2);
+    metronome_setup(180, 4, 2);
 
     /* test - initialise the effects with a basic setup */
     //g_reso0.set_ctrl(PARAM_CTRL_FIXED);
     //g_reso0.set_fixed_level(3200);
     //g_reso0.set_fixed_level(0);
-    g_reso0.set_ctrl(PARAM_CTRL_METRONOME);
-    g_reso0.set_metronome_ops(metr_ops, metr_levels_reso, 4);
+    g_reso0.set_ctrl(PARAM_CTRL_MANUAL);
+    g_reso0.set_fixed_level(0xC00);
 
     g_low_pass0.set_ctrl(PARAM_CTRL_METRONOME);
-    g_low_pass0.set_metronome_ops(metr_ops, metr_levels_lpf, 4);
+    g_low_pass0.set_metronome_ops(metr_ops, metr_levels_lpf, 8);
     //g_low_pass0.set_ctrl(PARAM_CTRL_MANUAL);
     //g_low_pass0.set_pot_index(4);
     //g_low_pass0.set_ctrl(PARAM_CTRL_FIXED);
     //g_low_pass0.set_fixed_level(0x800);
 
-    //g_trem.set_ctrl(PARAM_CTRL_LFO);
-    //g_trem.set_pot_index(4);
-    //g_trem.set_metronome_ops(metr_ops, metr_levels, 4);
+    g_trem.set_ctrl(PARAM_CTRL_LFO);
+    g_trem.set_pot_index(4);
+    g_trem.set_metronome_ops(metr_ops, metr_levels, 8);
 
     //g_reverb.set_ctrl(PARAM_CTRL_MANUAL);
     //g_reverb.set_pot_index(4);
@@ -329,27 +346,29 @@ void parameters_setup()
     //g_reverb.set_fixed_level(0x800);
 
     g_dist.set_ctrl(PARAM_CTRL_FIXED);
-    g_dist.set_fixed_level(0xC00);
+    g_dist.set_fixed_level(0x800);
 
     g_effects[0][0] = &g_passthru;
     g_effects[0][1] = (effect_base_t*)NULL;
 
     i = 0;
-    //g_effects[1][i++] = &g_reso0;
-    //g_effects[1][i++] = &g_low_pass0;
+    g_effects[1][i++] = &g_reso0;
+    g_effects[1][i++] = &g_low_pass0;
     //g_effects[1][i++] = &g_trem;
     //g_effects[1][i++] = &g_reverb;
     //g_effects[1][i++] = &g_dist;
 
-    //g_effects[1][i] = new delay_t(true, 200, 500);
-    //g_effects[1][i]->set_ctrl(PARAM_CTRL_METRONOME);
-    //g_effects[1][i]->set_metronome_ops(metr_ops, metr_levels_lpf, 4);
+    // TODO: work out on that one...
+    //g_effects[1][i] = new delay_t(true, 150, 300);
+    //g_effects[1][i]->set_ctrl(PARAM_CTRL_MANUAL);
+    //g_effects[1][i]->set_fixed_level(0xF00);
+    //((delay_t*)g_effects[1][i])->set_lfo(100);
     //i++;
 
-    g_effects[1][i] = new band_pass_t();
-    g_effects[1][i]->set_ctrl(PARAM_CTRL_METRONOME);
-    g_effects[1][i]->set_metronome_ops(metr_ops, metr_levels_lpf, 4);
-    i++;
+    //g_effects[1][i] = new band_pass_t();
+    //g_effects[1][i]->set_ctrl(PARAM_CTRL_METRONOME);
+    //g_effects[1][i]->set_metronome_ops(metr_ops_wah, metr_levels_wah, 8);
+    //i++;
 
     g_effects[1][i] = (effect_base_t*)NULL;
 
