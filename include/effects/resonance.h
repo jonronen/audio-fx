@@ -5,15 +5,12 @@
 #include "effects/effect_base.h"
 
 
-#define RESONANCE_MAX_LEVEL 0x100
-
-
-class resonance_t : public effect_base_t {
-    friend class low_pass_t;
+class Resonance : public EffectBase {
+    friend class LowPass;
 
 public:
-    resonance_t();
-    virtual int process_sample(int sample, unsigned char channel);
+    Resonance();
+    virtual double process_sample(double sample, unsigned char channel);
 };
 
 

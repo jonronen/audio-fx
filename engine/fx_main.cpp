@@ -34,12 +34,12 @@ static uint8_t g_print_cnt;
 
 static void modify_buffers(
     int out_buff[],
-    int in_buff[],
-    unsigned int num_samples,
-    unsigned int num_channels
+    const int in_buff[],
+    const unsigned int num_samples,
+    const unsigned int num_channels
 )
 {
-    int sample;
+    double sample;
     unsigned int i, j, k, index;
 
     // TODO: remove this min-max computation and print
@@ -73,15 +73,21 @@ static void modify_buffers(
 
             /* some definitions first */
             index = i*num_channels + j;
-            sample = in_buff[index] / 0x200; /* 23-bit is enough */
+
+            /* scale to a value between -1 and 1 */
+            sample = ((double)in_buff[index]) / 0x7FFFFFFF;
+
+            /* sanity check */
+            if (sample < -1.0) sample = -1.0;
+            if (sample > 1.0) sample = 1.0;
 
             for (k=0; k<MAX_EFFECT_COUNT; k++) {
-                effect_base_t* p_curr = g_effects[g_preset_count][k];
+                EffectBase* p_curr = g_effects[g_preset_count][k];
                 if (p_curr == NULL) break;
                 sample = p_curr->process_sample(sample, j);
             }
 
-            out_buff[index] = sample * 0x200; /* scale back from 23-bit to 32 */
+            out_buff[index] = (int)(sample * 0x7FFFFFFF); /* scale back */
         }
 
         // take care of other parameters too

@@ -4,8 +4,8 @@
 #include "fx_math.h"
 
 
-low_pass_t::low_pass_t(const resonance_t* reso)
-    : effect_base_t(), m_p_resonance(reso)
+LowPass::LowPass(const Resonance* reso)
+    : EffectBase(), m_p_resonance(reso)
 {
     int i;
     for (i=0; i<NUM_CHANNELS; i++) {
@@ -15,19 +15,25 @@ low_pass_t::low_pass_t(const resonance_t* reso)
 }
 
 
-unsigned short low_pass_t::translate_level(unsigned short level)
+/*
+ * translate the level from a linear level
+ * to an effect-specific level.
+ *
+ * input: between zero and one
+ * output: between zero and one, nonlinear
+ */
+double LowPass::translate_level(double level)
 {
-    return two_exp_12bit_to_8bit(level);
+    return level*level*level; /* TODO: work out on that one */
 }
 
 
-int low_pass_t::process_sample(int sample, unsigned char channel)
+double LowPass::process_sample(double sample, unsigned char channel)
 {
-    m_prev_delta[channel] *= (int)m_p_resonance->get_channel_level(channel);
-    m_prev_delta[channel] /= (int)RESONANCE_MAX_LEVEL;
+    m_prev_delta[channel] *= m_p_resonance->get_channel_level(channel);
     m_prev_delta[channel] +=
-        (int)(((sample - m_prev_result[channel]) *
-               (int)get_channel_level(channel)) / LOW_PASS_MAX_LEVEL);
+        (sample - m_prev_result[channel]) *
+        get_channel_level(channel);
     m_prev_delta[channel] = limit_value_of_delta(m_prev_delta[channel]);
 
     sample = m_prev_result[channel] + m_prev_delta[channel];

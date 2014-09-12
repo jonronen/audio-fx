@@ -26,13 +26,10 @@ typedef enum _metronome_op_t {
 } metronome_op_t;
 
 
-#define PHASES_PER_OP 256
-
-
 void metronome_setup(
     unsigned short freq,
-    unsigned char num_ops,
-    unsigned char pattern_units
+    unsigned char ops_per_beat,
+    unsigned char beat_count
 );
 void metronome_tick();
 void metronome_start();

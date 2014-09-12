@@ -9,9 +9,9 @@ void udelay(unsigned t)
     usleep(t);
 }
 
-int lradc_read_channel(int channel)
+double lradc_read_channel(const unsigned int channel)
 {
-    return 0x800;
+    return 0.5;
 }
 
 void lradc_setup_channels_for_polling()

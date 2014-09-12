@@ -5,10 +5,10 @@
 #include "effects/effect_base.h"
 
 
-class pass_thru_t : public effect_base_t {
+class PassThru : public EffectBase {
 public:
-    pass_thru_t();
-    virtual int process_sample(int sample, unsigned char channel);
+    PassThru();
+    virtual double process_sample(double sample, unsigned char channel);
 };
 
 

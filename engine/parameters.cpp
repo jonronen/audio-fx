@@ -9,108 +9,29 @@
 /* effects */
 #include "effects/effect_base.h"
 #include "effects/low_pass.h"
-#include "effects/high_pass.h"
-#include "effects/band_pass.h"
-#include "effects/tremolo.h"
-#include "effects/overdrive.h"
-#include "effects/distortion.h"
-#include "effects/delay.h"
+//#include "effects/high_pass.h"
+//#include "effects/band_pass.h"
+//#include "effects/tremolo.h"
+//#include "effects/overdrive.h"
+//#include "effects/distortion.h"
+//#include "effects/delay.h"
 #include "effects/resonance.h"
 #include "effects/passthru.h"
 
 
-effect_base_t* g_effects[MAX_PRESET_COUNT][MAX_EFFECT_COUNT];
+EffectBase* g_effects[MAX_PRESET_COUNT][MAX_EFFECT_COUNT];
 unsigned int g_preset_count;
 
-static pass_thru_t g_passthru;
-static resonance_t g_reso0;
-static low_pass_t  g_low_pass0(&g_reso0);
-static tremolo_t   g_trem;
+static PassThru g_passthru;
+static Resonance g_reso0;
+static LowPass  g_low_pass0(&g_reso0);
+//static tremolo_t   g_trem;
 //static delay_t     g_reverb(true, 30000, 30000);
-static distortion_t g_dist;
+//static distortion_t g_dist;
 
 
-/*
- * numerical tables for parameter conversions (e.g. logarithms)
- */
-static const unsigned short g_two_exp_fraction[] = {
-    256, 256, 256, 257, 257, 257, 258, 258, 
-    258, 259, 259, 259, 260, 260, 260, 261, 
-    261, 261, 262, 262, 263, 263, 263, 264, 
-    264, 264, 265, 265, 265, 266, 266, 266, 
-    267, 267, 268, 268, 268, 269, 269, 269, 
-    270, 270, 270, 271, 271, 272, 272, 272, 
-    273, 273, 273, 274, 274, 275, 275, 275, 
-    276, 276, 276, 277, 277, 278, 278, 278, 
-    279, 279, 279, 280, 280, 281, 281, 281, 
-    282, 282, 282, 283, 283, 284, 284, 284, 
-    285, 285, 286, 286, 286, 287, 287, 287, 
-    288, 288, 289, 289, 289, 290, 290, 291, 
-    291, 291, 292, 292, 293, 293, 293, 294, 
-    294, 295, 295, 295, 296, 296, 297, 297, 
-    297, 298, 298, 299, 299, 299, 300, 300, 
-    301, 301, 301, 302, 302, 303, 303, 304, 
-    304, 304, 305, 305, 306, 306, 306, 307, 
-    307, 308, 308, 309, 309, 309, 310, 310, 
-    311, 311, 311, 312, 312, 313, 313, 314, 
-    314, 314, 315, 315, 316, 316, 317, 317, 
-    317, 318, 318, 319, 319, 320, 320, 320, 
-    321, 321, 322, 322, 323, 323, 323, 324, 
-    324, 325, 325, 326, 326, 327, 327, 327, 
-    328, 328, 329, 329, 330, 330, 331, 331, 
-    331, 332, 332, 333, 333, 334, 334, 335, 
-    335, 336, 336, 336, 337, 337, 338, 338, 
-    339, 339, 340, 340, 341, 341, 342, 342, 
-    342, 343, 343, 344, 344, 345, 345, 346, 
-    346, 347, 347, 348, 348, 349, 349, 349, 
-    350, 350, 351, 351, 352, 352, 353, 353, 
-    354, 354, 355, 355, 356, 356, 357, 357, 
-    358, 358, 359, 359, 360, 360, 361, 361, 
-    362, 362, 363, 363, 364, 364, 364, 365, 
-    365, 366, 366, 367, 367, 368, 368, 369, 
-    369, 370, 370, 371, 371, 372, 372, 373, 
-    373, 374, 375, 375, 376, 376, 377, 377, 
-    378, 378, 379, 379, 380, 380, 381, 381, 
-    382, 382, 383, 383, 384, 384, 385, 385, 
-    386, 386, 387, 387, 388, 388, 389, 390, 
-    390, 391, 391, 392, 392, 393, 393, 394, 
-    394, 395, 395, 396, 396, 397, 398, 398, 
-    399, 399, 400, 400, 401, 401, 402, 402, 
-    403, 403, 404, 405, 405, 406, 406, 407, 
-    407, 408, 408, 409, 410, 410, 411, 411, 
-    412, 412, 413, 413, 414, 415, 415, 416, 
-    416, 417, 417, 418, 419, 419, 420, 420, 
-    421, 421, 422, 423, 423, 424, 424, 425, 
-    425, 426, 427, 427, 428, 428, 429, 429, 
-    430, 431, 431, 432, 432, 433, 434, 434, 
-    435, 435, 436, 436, 437, 438, 438, 439, 
-    439, 440, 441, 441, 442, 442, 443, 444, 
-    444, 445, 445, 446, 447, 447, 448, 448, 
-    449, 450, 450, 451, 452, 452, 453, 453, 
-    454, 455, 455, 456, 456, 457, 458, 458, 
-    459, 460, 460, 461, 461, 462, 463, 463, 
-    464, 465, 465, 466, 466, 467, 468, 468, 
-    469, 470, 470, 471, 472, 472, 473, 473, 
-    474, 475, 475, 476, 477, 477, 478, 479, 
-    479, 480, 481, 481, 482, 483, 483, 484, 
-    485, 485, 486, 486, 487, 488, 488, 489, 
-    490, 490, 491, 492, 492, 493, 494, 494, 
-    495, 496, 496, 497, 498, 498, 499, 500, 
-    501, 501, 502, 503, 503, 504, 505, 505, 
-    506, 507, 507, 508, 509, 509, 510, 511,
-};
-
-unsigned short two_exp_12bit_to_8bit(unsigned short raw_value)
-{
-    unsigned int tmp = 1 << (raw_value/512);
-    tmp *= g_two_exp_fraction[raw_value % 512];
-    tmp /= 256;
-
-    return (unsigned short)(tmp & 0xffff);
-}
-
-
-
+/* TODO: work out on the phase transitions */
+#ifdef NOT_DEFINED
 static const unsigned short g_sine_phase[] = {
      0x0000, 0x0030, 0x0060, 0x008f,  0x00be, 0x00ec, 0x011a, 0x0147,
      0x0175, 0x01a1, 0x01ce, 0x01fa,  0x0226, 0x0251, 0x027c, 0x02a7,
@@ -157,7 +78,7 @@ static unsigned short phase_sine_transition(
         (unsigned int)curr_level *
          (unsigned int)g_sine_phase[PHASES_PER_OP-phase] +
         (unsigned int)next_level *
-         (unsigned int)g_sine_phase[phase] / EFFECT_MAX_LEVEL
+         (unsigned int)g_sine_phase[phase]
     ) / (unsigned int)PHASES_PER_OP;
 
     return (unsigned short)res;
@@ -210,39 +131,35 @@ static unsigned short phase_exp_transition(
         (unsigned int)curr_level *
          (unsigned int)g_exp_phase[PHASES_PER_OP-phase] +
         (unsigned int)next_level *
-         (unsigned int)g_exp_phase[phase] / EFFECT_MAX_LEVEL
+         (unsigned int)g_exp_phase[phase]
     ) / (unsigned int)PHASES_PER_OP;
 
     return (unsigned short)res;
 }
+#endif
 
 
-static unsigned short phase_linear_transition(
-    unsigned short curr_level,
-    unsigned short next_level,
-    unsigned char phase
+static double phase_linear_transition(
+    double curr_level,
+    double next_level,
+    double phase
 )
 {
-    unsigned int res = (
-        (unsigned int)curr_level * (unsigned int)(PHASES_PER_OP-phase) +
-        (unsigned int)next_level * (unsigned int)phase
-    ) / (unsigned int)PHASES_PER_OP;
-
-    return (unsigned short)res;
+    return (curr_level * (1-phase)) + (next_level * phase);
 }
 
-unsigned short phase_perform_op(
+double phase_perform_op(
     metronome_op_t op,
-    unsigned char phase,
-    unsigned short curr_level,
-    unsigned short next_level
+    double phase,
+    double curr_level,
+    double next_level
 )
 {
-    unsigned short res = 0;
+    double res = 0.0;
 
     switch(op) {
       case METRONOME_OP_CONST_NONE:
-        res = 0;
+        res = 0.0;
         break;
       case METRONOME_OP_CONST_FULL:
         res = curr_level;
@@ -257,22 +174,22 @@ unsigned short phase_perform_op(
         res = phase_linear_transition(curr_level, next_level, phase);
         break;
       case METRONOME_OP_SINE_RISE:
-        res = phase_sine_transition(0, curr_level, phase);
+        res = 0.0; /* TODO: phase_sine_transition(0, curr_level, phase); */
         break;
       case METRONOME_OP_SINE_FALL:
-        res = phase_sine_transition(curr_level, 0, phase);
+        res = 0.0; // TODO: phase_sine_transition(curr_level, 0, phase);
         break;
       case METRONOME_OP_SINE_TRANSITION:
-        res = phase_sine_transition(curr_level, next_level, phase);
+        res = 0.0; // TODO: phase_sine_transition(curr_level, next_level, phase);
         break;
       case METRONOME_OP_EXP_RISE:
-        res = phase_exp_transition(0, curr_level, phase);
+        res = 0.0; // TODO: phase_exp_transition(0, curr_level, phase);
         break;
       case METRONOME_OP_EXP_FALL:
-        res = phase_exp_transition(curr_level, 0, phase);
+        res = 0.0; // TODO: phase_exp_transition(curr_level, 0, phase);
         break;
       case METRONOME_OP_EXP_TRANSITION:
-        res = phase_exp_transition(curr_level, next_level, phase);
+        res = 0.0; // TODO: phase_exp_transition(curr_level, next_level, phase);
         break;
       default:
         res = 0;
@@ -302,14 +219,14 @@ void parameters_setup()
         METRONOME_OP_CONST_FULL, METRONOME_OP_CONST_FULL
     };
     */
-    const unsigned short metr_levels_lpf[8] = {
-		0x1000, 0x1000, 0x1000, 0x1000,
-		0x1000, 0x1000, 0x1000, 0x1000};
-    const unsigned short metr_levels_reso[4] = {0xC00, 0xC00, 0xC00, 0xC00};
+    const double metr_levels_lpf[8] = {
+        1.0, 1.0, 1.0, 1.0,
+        1.0, 1.0, 1.0, 1.0};
+    const double metr_levels_reso[4] = {0xC00, 0xC00, 0xC00, 0xC00};
 
-    const unsigned short metr_levels_wah[8] = {
-		0xA00, 0xB00, 0xC00, 0xD00,
-		0xE00, 0xD00, 0xC00, 0xB00};
+    const double metr_levels_wah[8] = {
+        0xA00, 0xB00, 0xC00, 0xD00,
+        0xE00, 0xD00, 0xC00, 0xB00};
     const metronome_op_t metr_ops_wah[8] = {
         METRONOME_OP_LINEAR_TRANSITION, METRONOME_OP_LINEAR_TRANSITION,
         METRONOME_OP_LINEAR_TRANSITION, METRONOME_OP_LINEAR_TRANSITION,
@@ -326,8 +243,8 @@ void parameters_setup()
     //g_reso0.set_ctrl(PARAM_CTRL_FIXED);
     //g_reso0.set_fixed_level(3200);
     //g_reso0.set_fixed_level(0);
-    g_reso0.set_ctrl(PARAM_CTRL_MANUAL);
-    g_reso0.set_fixed_level(0xC00);
+    g_reso0.set_ctrl(PARAM_CTRL_FIXED);
+    g_reso0.set_fixed_level(0.5);
 
     g_low_pass0.set_ctrl(PARAM_CTRL_METRONOME);
     g_low_pass0.set_metronome_ops(metr_ops, metr_levels_lpf, 8);
@@ -336,20 +253,20 @@ void parameters_setup()
     //g_low_pass0.set_ctrl(PARAM_CTRL_FIXED);
     //g_low_pass0.set_fixed_level(0x800);
 
-    g_trem.set_ctrl(PARAM_CTRL_LFO);
-    g_trem.set_pot_index(4);
-    g_trem.set_metronome_ops(metr_ops, metr_levels, 8);
+    //g_trem.set_ctrl(PARAM_CTRL_LFO);
+    //g_trem.set_pot_index(4);
+    //g_trem.set_metronome_ops(metr_ops, metr_levels, 8);
 
     //g_reverb.set_ctrl(PARAM_CTRL_MANUAL);
     //g_reverb.set_pot_index(4);
     //g_reverb.set_ctrl(PARAM_CTRL_FIXED);
     //g_reverb.set_fixed_level(0x800);
 
-    g_dist.set_ctrl(PARAM_CTRL_FIXED);
-    g_dist.set_fixed_level(0x800);
+    //g_dist.set_ctrl(PARAM_CTRL_FIXED);
+    //g_dist.set_fixed_level(0x800);
 
     g_effects[0][0] = &g_passthru;
-    g_effects[0][1] = (effect_base_t*)NULL;
+    g_effects[0][1] = (EffectBase*)NULL;
 
     i = 0;
     g_effects[1][i++] = &g_reso0;
@@ -370,7 +287,7 @@ void parameters_setup()
     //g_effects[1][i]->set_metronome_ops(metr_ops_wah, metr_levels_wah, 8);
     //i++;
 
-    g_effects[1][i] = (effect_base_t*)NULL;
+    g_effects[1][i] = (EffectBase*)NULL;
 
     g_preset_count = 1;
 

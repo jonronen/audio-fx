@@ -1,13 +1,13 @@
 #include "effects/passthru.h"
 
 
-pass_thru_t::pass_thru_t()
-    : effect_base_t()
+PassThru::PassThru()
+    : EffectBase()
 {
 }
 
 
-int pass_thru_t::process_sample(int sample, unsigned char channel)
+double PassThru::process_sample(double sample, unsigned char channel)
 {
     return sample;
 }

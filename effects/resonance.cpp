@@ -2,14 +2,14 @@
 #include "engine/parameters.h"
 
 
-resonance_t::resonance_t()
-    : effect_base_t()
+Resonance::Resonance()
+    : EffectBase()
 {
-    set_level(RESONANCE_MAX_LEVEL);
+    set_level(1.0);
 }
 
 
-int resonance_t::process_sample(int sample, unsigned char channel)
+double Resonance::process_sample(double sample, unsigned char channel)
 {
     return sample;
 }

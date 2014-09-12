@@ -40,16 +40,25 @@ void parameters_set();
 void parameters_counter_increment();
 
 
-
-/* parameter manipulation */
-unsigned short two_exp_12bit_to_8bit(unsigned short raw_value);
-
-
-unsigned short phase_perform_op(
+/*
+ * phase_perform_op
+ *
+ * return the computed phase based on the operator op,
+ * on the current level and the next level, and on the phase.
+ *
+ * the purpose of this function is to make a smooth transition
+ * between curr_level and next_level.
+ *
+ * phase (between 0 and 1) determines how close we should be
+ * to either one of the edges.
+ *
+ * op determines the transition factor (linear, exponential, etc.)
+ */
+double phase_perform_op(
     metronome_op_t op,
-    unsigned char phase,
-    unsigned short curr_level,
-    unsigned short next_level
+    double phase,
+    double curr_level,
+    double next_level
 );
 
 

@@ -64,7 +64,7 @@ void delay_t::params_update()
         (m_param_ctrl == PARAM_CTRL_METRONOME))
         return;
 
-    if (m_pot_index != MAX_LRADC_CHANNEL) {
+    if (m_pot_index < MAX_LRADC_CHANNEL) {
         //serial_puts("pot #");
         //serial_puthex(m_pot_index);
         tmp = lradc_read_channel(m_pot_index);
@@ -79,7 +79,7 @@ void delay_t::params_update()
         }
     }
 
-    if (m_lfo_index != MAX_LRADC_CHANNEL) {
+    if (m_lfo_index < MAX_LRADC_CHANNEL) {
         //serial_puts("pot #");
         //serial_puthex(m_lfo_index);
 

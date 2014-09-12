@@ -8,14 +8,13 @@
 
 
 /*
- * our levels are 12-bit unsigned integers
+ * our levels are doubles between 0 and 1.
  * zero means no effect at all,
- * 0x1000 means full power
+ * 1 means full power.
  */
-#define EFFECT_MAX_LEVEL 0x1000
 
 
-class effect_base_t {
+class EffectBase {
 public:
     /*
      * methods that update the parameters
@@ -39,58 +38,60 @@ public:
     virtual void set_pot_index(unsigned char index);
     virtual void set_metronome_ops(
         const metronome_op_t ops[],
-        const unsigned short levels[],
+        const double levels[],
         unsigned short cnt
     );
-    virtual void set_fixed_levels(const unsigned short levels[NUM_CHANNELS]);
-    virtual void set_fixed_level(unsigned short level);
+    virtual void set_fixed_levels(const double levels[NUM_CHANNELS]);
+    virtual void set_fixed_level(const double level);
 
     /* methods that use the parameters for modifying samples */
-    virtual int process_sample(int sample, unsigned char channel);
+    virtual double process_sample(
+        const double sample,
+        const unsigned char channel);
 
 
 protected:
     /* set levels per-channel. units are before translating: 12-bit */
-    virtual void set_levels(const unsigned short levels[NUM_CHANNELS]);
+    virtual void set_levels(const double levels[NUM_CHANNELS]);
     /* set levels for all channels. units are before translating: 12-bit */
-    virtual void set_level(unsigned short level);
+    virtual void set_level(double level);
 
     /*
      * translate levels from generic levels to effect-specific levels.
      *
-     * input: 12-bit unsigned integer (0-0x1000, zero means no effect, 0x1000 means full)
+     * input: a double between zero and one
      * output: effect-specific
      */
-    virtual unsigned short translate_level(unsigned short level);
+    virtual double translate_level(const double level) const;
 
     /*
-     * translate lfo frequency from 12-bit to an actual frequency in Hz
+     * translate lfo frequency to an actual frequency in Hz
      * (this is effect-specific as well, therefore virtual)
      */
-    virtual unsigned short translate_lfo(unsigned short lfo_level) const;
+    virtual double translate_lfo(const double lfo_level) const;
 
     /* get the translated channel level (for performing effects on it) */
-    virtual unsigned short get_channel_level(unsigned char channel) const;
+    virtual double get_channel_level(const unsigned char channel) const;
 
     param_ctrl_t m_param_ctrl;
     unsigned short m_pot_index;
-    unsigned short m_lfo_freq;
+    double m_lfo_freq;
     bool m_updating_params;
 
-    effect_base_t();
+    EffectBase();
 
 private:
     metronome_op_t m_metronome_ops[MAX_DIVISION_FACTOR*MAX_PATTERN_UNITS];
-    unsigned short m_metronome_levels[MAX_DIVISION_FACTOR*MAX_PATTERN_UNITS];
+    double m_metronome_levels[MAX_DIVISION_FACTOR*MAX_PATTERN_UNITS];
     unsigned short m_metronome_op_cnt;
 
-    unsigned char m_lfo_phase[NUM_CHANNELS];
-    unsigned short m_lfo_cnt[NUM_CHANNELS];
+    double m_lfo_phase[NUM_CHANNELS];
+    double m_lfo_cnt[NUM_CHANNELS];
     metronome_op_t m_lfo_op[NUM_CHANNELS];
 
-    unsigned short m_levels[NUM_CHANNELS];
+    double m_levels[NUM_CHANNELS];
 
-    effect_base_t(const effect_base_t& other);
+    EffectBase(const EffectBase& other);
 };
 
 
@@ -98,7 +99,7 @@ private:
 /* allow up to 64 effects in parallel */
 #define MAX_EFFECT_COUNT 16
 #define MAX_PRESET_COUNT 8
-extern effect_base_t* g_effects[MAX_PRESET_COUNT][MAX_EFFECT_COUNT];
+extern EffectBase* g_effects[MAX_PRESET_COUNT][MAX_EFFECT_COUNT];
 extern unsigned int g_preset_count;
 
 

@@ -1,6 +1,9 @@
 #include "fx_math.h"
 
 
+/* TODO: fix that */
+
+#ifdef NOT_DEFINED
 static int sine_8_bit(const unsigned char degrees)
 {
     int tmp = (int)(degrees & 0x7f);
@@ -33,4 +36,5 @@ unsigned short scaled_shifted_sine(
 
     return (unsigned short)scaled_sin + min;
 }
+#endif
 

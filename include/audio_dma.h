@@ -9,7 +9,7 @@ extern "C" {
 
 typedef void (*audio_dma_callback_t)(
     int out_buff[],
-    int in_buff[],
+    const int in_buff[],
     unsigned int num_samples,
     unsigned int num_channels
 );
