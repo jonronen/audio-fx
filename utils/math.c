@@ -1,40 +1,31 @@
 #include "fx_math.h"
 
 
-/* TODO: fix that */
-
-#ifdef NOT_DEFINED
-static int sine_8_bit(const unsigned char degrees)
+double scaled_sine(const double scaled_degrees)
 {
-    int tmp = (int)(degrees & 0x7f);
-    unsigned char is_negative = (degrees & 0x80);
+    unsigned char is_negative = (scaled_degrees < 0) ? 1 : 0;
+    double tmp = is_negative ?
+                 -scaled_degrees :
+                 scaled_degrees;
+    tmp -= (double)(int)tmp;
 
-    tmp *= (0x80-tmp);
+    tmp *= (1-tmp) * 4;
 
     return is_negative ? -tmp : tmp;
 }
 
-int scaled_sine_8_bit(const unsigned char degrees)
-{
-    return sine_8_bit(degrees) / 32;
-}
-
-unsigned short scaled_shifted_sine(
-    unsigned short min,
-    unsigned short max,
-    unsigned char phase
+double scaled_shifted_sine(
+    const double min,
+    const double max,
+    const double phase
 )
 {
-    unsigned int diff = (int)max-(int)min;
-    int scaled_sin = sine_8_bit(phase);
+    double half_diff = (max-min)/2;
+    double scaled_sin = scaled_sine(phase);
 
     // deal with overflows
-    if ((diff == 0) || (diff > max)) return max;
+    if (half_diff <= 0) return max;
 
-    scaled_sin = scaled_sin * (int) diff / 64 / 0x100;
-    scaled_sin += diff/2;
-
-    return (unsigned short)scaled_sin + min;
+    return scaled_sin*half_diff + (min+max)/2;
 }
-#endif
 

@@ -21,11 +21,11 @@ static inline double limit_value_of_delta(const double delta_value)
     else return delta_value;
 }
 
-double scaled_sine(const double degrees);
+double scaled_sine(const double scaled_degrees);
 double scaled_shifted_sine(
-    double min,
-    double max,
-    double phase
+    const double min,
+    const double max,
+    const double phase
 );
 
 

@@ -4,6 +4,7 @@
 
 #define MAX_LRADC_CHANNEL 256
 
+#define LRADC_INVALID_VALUE -1.0
 
 #ifdef __cplusplus
 extern "C" {

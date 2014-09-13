@@ -14,7 +14,7 @@
 //#include "effects/tremolo.h"
 //#include "effects/overdrive.h"
 //#include "effects/distortion.h"
-//#include "effects/delay.h"
+#include "effects/delay.h"
 #include "effects/resonance.h"
 #include "effects/passthru.h"
 
@@ -25,9 +25,9 @@ unsigned int g_preset_count;
 static PassThru g_passthru;
 static Resonance g_reso0;
 static LowPass  g_low_pass0(&g_reso0);
-//static tremolo_t   g_trem;
-//static delay_t     g_reverb(true, 30000, 30000);
-//static distortion_t g_dist;
+//static Tremolo   g_trem;
+static Delay     g_reverb(true, 30000, 30000);
+//static Distortion g_dist;
 
 
 /* TODO: work out on the phase transitions */
@@ -259,8 +259,8 @@ void parameters_setup()
 
     //g_reverb.set_ctrl(PARAM_CTRL_MANUAL);
     //g_reverb.set_pot_index(4);
-    //g_reverb.set_ctrl(PARAM_CTRL_FIXED);
-    //g_reverb.set_fixed_level(0x800);
+    g_reverb.set_ctrl(PARAM_CTRL_FIXED);
+    g_reverb.set_fixed_level(0.5);
 
     //g_dist.set_ctrl(PARAM_CTRL_FIXED);
     //g_dist.set_fixed_level(0x800);
@@ -269,18 +269,17 @@ void parameters_setup()
     g_effects[0][1] = (EffectBase*)NULL;
 
     i = 0;
-    g_effects[1][i++] = &g_reso0;
-    g_effects[1][i++] = &g_low_pass0;
+    //g_effects[1][i++] = &g_reso0;
+    //g_effects[1][i++] = &g_low_pass0;
     //g_effects[1][i++] = &g_trem;
     //g_effects[1][i++] = &g_reverb;
     //g_effects[1][i++] = &g_dist;
 
-    // TODO: work out on that one...
-    //g_effects[1][i] = new delay_t(true, 150, 300);
-    //g_effects[1][i]->set_ctrl(PARAM_CTRL_MANUAL);
-    //g_effects[1][i]->set_fixed_level(0xF00);
-    //((delay_t*)g_effects[1][i])->set_lfo(100);
-    //i++;
+    g_effects[1][i] = new Delay(true, 50, 80);
+    g_effects[1][i]->set_ctrl(PARAM_CTRL_FIXED);
+    g_effects[1][i]->set_fixed_level(0.5);
+    ((Delay*)g_effects[1][i])->set_lfo(0.00001);
+    i++;
 
     //g_effects[1][i] = new band_pass_t();
     //g_effects[1][i]->set_ctrl(PARAM_CTRL_METRONOME);
