@@ -3,27 +3,26 @@
 #include "fx_math.h"
 
 
-distortion_t::distortion_t()
-    : effect_base_t()
+Distortion::Distortion()
+    : EffectBase()
 {
 }
 
 
-unsigned short distortion_t::translate_level(unsigned short level)
+double Distortion::translate_level(const double level) const
 {
-    // translate from 12-bit to 17-bit
-    m_dist_level = (double)level / (double)(2080 - level/2);
-
-    return 0;
+    return level*2 / ((double)1.02 - level);
 }
 
-int distortion_t::process_sample(int sample, unsigned char channel)
+double Distortion::process_sample(
+        const double sample,
+        const unsigned char channel)
 {
-    double tmp = (double)sample;
+    double tmp = sample;
 
-    tmp *= (m_dist_level + 1.0);
-    tmp /= ((double)sample * m_dist_level / (double)(int)(1<<22) + 1.0);
+    tmp *= (get_channel_level(channel) + 1.0);
+    tmp /= ((sample<0 ? -sample : sample) * get_channel_level(channel) + 1.0);
 
-    return limit_value_of_sample((int)tmp);
+    return limit_value_of_sample(tmp);
 }
 

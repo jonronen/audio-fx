@@ -15,11 +15,13 @@
 class Delay : public EffectBase {
 public:
     Delay(bool with_feedback, unsigned int mn, unsigned int mx);
-    virtual double process_sample(double sample, const unsigned char channel);
-    void set_pot_indices(
+    virtual double process_sample(
+        const double sample,
+        const unsigned char channel);
+    int set_pot_indices(
             const unsigned char mix_index,
             const unsigned char lfo_index);
-    void set_lfo(const double lfo);
+    int set_lfo(const double lfo);
     virtual void params_update();
 
 

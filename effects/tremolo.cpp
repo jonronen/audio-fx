@@ -3,19 +3,21 @@
 #include "fx_math.h"
 
 
-tremolo_t::tremolo_t()
-    : effect_base_t()
+Tremolo::Tremolo()
+    : EffectBase()
 {
-    set_level(TREMOLO_MAX_LEVEL);
+    set_level(0);
 }
 
 
-int tremolo_t::process_sample(int sample, unsigned char channel)
+double Tremolo::process_sample(
+        const double sample,
+        const unsigned char channel)
 {
-    return sample * get_channel_level(channel) / TREMOLO_MAX_LEVEL;
+    return sample * get_channel_level(channel);
 }
 
-unsigned short tremolo_t::translate_lfo(unsigned short lfo) const
+double Tremolo::translate_lfo(double lfo) const
 {
     return lfo + 128;
 }

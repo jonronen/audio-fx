@@ -6,16 +6,13 @@
 #include "engine/parameters.h"
 
 
-#define DISTORTION_MAX_LEVEL 0x100
-
-
-class distortion_t : public effect_base_t {
+class Distortion : public EffectBase {
 public:
-    distortion_t();
-    virtual int process_sample(int sample, unsigned char channel);
-    virtual unsigned short translate_level(unsigned short level);
-protected:
-    double m_dist_level;
+    Distortion();
+    virtual double process_sample(
+        const double sample,
+        const unsigned char channel);
+    virtual double translate_level(const double level) const;
 };
 
 

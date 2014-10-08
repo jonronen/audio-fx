@@ -10,7 +10,9 @@ class Resonance : public EffectBase {
 
 public:
     Resonance();
-    virtual double process_sample(double sample, unsigned char channel);
+    virtual double process_sample(
+        const double sample,
+        const unsigned char channel);
 };
 
 

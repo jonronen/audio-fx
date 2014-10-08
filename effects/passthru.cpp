@@ -7,7 +7,9 @@ PassThru::PassThru()
 }
 
 
-double PassThru::process_sample(double sample, unsigned char channel)
+double PassThru::process_sample(
+        const double sample,
+        const unsigned char channel)
 {
     return sample;
 }

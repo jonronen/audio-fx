@@ -8,7 +8,9 @@
 class PassThru : public EffectBase {
 public:
     PassThru();
-    virtual double process_sample(double sample, unsigned char channel);
+    virtual double process_sample(
+        const double sample,
+        const unsigned char channel);
 };
 
 

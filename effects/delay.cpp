@@ -26,7 +26,7 @@ Delay::Delay(bool with_feedback, unsigned int mn, unsigned int mx)
 }
 
 
-void Delay::set_pot_indices(
+int Delay::set_pot_indices(
         const unsigned char mix_index,
         const unsigned char lfo_index)
 {
@@ -34,10 +34,12 @@ void Delay::set_pot_indices(
     m_pot_index = mix_index;
     m_lfo_index = lfo_index;
     m_updating_params = false;
+
+    return 0;
 }
 
 
-void Delay::set_lfo(const double lfo)
+int Delay::set_lfo(const double lfo)
 {
     int i;
     double tmp = translate_lfo(lfo);
@@ -47,6 +49,8 @@ void Delay::set_lfo(const double lfo)
         m_lfo_increment[i] = tmp;
     }
     m_updating_params = false;
+
+    return 0;
 }
 
 
@@ -91,7 +95,9 @@ void Delay::params_update()
 }
 
 
-double Delay::process_sample(const double sample, unsigned char channel)
+double Delay::process_sample(
+        const double sample,
+        const unsigned char channel)
 {
     double ret_sample = sample;
 

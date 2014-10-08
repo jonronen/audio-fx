@@ -9,16 +9,18 @@
 #define HIGH_PASS_MAX_LEVEL 0x100
 
 
-class high_pass_t : public effect_base_t {
+class HighPass : public EffectBase {
 public:
-    high_pass_t();
-    virtual unsigned short translate_level(unsigned short level);
-    virtual int process_sample(int sample, unsigned char channel);
+    HighPass();
+    virtual double translate_level(const double level) const;
+    virtual double process_sample(
+        const double sample,
+        const unsigned char channel);
 
 
 private:
-    int m_prev_result[NUM_CHANNELS];
-    int m_prev_clean[NUM_CHANNELS];
+    double m_prev_result[NUM_CHANNELS];
+    double m_prev_clean[NUM_CHANNELS];
 };
 
 

@@ -10,8 +10,10 @@
 class LowPass : public EffectBase {
 public:
     LowPass(const Resonance* reso);
-    virtual double translate_level(double level);
-    virtual double process_sample(double sample, unsigned char channel);
+    virtual double translate_level(const double level) const;
+    virtual double process_sample(
+        const double sample,
+        const unsigned char channel);
 
 
 private:

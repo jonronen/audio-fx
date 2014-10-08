@@ -26,7 +26,7 @@ It comes as-is with no warranty.
 
 Directory Structure
 -------------------
-* effects - C++ objects (with matching .h files on include/effects) for the various sound effects and filters. Every effect should inherit from effect_base_t, defined in include/effects/effect_base.h with basic implementation in effects/effect_base.cpp
+* effects - C++ objects (with matching .h files on include/effects) for the various sound effects and filters. Every effect should inherit from EffectBase, defined in include/effects/effect_base.h with basic implementation in effects/effect_base.cpp
 * engine - contains C/C++ sources for the core components of the system, such as the metronome, the effects engine, and the main.
 * include - contains .h files for the various components.
 * platform - contains platform-specific code (each platform has its own subdirectory)

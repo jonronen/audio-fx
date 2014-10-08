@@ -6,17 +6,16 @@
 #include "engine/parameters.h"
 
 
-#define TREMOLO_MAX_LEVEL 0x100
-
-
-class tremolo_t : public effect_base_t {
+class Tremolo : public EffectBase {
 public:
-    tremolo_t();
-    virtual int process_sample(int sample, unsigned char channel);
+    Tremolo();
+    virtual double process_sample(
+        const double sample,
+        const unsigned char channel);
 
 
 private:
-    virtual unsigned short translate_lfo(unsigned short lfo_level) const;
+    virtual double translate_lfo(double lfo_level) const;
 };
 
 

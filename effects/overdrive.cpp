@@ -3,23 +3,25 @@
 #include "fx_math.h"
 
 
-overdrive_t::overdrive_t()
-    : effect_base_t()
+Overdrive::Overdrive()
+    : EffectBase()
 {
-    set_level(OVERDRIVE_NORMAL_LEVEL);
+    set_level(0);
 }
 
 
-unsigned short overdrive_t::translate_level(unsigned short level)
+double Overdrive::translate_level(const double level) const
 {
-    return level < 257 ? 0x40 : 0x41 + (level-257)/20;
+    return 0.25 + (level-0.25)*300;
 }
 
 
-int overdrive_t::process_sample(int sample, unsigned char channel)
+double Overdrive::process_sample(
+        const double sample,
+        const unsigned char channel)
 {
     return limit_value_of_sample(
-        sample * (int)get_channel_level(channel) / OVERDRIVE_MAX_LEVEL
+        sample * get_channel_level(channel)
     );
 }
 

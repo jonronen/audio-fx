@@ -6,15 +6,13 @@
 #include "engine/parameters.h"
 
 
-#define OVERDRIVE_MAX_LEVEL 0x100
-#define OVERDRIVE_NORMAL_LEVEL 0x40
-
-
-class overdrive_t : public effect_base_t {
+class Overdrive : public EffectBase {
 public:
-    overdrive_t();
-    virtual unsigned short translate_level(unsigned short level);
-    virtual int process_sample(int sample, unsigned char channel);
+    Overdrive();
+    virtual double translate_level(const double level) const;
+    virtual double process_sample(
+        const double sample,
+        const unsigned char channel);
 };
 
 

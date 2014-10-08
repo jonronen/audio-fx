@@ -9,7 +9,9 @@ Resonance::Resonance()
 }
 
 
-double Resonance::process_sample(double sample, unsigned char channel)
+double Resonance::process_sample(
+        const double sample,
+        const unsigned char channel)
 {
     return sample;
 }
