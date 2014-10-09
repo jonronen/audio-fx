@@ -17,8 +17,3 @@ double Tremolo::process_sample(
     return sample * get_channel_level(channel);
 }
 
-double Tremolo::translate_lfo(double lfo) const
-{
-    return lfo + 128;
-}
-

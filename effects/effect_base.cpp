@@ -184,8 +184,8 @@ int EffectBase::params_tick()
     if (m_param_ctrl == PARAM_CTRL_LFO) {
         for (j=0; j<NUM_CHANNELS; j++) {
             m_lfo_phase[j] += m_lfo_freq;
-            if (m_lfo_phase[j] >= 2.0) {
-                m_lfo_phase[j] -= 2.0;
+            if (m_lfo_phase[j] >= 1.0) {
+                m_lfo_phase[j] -= 1.0;
             }
             m_levels[j] = translate_level(
                 phase_perform_op(
@@ -247,7 +247,6 @@ EffectBase::EffectBase()
     for (i=0; i<NUM_CHANNELS; i++) {
         /* TODO: change this to something less rude */
         m_lfo_op[i] = METRONOME_OP_LINEAR_FALL;
-        m_lfo_cnt[i] = 0;
         m_lfo_phase[i] = 0;
     }
 
@@ -269,7 +268,14 @@ double EffectBase::translate_level(const double level) const
 
 double EffectBase::translate_lfo(const double lfo) const
 {
-    return lfo/TICK_FREQUENCY;
+    static const double MIN_LFO_FREQ = 0.3;
+    static const double MAX_LFO_FREQ = 16.0;
+
+    // LFO should be between m_min_lfo_freq and m_max_lfo_freq
+    double tmp_lfo = MIN_LFO_FREQ;
+    tmp_lfo += (lfo * (MAX_LFO_FREQ - MIN_LFO_FREQ));
+
+    return tmp_lfo/TICK_FREQUENCY;
 }
 
 double EffectBase::process_sample(

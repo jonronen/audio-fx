@@ -53,9 +53,9 @@ static double phase_linear_transition(
 
 double phase_perform_op(
     metronome_op_t op,
-    double phase,
-    double curr_level,
-    double next_level
+    const double phase,
+    const double curr_level,
+    const double next_level
 )
 {
     double res = 0.0;

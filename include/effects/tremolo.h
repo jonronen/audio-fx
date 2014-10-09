@@ -12,10 +12,6 @@ public:
     virtual double process_sample(
         const double sample,
         const unsigned char channel);
-
-
-private:
-    virtual double translate_lfo(double lfo_level) const;
 };
 
 
