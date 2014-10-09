@@ -22,7 +22,7 @@ public:
             const unsigned char mix_index,
             const unsigned char lfo_index);
     int set_lfo(const double lfo);
-    virtual void params_update();
+    virtual int params_update();
 
 
 protected:

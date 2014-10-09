@@ -54,14 +54,14 @@ int Delay::set_lfo(const double lfo)
 }
 
 
-void Delay::params_update()
+int Delay::params_update()
 {
     double tmp;
 
     if ((m_param_ctrl == PARAM_CTRL_FIXED) ||
         (m_param_ctrl == PARAM_CTRL_EXTERNAL) ||
         (m_param_ctrl == PARAM_CTRL_METRONOME))
-        return;
+        return 0;
 
     if (m_pot_index < MAX_LRADC_CHANNEL) {
         //serial_puts("pot #");
@@ -92,6 +92,8 @@ void Delay::params_update()
             set_lfo(tmp);
         }
     }
+
+    return 0;
 }
 
 

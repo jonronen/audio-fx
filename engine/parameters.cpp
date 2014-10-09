@@ -84,8 +84,8 @@ void parameters_setup()
     //g_low_pass0.set_ctrl(PARAM_CTRL_FIXED);
     //g_low_pass0.set_fixed_level(0x800);
 
-    //g_trem.set_ctrl(PARAM_CTRL_LFO);
-    //g_trem.set_pot_index(4);
+    g_trem.set_ctrl(PARAM_CTRL_LFO);
+    g_trem.set_pot_index(4);
     //g_trem.set_metronome_ops(metr_ops, metr_levels, 8);
 
     //g_reverb.set_ctrl(PARAM_CTRL_MANUAL);
@@ -93,8 +93,8 @@ void parameters_setup()
     g_reverb.set_ctrl(PARAM_CTRL_FIXED);
     g_reverb.set_fixed_level(0.5);
 
-    //g_dist.set_ctrl(PARAM_CTRL_FIXED);
-    //g_dist.set_fixed_level(0x800);
+    g_dist.set_ctrl(PARAM_CTRL_FIXED);
+    g_dist.set_fixed_level(0.2);
 
     g_effects[0][0] = &g_passthru;
     g_effects[0][1] = (EffectBase*)NULL;
@@ -102,15 +102,21 @@ void parameters_setup()
     i = 0;
     //g_effects[1][i++] = &g_reso0;
     //g_effects[1][i++] = &g_low_pass0;
-    //g_effects[1][i++] = &g_trem;
+    g_effects[1][i++] = &g_trem;
     //g_effects[1][i++] = &g_reverb;
     //g_effects[1][i++] = &g_dist;
 
-    g_effects[1][i] = new Delay(true, 50, 80);
-    g_effects[1][i]->set_ctrl(PARAM_CTRL_FIXED);
-    g_effects[1][i]->set_fixed_level(0.5);
-    ((Delay*)g_effects[1][i])->set_lfo(0.00001);
-    i++;
+    //g_effects[1][i] = new Delay(true, 50, 150);
+    //g_effects[1][i]->set_ctrl(PARAM_CTRL_FIXED);
+    //g_effects[1][i]->set_fixed_level(0.7);
+    //((Delay*)g_effects[1][i])->set_lfo(0.00001);
+    //i++;
+
+    //g_effects[1][i] = new Delay(false, 2000, 2500);
+    //g_effects[1][i]->set_ctrl(PARAM_CTRL_FIXED);
+    //g_effects[1][i]->set_fixed_level(0.3);
+    //((Delay*)g_effects[1][i])->set_lfo(0.0001);
+    //i++;
 
     //g_effects[1][i] = new band_pass_t();
     //g_effects[1][i]->set_ctrl(PARAM_CTRL_METRONOME);

@@ -18,8 +18,6 @@
         with one potentiometer that controls the frequency
         and another potentiometer that controls the level
  ** METRONOME - with metronome operators (see metronome.h and metronome.c)
- ** METRONOME_WITH_MANUAL_LEVEL - metronome operators
-        with manual level control
  ** EXTERNAL - level is set by an external force (UART/USB/MIDI/aliens)
  ** FIXED - don't touch this!
  */
@@ -27,7 +25,6 @@ typedef enum _param_ctrl_t {
     PARAM_CTRL_MANUAL,
     PARAM_CTRL_LFO,
     PARAM_CTRL_METRONOME,
-    PARAM_CTRL_METRONOME_WITH_MANUAL_LEVEL,
     PARAM_CTRL_EXTERNAL,
     PARAM_CTRL_FIXED,
     PARAM_CTRL_MAX

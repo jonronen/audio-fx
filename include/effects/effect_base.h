@@ -21,28 +21,28 @@ public:
      */
 
     /* update at ease :) */
-    virtual void params_update();
+    virtual int params_update();
     /* update with a timer in mind */
-    virtual void params_tick();
+    virtual int params_tick();
     /* update according to the metronome phase and operation */
-    virtual void metronome_phase(
-        unsigned char phase_index,
-        unsigned short op_index
+    virtual int metronome_phase(
+        const unsigned char phase_index,
+        const unsigned short op_index
     );
 
     /*
      * the following methods are setup methods.
      * try not to call them too much, only when really changing the setup
      */
-    virtual void set_ctrl(param_ctrl_t ctrl);
-    virtual void set_pot_index(unsigned char index);
-    virtual void set_metronome_ops(
+    virtual int set_ctrl(param_ctrl_t ctrl);
+    virtual int set_pot_index(unsigned char index);
+    virtual int set_metronome_ops(
         const metronome_op_t ops[],
         const double levels[],
-        unsigned short cnt
+        const unsigned short cnt
     );
-    virtual void set_fixed_levels(const double levels[NUM_CHANNELS]);
-    virtual void set_fixed_level(const double level);
+    virtual int set_fixed_levels(const double levels[NUM_CHANNELS]);
+    virtual int set_fixed_level(const double level);
 
     /* methods that use the parameters for modifying samples */
     virtual double process_sample(
@@ -52,9 +52,9 @@ public:
 
 protected:
     /* set levels per-channel. units are before translating: 12-bit */
-    virtual void set_levels(const double levels[NUM_CHANNELS]);
+    virtual int set_levels(const double levels[NUM_CHANNELS]);
     /* set levels for all channels. units are before translating: 12-bit */
-    virtual void set_level(double level);
+    virtual int set_level(const double level);
 
     /*
      * translate levels from generic levels to effect-specific levels.

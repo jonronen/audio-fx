@@ -5,26 +5,42 @@
 #include "serial.h"
 
 
-void EffectBase::set_ctrl(param_ctrl_t ctrl)
+int EffectBase::set_ctrl(const param_ctrl_t ctrl)
 {
+    if (ctrl > PARAM_CTRL_MAX) {
+        serial_puts("set_ctrl: wrong parameter 0x");
+        serial_puthex(ctrl);
+        serial_puts("\n");
+        return -1;
+    }
+
     /* TODO: lock a mutex? disable interrupts? */
     m_updating_params = true;
     m_param_ctrl = ctrl;
     /* TODO: based on the ctrl, set the level (MAX, etc.) */
     m_updating_params = false;
+
+    return 0;
 }
 
-void EffectBase::set_pot_index(unsigned char index)
+int EffectBase::set_pot_index(const unsigned char index)
 {
     /* TODO: lock a mutex? disable interrupts? */
     m_updating_params = true;
     m_pot_index = index;
     m_updating_params = false;
+
+    return 0;
 }
 
-void EffectBase::set_level(double level)
+int EffectBase::set_level(const double level)
 {
     int i;
+
+    if ((level < 0.0) || (level > 1.0)) {
+        serial_puts("set_level: wrong level\n");
+        return -1;
+    }
 
     /* TODO: lock a mutex? disable interrupts? */
     m_updating_params = true;
@@ -32,11 +48,22 @@ void EffectBase::set_level(double level)
         m_levels[i] = translate_level(level);
     }
     m_updating_params = false;
+
+    return 0;
 }
 
-void EffectBase::set_levels(const double levels[NUM_CHANNELS])
+int EffectBase::set_levels(const double levels[NUM_CHANNELS])
 {
     int i;
+
+    for (i=0; i<NUM_CHANNELS; i++) {
+        if ((levels[i] < 0.0) || (levels[i] > 1.0)) {
+            serial_puts("set_levels: wrong level for channel 0x");
+            serial_puthex(i);
+            serial_puts("\n");
+            return -1;
+        }
+    }
 
     /* TODO: lock a mutex? disable interrupts? */
     m_updating_params = true;
@@ -44,22 +71,30 @@ void EffectBase::set_levels(const double levels[NUM_CHANNELS])
         m_levels[i] = translate_level(levels[i]);
     }
     m_updating_params = false;
+
+    return 0;
 }
 
-void EffectBase::set_fixed_level(const double level)
+int EffectBase::set_fixed_level(const double level)
 {
     if (m_param_ctrl == PARAM_CTRL_FIXED) {
         set_level(level);
+        return 0;
     }
 
-    /* TODO: else return an error */
+    serial_puts("set_fixed_level: ctrl is not FIXED\n");
+    return -1;
 }
 
-void EffectBase::set_fixed_levels(const double levels[NUM_CHANNELS])
+int EffectBase::set_fixed_levels(const double levels[NUM_CHANNELS])
 {
     if (m_param_ctrl == PARAM_CTRL_FIXED) {
         set_levels(levels);
+        return 0;
     }
+
+    serial_puts("set_fixed_levels: ctrl is not FIXED\n");
+    return -1;
 }
 
 double EffectBase::get_channel_level(unsigned char channel) const
@@ -67,16 +102,19 @@ double EffectBase::get_channel_level(unsigned char channel) const
     return m_levels[channel];
 }
 
-void EffectBase::set_metronome_ops(
+int EffectBase::set_metronome_ops(
     const metronome_op_t ops[],
     const double levels[],
-    unsigned short cnt
+    const unsigned short cnt
 )
 {
     int i;
 
     // sanity check
-    if (cnt > MAX_DIVISION_FACTOR * MAX_PATTERN_UNITS) return;
+    if (cnt > MAX_DIVISION_FACTOR * MAX_PATTERN_UNITS) {
+        serial_puts("set_metronome_ops: too many ops\n");
+        return -1;
+    }
 
     /* TODO: lock a mutex? disable interrupts? */
     m_updating_params = true;
@@ -86,104 +124,102 @@ void EffectBase::set_metronome_ops(
     }
     m_metronome_op_cnt = cnt;
     m_updating_params = false;
+
+    return 0;
 }
 
 
 /* methods that update the parameters */
-void EffectBase::params_update()
+int EffectBase::params_update()
 {
     double tmp;
 
     if ((m_param_ctrl == PARAM_CTRL_FIXED) ||
         (m_param_ctrl == PARAM_CTRL_EXTERNAL) ||
         (m_param_ctrl == PARAM_CTRL_METRONOME))
-        return;
+        return 0;
 
-    else if ((m_param_ctrl == PARAM_CTRL_MANUAL) ||
-             (m_param_ctrl == PARAM_CTRL_METRONOME_WITH_MANUAL_LEVEL)) {
+    else if (m_param_ctrl == PARAM_CTRL_MANUAL) {
         if (m_pot_index < MAX_LRADC_CHANNEL) {
-            //serial_puts("pot #");
-            //serial_puthex(m_pot_index);
             tmp = lradc_read_channel(m_pot_index);
-            if (tmp != -1) {
-                //serial_puts(": ");
-                //serial_puthex(tmp);
-                //serial_puts("\n");
-                set_level(tmp);
+            if (tmp != LRADC_INVALID_VALUE) {
+                return set_level(tmp);
             }
             else {
-                //serial_puts(" returned -1\n");
+                serial_puts("params_update: cannot read lradc channel 0x");
+                serial_puthex(m_pot_index);
+                serial_puts("\n");
+                return -1;
             }
         }
     }
 
     else if (m_param_ctrl == PARAM_CTRL_LFO) {
-        if (m_pot_index >= MAX_LRADC_CHANNEL) return;
-
-        //serial_puts("pot #");
-        //serial_puthex(m_pot_index);
+        if (m_pot_index >= MAX_LRADC_CHANNEL) {
+            serial_puts("params_update: wrong pot index 0x");
+            serial_puthex(m_pot_index);
+            serial_puts("\n");
+            return -1;
+        }
 
         tmp = lradc_read_channel(m_pot_index);
 
-        if (tmp == -1) return;
-
-        //serial_puts(": ");
-        //serial_puthex(tmp);
-        //serial_puts("\n");
+        if (tmp == LRADC_INVALID_VALUE) {
+            serial_puts("params_update: cannot read lradc channel 0x");
+            serial_puthex(m_pot_index);
+            serial_puts("\n");
+            return -1;
+        }
 
         m_lfo_freq = translate_lfo(tmp);
     }
+
+    return 0;
 }
 
-void EffectBase::params_tick()
+int EffectBase::params_tick()
 {
     int j;
 
     if (m_param_ctrl == PARAM_CTRL_LFO) {
         for (j=0; j<NUM_CHANNELS; j++) {
-            m_lfo_cnt[j] += m_lfo_freq;
-            if (m_lfo_cnt[j] >= TICK_FREQUENCY) {
-                m_lfo_cnt[j] -= TICK_FREQUENCY;
-                m_lfo_phase[j]++;
-                m_levels[j] = translate_level(
-                    phase_perform_op(
-                        m_lfo_op[j],
-                        m_lfo_phase[j],
-                        1,
-                        1
-                    )
-                );
+            m_lfo_phase[j] += m_lfo_freq;
+            if (m_lfo_phase[j] >= 2.0) {
+                m_lfo_phase[j] -= 2.0;
             }
+            m_levels[j] = translate_level(
+                phase_perform_op(
+                    m_lfo_op[j],
+                    m_lfo_phase[j],
+                    1,
+                    1
+                )
+            );
         }
     }
+    return 0;
 }
 
-void EffectBase::metronome_phase(
+int EffectBase::metronome_phase(
     unsigned char phase_index,
     unsigned short op_index
 )
 {
     double curr_level, next_level;
 
-    if ((m_param_ctrl != PARAM_CTRL_METRONOME) &&
-        (m_param_ctrl != PARAM_CTRL_METRONOME_WITH_MANUAL_LEVEL))
-        return;
+    if (m_param_ctrl != PARAM_CTRL_METRONOME) {
+        // this is not an error, we just don't need to do anything
+        return 0;
+    }
 
     /*
      * the final level is a convex combination
-     * of the metronome/manual level and the default level
+     * of the metronome level and the next/default
      */
-    if (m_param_ctrl == PARAM_CTRL_METRONOME) {
-        curr_level = m_metronome_levels[op_index];
-        next_level = m_metronome_levels[
-            op_index+1 >= m_metronome_op_cnt ? 0 : op_index+1
-        ];
-    }
-    else {
-        // assuming all channels are at the same level...
-        curr_level = m_levels[0];
-        next_level = m_levels[0];
-    }
+    curr_level = m_metronome_levels[op_index];
+    next_level = m_metronome_levels[
+        op_index+1 >= m_metronome_op_cnt ? 0 : op_index+1
+    ];
 
     /* get the raw level as an output from the metronome */
     double metronome_result =
@@ -195,6 +231,8 @@ void EffectBase::metronome_phase(
         );
 
     set_level(metronome_result);
+
+    return 0;
 }
 
 
@@ -231,7 +269,7 @@ double EffectBase::translate_level(const double level) const
 
 double EffectBase::translate_lfo(const double lfo) const
 {
-    return lfo;
+    return lfo/TICK_FREQUENCY;
 }
 
 double EffectBase::process_sample(
