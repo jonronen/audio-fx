@@ -20,7 +20,7 @@ BandPass::BandPass()
 double BandPass::process_sample(
         const double sample, const unsigned char channel)
 {
-    double alpha_level = (int)get_channel_level(channel);
+    double alpha_level = get_channel_level(channel);
     double beta_level = alpha_level / 2;
 
     double tmp_val =

@@ -35,14 +35,10 @@ void parameters_setup()
     int i=0;
 
     const metronome_op_t metr_ops[8] = {
-        METRONOME_OP_LINEAR_FALL, METRONOME_OP_LINEAR_RISE,
-        METRONOME_OP_LINEAR_FALL, METRONOME_OP_LINEAR_RISE,
-        METRONOME_OP_LINEAR_FALL, METRONOME_OP_LINEAR_RISE,
-        METRONOME_OP_LINEAR_FALL, METRONOME_OP_LINEAR_RISE
-    };
-    unsigned short metr_levels[8] = {
-        0x1000, 0x1000, 0x1000, 0x1000,
-        0x1000, 0x1000, 0x1000, 0x1000
+        METRONOME_OP_LINEAR_TRANSITION, METRONOME_OP_LINEAR_TRANSITION,
+        METRONOME_OP_LINEAR_TRANSITION, METRONOME_OP_LINEAR_TRANSITION,
+        METRONOME_OP_LINEAR_TRANSITION, METRONOME_OP_LINEAR_TRANSITION,
+        METRONOME_OP_LINEAR_TRANSITION, METRONOME_OP_LINEAR_TRANSITION
     };
     /*
     metronome_op_t metr_ops[4] = {
@@ -51,13 +47,13 @@ void parameters_setup()
     };
     */
     const double metr_levels_lpf[8] = {
-        1.0, 1.0, 1.0, 1.0,
-        1.0, 1.0, 1.0, 1.0};
-    const double metr_levels_reso[4] = {0xC00, 0xC00, 0xC00, 0xC00};
+        1.0, 0.7, 0.6, 0.5,
+        0.4, 0.5, 0.6, 0.7};
+    const double metr_levels_reso[4] = {0.75, 0.75, 0.75, 0.75};
 
     const double metr_levels_wah[8] = {
-        0xA00, 0xB00, 0xC00, 0xD00,
-        0xE00, 0xD00, 0xC00, 0xB00};
+        0.625, 0.6875, 0.75, 0.8125,
+        0.875, 0.8125, 0.75, 0.6875};
     const metronome_op_t metr_ops_wah[8] = {
         METRONOME_OP_LINEAR_TRANSITION, METRONOME_OP_LINEAR_TRANSITION,
         METRONOME_OP_LINEAR_TRANSITION, METRONOME_OP_LINEAR_TRANSITION,
@@ -86,7 +82,6 @@ void parameters_setup()
 
     g_trem.set_ctrl(PARAM_CTRL_LFO);
     g_trem.set_pot_index(4);
-    //g_trem.set_metronome_ops(metr_ops, metr_levels, 8);
 
     //g_reverb.set_ctrl(PARAM_CTRL_MANUAL);
     //g_reverb.set_pot_index(4);
@@ -106,19 +101,19 @@ void parameters_setup()
     //g_effects[1][i++] = &g_reverb;
     //g_effects[1][i++] = &g_dist;
 
-    //g_effects[1][i] = new Delay(true, 50, 150);
+    //g_effects[1][i] = new Delay(true, 35, 50);
     //g_effects[1][i]->set_ctrl(PARAM_CTRL_FIXED);
-    //g_effects[1][i]->set_fixed_level(0.7);
+    //g_effects[1][i]->set_fixed_level(0.65);
     //((Delay*)g_effects[1][i])->set_lfo(0.00001);
     //i++;
 
     //g_effects[1][i] = new Delay(false, 2000, 2500);
     //g_effects[1][i]->set_ctrl(PARAM_CTRL_FIXED);
-    //g_effects[1][i]->set_fixed_level(0.3);
+    //g_effects[1][i]->set_fixed_level(0.5);
     //((Delay*)g_effects[1][i])->set_lfo(0.0001);
     //i++;
 
-    //g_effects[1][i] = new band_pass_t();
+    //g_effects[1][i] = new BandPass();
     //g_effects[1][i]->set_ctrl(PARAM_CTRL_METRONOME);
     //g_effects[1][i]->set_metronome_ops(metr_ops_wah, metr_levels_wah, 8);
     //i++;
