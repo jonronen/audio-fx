@@ -30,6 +30,7 @@ OBJDUMP	= $(CROSS_COMPILE)objdump
 
 CFLAGS	= -Wall -I$(INCLUDEDIR) -I$(INCLUDEDIR)/bare
 CFLAGS	+= -fno-common -fno-exceptions -fno-non-call-exceptions -fno-builtin
+CFLAGS	+= -fno-stack-protector
 CFLAGS	+= -O2 -DMEMORYSIZE=64 -fPIC
 CPPFLAGS = $(CFLAGS) -fno-weak -fno-rtti
 LDFLAGS = -static -nostdlib -O2 -T $(BOOT_LAYOUT_OUT)

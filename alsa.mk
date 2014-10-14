@@ -11,7 +11,7 @@ CC	= $(CROSS_COMPILE)gcc
 CPP	= $(CROSS_COMPILE)g++
 LD	= $(CROSS_COMPILE)g++
 
-CFLAGS = -Wall -I$(INCLUDEDIR) -O2
+CFLAGS = -Wall -Wextra -I$(INCLUDEDIR) -O2
 LDFLAGS = -lasound
 
 

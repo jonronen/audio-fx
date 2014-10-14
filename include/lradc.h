@@ -11,7 +11,6 @@ extern "C" {
 #endif
 
 
-/* TODO: units */
 double lradc_read_channel(const unsigned int channel);
 void lradc_setup_channels_for_polling();
 

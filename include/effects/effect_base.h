@@ -87,7 +87,7 @@ private:
 
     double m_lfo_phase[NUM_CHANNELS];
     double m_lfo_cnt[NUM_CHANNELS];
-    metronome_op_t m_lfo_op[NUM_CHANNELS];
+    lfo_op_t m_lfo_op[NUM_CHANNELS];
 
     double m_levels[NUM_CHANNELS];
 

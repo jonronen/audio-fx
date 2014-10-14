@@ -1,16 +1,17 @@
 #include "serial.h"
 #include "utils/str.h"
+#include "system.h"
 #include "stdbool.h"
 
 
-#define BUFF_SIZE 256
-#define START_DELIM 'S'
-#define END_DELIM 'E'
-#define START_ADDR 0X40900000
+static const unsigned int BUFF_SIZE = 256;
+static const char START_DELIM = 'S';
+static const char END_DELIM = 'E';
+static const unsigned int START_ADDR = 0x40900000;
 
 static void halt() {while (true);}
 
-static bool validate_checksum(unsigned char* buff, unsigned int csm)
+static int validate_checksum(unsigned char* buff, unsigned int csm)
 {
     int i;
     unsigned int s = 0;
@@ -30,8 +31,7 @@ void load_from_serial()
     unsigned int start_addr;
     unsigned short curr_block = 0;
 
-    delay(1);
-    
+    udelay(1000);    
     if (!serial_tstc()) {
         serial_puts("no char in buffer, returning to normal boot\n");
         return;

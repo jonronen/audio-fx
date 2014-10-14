@@ -184,15 +184,13 @@ int EffectBase::params_tick()
     if (m_param_ctrl == PARAM_CTRL_LFO) {
         for (j=0; j<NUM_CHANNELS; j++) {
             m_lfo_phase[j] += m_lfo_freq;
-            if (m_lfo_phase[j] >= 1.0) {
-                m_lfo_phase[j] -= 1.0;
+            if (m_lfo_phase[j] >= 2.0) {
+                m_lfo_phase[j] -= 2.0;
             }
             m_levels[j] = translate_level(
-                phase_perform_op(
+                lfo_perform_op(
                     m_lfo_op[j],
-                    m_lfo_phase[j],
-                    1,
-                    1
+                    m_lfo_phase[j]
                 )
             );
         }
@@ -242,11 +240,11 @@ EffectBase::EffectBase()
 
     m_param_ctrl = PARAM_CTRL_FIXED;
     m_pot_index = MAX_LRADC_CHANNEL;
-    m_lfo_freq = 1;
+    m_lfo_freq = 0;
 
     for (i=0; i<NUM_CHANNELS; i++) {
         /* TODO: change this to something less rude */
-        m_lfo_op[i] = METRONOME_OP_LINEAR_FALL;
+        m_lfo_op[i] = LFO_OP_SINE;
         m_lfo_phase[i] = 0;
     }
 

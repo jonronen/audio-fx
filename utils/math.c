@@ -8,7 +8,7 @@ double scaled_sine(const double scaled_degrees)
                  -scaled_degrees :
                  scaled_degrees;
 
-    // truncate to get tmp into the interval of [-1,1]
+    /* truncate to get tmp into the interval of [-1,1] */
     tmp -= (double)((int)(tmp/2))*2;
     if (tmp > 1.0) {
         tmp = 2.0-tmp;
@@ -29,7 +29,7 @@ double scaled_shifted_sine(
     double half_diff = (max-min)/2;
     double scaled_sin = scaled_sine(phase);
 
-    // deal with overflows
+    /* deal with overflows */
     if (half_diff <= 0) return max;
 
     return scaled_sin*half_diff + (min+max)/2;

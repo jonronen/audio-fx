@@ -52,7 +52,7 @@ static double phase_linear_transition(
 
 
 double phase_perform_op(
-    metronome_op_t op,
+    const metronome_op_t op,
     const double phase,
     const double curr_level,
     const double next_level
@@ -96,6 +96,35 @@ double phase_perform_op(
         break;
       default:
         res = 0;
+        break;
+    }
+
+    return res;
+}
+
+
+double lfo_perform_op(
+    const lfo_op_t op,
+    const double phase
+)
+{
+    double res = 0.0;
+    double mod_phase = phase;
+    if (phase > 1.0) mod_phase = 2.0 - phase;
+
+    switch(op) {
+      case LFO_OP_LINEAR:
+        res = phase_linear_transition(0, 1, mod_phase);
+        break;
+      case LFO_OP_SINE:
+        res = phase_sine_transition(0, 1, mod_phase*2 - 1.0);
+        break;
+      case LFO_OP_EXP:
+        res = phase_exp_transition(0, 1, mod_phase);
+        break;
+      default:
+        res = 0;
+        break;
     }
 
     return res;

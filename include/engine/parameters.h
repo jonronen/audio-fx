@@ -31,6 +31,13 @@ typedef enum _param_ctrl_t {
 } param_ctrl_t;
 
 
+typedef enum _lfo_op_t {
+    LFO_OP_LINEAR,
+    LFO_OP_SINE,
+    LFO_OP_EXP,
+    LFO_OP_MAX
+} lfo_op_t;
+
 
 void parameters_setup();
 void parameters_set();
@@ -52,10 +59,16 @@ void parameters_counter_increment();
  * op determines the transition factor (linear, exponential, etc.)
  */
 double phase_perform_op(
-    metronome_op_t op,
-    double phase,
-    double curr_level,
-    double next_level
+    const metronome_op_t op,
+    const double phase,
+    const double curr_level,
+    const double next_level
+);
+
+
+double lfo_perform_op(
+    const lfo_op_t op,
+    const double phase
 );
 
 
