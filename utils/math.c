@@ -9,11 +9,9 @@ double scaled_sine(const double scaled_degrees)
                  scaled_degrees;
 
     /* truncate to get tmp into the interval of [-1,1] */
+    tmp += 1.0;
     tmp -= (double)((int)(tmp/2))*2;
-    if (tmp > 1.0) {
-        tmp = 2.0-tmp;
-        is_negative ^= 1;
-    }
+    tmp -= 1.0;
 
     tmp *= (1-tmp) * 4;
 

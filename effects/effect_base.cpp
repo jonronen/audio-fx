@@ -171,7 +171,7 @@ int EffectBase::params_update()
             return -1;
         }
 
-        m_lfo_freq = translate_lfo(tmp);
+        m_lfo_increment = translate_lfo(tmp);
     }
 
     return 0;
@@ -183,7 +183,7 @@ int EffectBase::params_tick()
 
     if (m_param_ctrl == PARAM_CTRL_LFO) {
         for (j=0; j<NUM_CHANNELS; j++) {
-            m_lfo_phase[j] += m_lfo_freq;
+            m_lfo_phase[j] += m_lfo_increment;
             if (m_lfo_phase[j] >= 2.0) {
                 m_lfo_phase[j] -= 2.0;
             }
@@ -240,7 +240,7 @@ EffectBase::EffectBase()
 
     m_param_ctrl = PARAM_CTRL_FIXED;
     m_pot_index = MAX_LRADC_CHANNEL;
-    m_lfo_freq = 0;
+    m_lfo_increment = 0;
 
     for (i=0; i<NUM_CHANNELS; i++) {
         /* TODO: change this to something less rude */
@@ -274,12 +274,5 @@ double EffectBase::translate_lfo(const double lfo) const
     tmp_lfo += (lfo * (MAX_LFO_FREQ - MIN_LFO_FREQ));
 
     return tmp_lfo/TICK_FREQUENCY;
-}
-
-double EffectBase::process_sample(
-    const double sample,
-    const unsigned char channel)
-{
-    return sample;
 }
 

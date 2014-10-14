@@ -47,7 +47,7 @@ public:
     /* methods that use the parameters for modifying samples */
     virtual double process_sample(
         const double sample,
-        const unsigned char channel);
+        const unsigned char channel) = 0;
 
 
 protected:
@@ -75,7 +75,7 @@ protected:
 
     param_ctrl_t m_param_ctrl;
     unsigned short m_pot_index;
-    double m_lfo_freq;
+    double m_lfo_increment;
     bool m_updating_params;
 
     EffectBase();

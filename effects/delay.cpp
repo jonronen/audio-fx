@@ -139,7 +139,13 @@ double Delay::process_sample(
     m_history_offset = ((m_history_offset + 1) % DELAY_HISTORY_SIZE);
 
     m_lfo_phase[channel] += m_lfo_increment[channel];
-    if (m_lfo_phase[channel] >= 1.0) m_lfo_phase[channel] -= 1.0;
+    if (m_lfo_phase[channel] >= 1.0) {
+        /*
+         * we'd like to have the full circle,
+         * i.e. to keep the phase in the interval [-1,1]
+         */
+        m_lfo_phase[channel] -= 2.0;
+    }
 
     return ret_sample;
 }

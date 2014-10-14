@@ -15,7 +15,9 @@ static double phase_sine_transition(
     const double phase
 )
 {
-    double factor = scaled_sine(phase);
+    /* we're only interested in the first quarter of the circle */
+    double factor = scaled_sine(phase/2);
+
     double res =
         curr_level * (1.0 - factor) +
         next_level * factor;
@@ -59,6 +61,8 @@ double phase_perform_op(
 )
 {
     double res = 0.0;
+
+    /* assumption: phase is in the interval [0,1] */
 
     switch(op) {
       case METRONOME_OP_CONST_NONE:
@@ -109,6 +113,8 @@ double lfo_perform_op(
 )
 {
     double res = 0.0;
+
+    /* scale the phase to the interval [0,1] */
     double mod_phase = phase;
     if (phase > 1.0) mod_phase = 2.0 - phase;
 
@@ -117,7 +123,8 @@ double lfo_perform_op(
         res = phase_linear_transition(0, 1, mod_phase);
         break;
       case LFO_OP_SINE:
-        res = phase_sine_transition(0, 1, mod_phase*2 - 1.0);
+        res = scaled_sine(mod_phase-0.5);
+        res = (res + 1.0)/2.0;
         break;
       case LFO_OP_EXP:
         res = phase_exp_transition(0, 1, mod_phase);
