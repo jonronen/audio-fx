@@ -26,7 +26,7 @@ public:
     virtual int params_tick();
     /* update according to the metronome phase and operation */
     virtual int metronome_phase(
-        const unsigned char phase_index,
+        const double phase,
         const unsigned short op_index
     );
 

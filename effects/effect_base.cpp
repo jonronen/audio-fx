@@ -199,8 +199,8 @@ int EffectBase::params_tick()
 }
 
 int EffectBase::metronome_phase(
-    unsigned char phase_index,
-    unsigned short op_index
+    const double phase,
+    const unsigned short op_index
 )
 {
     double curr_level, next_level;
@@ -216,14 +216,14 @@ int EffectBase::metronome_phase(
      */
     curr_level = m_metronome_levels[op_index];
     next_level = m_metronome_levels[
-        op_index+1 >= m_metronome_op_cnt ? 0 : op_index+1
+        (op_index+1 >= m_metronome_op_cnt) ? 0 : (op_index+1)
     ];
 
     /* get the raw level as an output from the metronome */
     double metronome_result =
         phase_perform_op(
             m_metronome_ops[op_index],
-            phase_index,
+            phase,
             curr_level,
             next_level
         );
