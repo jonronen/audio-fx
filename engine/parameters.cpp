@@ -8,14 +8,14 @@
 
 /* effects */
 #include "effects/effect_base.h"
-#include "effects/low_pass.h"
+#include "effects/low_pass2.h"
 #include "effects/high_pass.h"
 #include "effects/band_pass.h"
 #include "effects/tremolo.h"
 #include "effects/overdrive.h"
 #include "effects/distortion.h"
 #include "effects/delay.h"
-#include "effects/resonance.h"
+#include "effects/reso2.h"
 #include "effects/passthru.h"
 
 
@@ -23,8 +23,8 @@ EffectBase* g_effects[MAX_PRESET_COUNT][MAX_EFFECT_COUNT];
 unsigned int g_preset_count;
 
 static PassThru g_passthru;
-static Resonance g_reso0;
-static LowPass  g_low_pass0(&g_reso0);
+static Reso2 g_reso0;
+static LowPass2  g_low_pass0(&g_reso0);
 static Tremolo   g_trem;
 static Delay     g_reverb(true, 30000, 30000);
 static Distortion g_dist;
@@ -47,9 +47,9 @@ void parameters_setup()
     };
     */
     const double metr_levels_lpf[8] = {
-        1.0, 0.7, 0.6, 0.5,
-        0.4, 0.5, 0.6, 0.7};
-    const double metr_levels_reso[4] = {0.75, 0.75, 0.75, 0.75};
+        0.5, 0.6, 0.7, 0.8,
+        0.9, 0.8, 0.7, 0.6};
+    const double metr_levels_reso[4] = {0.2, 0.2, 0.2, 0.2};
 
     const double metr_levels_wah[8] = {
         0.625, 0.6875, 0.75, 0.8125,
@@ -64,14 +64,14 @@ void parameters_setup()
     memset(g_effects, 0x00, sizeof(g_effects));
 
     // test - initialise the metronome with some fixed parameters
-    metronome_setup(180, 4, 2);
+    metronome_setup(60, 4, 2);
 
     /* test - initialise the effects with a basic setup */
     //g_reso0.set_ctrl(PARAM_CTRL_FIXED);
     //g_reso0.set_fixed_level(3200);
     //g_reso0.set_fixed_level(0);
     g_reso0.set_ctrl(PARAM_CTRL_FIXED);
-    g_reso0.set_fixed_level(0.5);
+    g_reso0.set_fixed_level(0.7);
 
     g_low_pass0.set_ctrl(PARAM_CTRL_METRONOME);
     g_low_pass0.set_metronome_ops(metr_ops, metr_levels_lpf, 8);
@@ -95,9 +95,9 @@ void parameters_setup()
     g_effects[0][1] = (EffectBase*)NULL;
 
     i = 0;
-    //g_effects[1][i++] = &g_reso0;
-    //g_effects[1][i++] = &g_low_pass0;
-    g_effects[1][i++] = &g_trem;
+    g_effects[1][i++] = &g_reso0;
+    g_effects[1][i++] = &g_low_pass0;
+    //g_effects[1][i++] = &g_trem;
     //g_effects[1][i++] = &g_reverb;
     //g_effects[1][i++] = &g_dist;
 
