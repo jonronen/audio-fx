@@ -166,7 +166,7 @@ static void set_params(snd_pcm_t* handle, int is_capture)
 		error("Access type not available");
 		exit(EXIT_FAILURE);
 	}
-	err = snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_S16_BE);
+	err = snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_S32_LE);
 	if (err < 0) {
 		error("Sample format non available");
 		exit(EXIT_FAILURE);
@@ -177,16 +177,17 @@ static void set_params(snd_pcm_t* handle, int is_capture)
 		exit(EXIT_FAILURE);
 	}
 
-	rate = 44100;
+	//rate = 44100;
+	rate = 48000;
 	err = snd_pcm_hw_params_set_rate_near(handle, params, &rate, 0);
 	assert(err >= 0);
-	if ((float)rate * 1.05 < 44100 || (float)rate * 0.95 > 44100) {
+	if ((float)rate * 1.05 < 48000 || (float)rate * 0.95 > 48000) {
 		if (!quiet_mode) {
-			fprintf(stderr, "Warning: rate is not accurate (requested = %iHz, got = %iHz)\n", rate, 44100);
+			fprintf(stderr, "Warning: rate is not accurate (requested = %iHz, got = %iHz)\n", rate, 48000);
 			fprintf(stderr, "         please, try the plug plugin (-Dplug:%s)\n", snd_pcm_name(handle));
 		}
 	}
-	rate = 44100;
+	rate = 48000;
 	if (buffer_time == 0 && buffer_frames == 0) {
 		err = snd_pcm_hw_params_get_buffer_time_max(params,
 							    &buffer_time, 0);
@@ -258,7 +259,7 @@ static void set_params(snd_pcm_t* handle, int is_capture)
 	if (verbose)
 		snd_pcm_dump(handle, log);
 
-	bits_per_sample = snd_pcm_format_physical_width(SND_PCM_FORMAT_S16_BE);
+	bits_per_sample = snd_pcm_format_physical_width(SND_PCM_FORMAT_S32_LE);
 	bits_per_frame = bits_per_sample;
 	chunk_bytes = chunk_size * bits_per_frame / 8;
 	printf("Reallocating the audio buffers to size %d\n", chunk_bytes);
@@ -364,12 +365,12 @@ static void compute_max_peak(u_char *data, size_t count)
 	signed int val, max, max_peak = 0, perc;
 	static	int	run = 0;
 	size_t ocount = count;
-	int	format_little_endian = snd_pcm_format_little_endian(SND_PCM_FORMAT_S16_BE);	
+	int	format_little_endian = snd_pcm_format_little_endian(SND_PCM_FORMAT_S32_LE);	
 
 	switch (bits_per_sample) {
 	case 8: {
 		signed char *valp = (signed char *)data;
-		signed char mask = snd_pcm_format_silence(SND_PCM_FORMAT_S16_BE);
+		signed char mask = snd_pcm_format_silence(SND_PCM_FORMAT_S32_LE);
 		while (count-- > 0) {
 			val = *valp++ ^ mask;
 			val = abs(val);
@@ -380,7 +381,7 @@ static void compute_max_peak(u_char *data, size_t count)
 	}
 	case 16: {
 		signed short *valp = (signed short *)data;
-		signed short mask = snd_pcm_format_silence_16(SND_PCM_FORMAT_S16_BE);
+		signed short mask = snd_pcm_format_silence_16(SND_PCM_FORMAT_S32_LE);
 		signed short sval;
 
 		count /= 2;
@@ -397,7 +398,7 @@ static void compute_max_peak(u_char *data, size_t count)
 	}
 	case 24: {
 		unsigned char *valp = data;
-		signed int mask = snd_pcm_format_silence_32(SND_PCM_FORMAT_S16_BE);
+		signed int mask = snd_pcm_format_silence_32(SND_PCM_FORMAT_S32_LE);
 
 		count /= 3;
 		while (count-- > 0) {
@@ -419,7 +420,7 @@ static void compute_max_peak(u_char *data, size_t count)
 	}
 	case 32: {
 		signed int *valp = (signed int *)data;
-		signed int mask = snd_pcm_format_silence_32(SND_PCM_FORMAT_S16_BE);
+		signed int mask = snd_pcm_format_silence_32(SND_PCM_FORMAT_S32_LE);
 		count /= 4;
 		while (count-- > 0) {
 			if (format_little_endian)
@@ -467,7 +468,7 @@ static ssize_t pcm_writev(u_char *data, size_t count)
 	if (count != chunk_size) {
 		size_t offset = count;
 		size_t remaining = chunk_size - count;
-		snd_pcm_format_set_silence(SND_PCM_FORMAT_S16_BE, data + offset * bits_per_sample / 8, remaining);
+		snd_pcm_format_set_silence(SND_PCM_FORMAT_S32_LE, data + offset * bits_per_sample / 8, remaining);
 		count = chunk_size;
 	}
 	while (count > 0) {

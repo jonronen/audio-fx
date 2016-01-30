@@ -13,10 +13,11 @@ sem_t g_full_cnt_sem;
 
 static const char *device = "default";
 
+#define NUM_CHANNELS 2
 #define NUM_BUFFERS 6
-#define NUM_SAMPLES 128
-int g_play_buffers[NUM_BUFFERS][NUM_SAMPLES];
-int g_rec_buffers[NUM_BUFFERS][NUM_SAMPLES];
+#define NUM_SAMPLES 64
+int g_play_buffers[NUM_BUFFERS][NUM_SAMPLES*NUM_CHANNELS];
+int g_rec_buffers[NUM_BUFFERS][NUM_SAMPLES*NUM_CHANNELS];
 
 
 snd_pcm_t *g_handle_rec, *g_handle_play;
@@ -61,7 +62,7 @@ static void* writer_thread(void* param)
             g_play_buffers[i],
             g_rec_buffers[i],
             NUM_SAMPLES,
-            1 /* we're MONO right now */
+            NUM_CHANNELS
         );
         
         frames = snd_pcm_writei(
@@ -69,14 +70,16 @@ static void* writer_thread(void* param)
             g_play_buffers[i],
             NUM_SAMPLES
         );
-        if (frames < 0)
-            frames = snd_pcm_recover(g_handle_play, frames, 0);
         if (frames < 0) {
             printf("snd_pcm_writei failed: %s\n", snd_strerror(frames));
+            frames = snd_pcm_recover(g_handle_play, frames, 0);
+        }
+        if (frames < 0) {
+            printf("snd_pcm_recover failed: %s\n", snd_strerror(frames));
             break;
         }
         if (frames > 0 && frames < NUM_SAMPLES)
-            printf("Short write (expected %d, wrote %li)\n",
+            printf("Short write (expected %d, wrote %ld)\n",
                 NUM_SAMPLES, frames
             );
 
@@ -102,14 +105,16 @@ void* reader_thread(void* param)
             g_rec_buffers[i],
             NUM_SAMPLES
         );
-        if (frames < 0)
-            frames = snd_pcm_recover(g_handle_rec, frames, 0);
         if (frames < 0) {
             printf("snd_pcm_readi failed: %s\n", snd_strerror(frames));
+            frames = snd_pcm_recover(g_handle_rec, frames, 0);
+        }
+        if (frames < 0) {
+            printf("snd_pcm_recover failed: %s\n", snd_strerror(frames));
             break;
         }
         if ((frames > 0) && (frames < NUM_SAMPLES))
-            printf("Short read (expected %d, read %li)\n", NUM_SAMPLES, frames);
+            printf("Short read (expected %d, read %ld)\n", NUM_SAMPLES, frames);
 
         sem_post(&g_full_cnt_sem);
         
@@ -150,20 +155,20 @@ void audio_dma_start()
     if ((err = snd_pcm_set_params(g_handle_rec,
                                   SND_PCM_FORMAT_S32_LE,
                                   SND_PCM_ACCESS_RW_INTERLEAVED,
-                                  1,
+                                  NUM_CHANNELS,
                                   48000,
-                                  1,
-                                  5000)) < 0) {   /* 0.5sec */
+                                  0, /* disallow resampling */
+                                  1000)) < 0) {   /* 1 msec */
         printf("Capture open error: %s\n", snd_strerror(err));
         exit(EXIT_FAILURE);
     }
     if ((err = snd_pcm_set_params(g_handle_play,
                                   SND_PCM_FORMAT_S32_LE,
                                   SND_PCM_ACCESS_RW_INTERLEAVED,
-                                  1,
+                                  NUM_CHANNELS,
                                   48000,
-                                  1,
-                                  5000)) < 0) {   /* 0.5sec */
+                                  0, /* disallow resampling */
+                                  1000)) < 0) {   /* 1 msec */
         printf("Playback open error: %s\n", snd_strerror(err));
         exit(EXIT_FAILURE);
     }

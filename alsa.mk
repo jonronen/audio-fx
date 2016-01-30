@@ -12,7 +12,7 @@ CPP	= $(CROSS_COMPILE)g++
 LD	= $(CROSS_COMPILE)g++
 
 CFLAGS = -Wall -Wextra -I$(INCLUDEDIR) -O2
-LDFLAGS = -lasound
+LDFLAGS = -lasound -pthread
 
 
 PLATFORM_OBJS = system nonsense
