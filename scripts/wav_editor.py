@@ -162,31 +162,31 @@ if __name__ == "__main__":
     
     # validate the values
     if options.lowpass > 1 or options.lowpass < 0:
-        print "low pass value should be between zero and one"
+        print("low pass value should be between zero and one")
         sys.exit()
     if options.resonance > 1 or options.resonance < 0:
-        print "resonance value should be between zero and one"
+        print("resonance value should be between zero and one")
         sys.exit()
     if options.hipass > 1 or options.hipass < 0:
-        print "high pass value should be between zero and one"
+        print("high pass value should be between zero and one")
         sys.exit()
     if options.dist < 0 or options.dist > 255:
-        print "distortion value should be between 0 and 255"
+        print("distortion value should be between 0 and 255")
         sys.exit()
     if options.overdrive < 1 or options.overdrive > 3:
-        print "overdrive value should be between one and three"
+        print("overdrive value should be between one and three")
         sys.exit()
     if options.phase_low < 0 or options.phase_low > 1000:
-        print "low phase shift value should be between 0 and 1000"
+        print("low phase shift value should be between 0 and 1000")
         sys.exit()
     if options.phase_high < 0 or options.phase_high > 1000:
-        print "high phase shift value should be between 0 and 1000"
+        print("high phase shift value should be between 0 and 1000")
         sys.exit()
     if options.phase_low > options.phase_high:
-        print "low phase shift value cannot be higher than high phase shift value"
+        print("low phase shift value cannot be higher than high phase shift value")
         sys.exit()
     if options.phase_mix > 1 or options.phase_mix < 0:
-        print "phase mix value should be between zero and one"
+        print("phase mix value should be between zero and one")
         sys.exit()
     
     infile = open(args[0], "rb")
@@ -197,7 +197,7 @@ if __name__ == "__main__":
     
     hdr = infile.read(0x2c)
     if len(hdr) < 0x2c:
-        print "file is too short"
+        print("file is too short")
         infile.close()
         outfile.close()
         sys.exit()
@@ -212,10 +212,10 @@ if __name__ == "__main__":
     if unpacked_hdr.tag != "RIFF" or \
             unpacked_hdr.fmt_tag != "WAVEfmt " or \
             unpacked_hdr.data_tag != "data":
-        print "input file is not a wav file"
+        print("input file is not a wav file")
         sys.exit()
     if unpacked_hdr.bits != 16 or unpacked_hdr.bps != 16:
-        print "expected 16-bit wav file"
+        print("expected 16-bit wav file")
         sys.exit()
     
     prev_buff_left = [0]*NUM_SAMPLES
