@@ -4,59 +4,66 @@ from optparse import OptionParser
 from collections import namedtuple
 
 
-# TODO: refactor these definitions to be class variables
-NUM_SAMPLES = 1024
-BITS = 16
-MAX_SAMPLE = 2**(BITS-1)
-
-HANN_WINDOW = numpy.array([math.sin((math.pi*n)/NUM_SAMPLES)**2 for n in range(NUM_SAMPLES)])
-HANN_WINDOW_DOUBLE = numpy.array([math.sin((math.pi*n)/NUM_SAMPLES/2)**2 for n in range(NUM_SAMPLES*2)])
-
-class Context:
-    def __init__(self):
-        self.prev_buff = numpy.array([0] * NUM_SAMPLES, dtype = complex)
-        self.prev_mod_buffs = [numpy.array([0] * NUM_SAMPLES * 2, dtype = complex) for i in range(4)]
-
-def extrapolate(buff):
-    return numpy.array([buff[i//2] for i in range(2*buff.size)])
-
-def get_windowed_quarters(buff, start_quarter):
-    l = numpy.array(([0] * (NUM_SAMPLES//2)) + list(buff * HANN_WINDOW_DOUBLE) + ([0] * (NUM_SAMPLES//2)))
-    return l[(start_quarter + 1) * NUM_SAMPLES//2 : (start_quarter + 3) * NUM_SAMPLES//2]
-
-# TODO: refactor this to be a class method
-def modify_data(curr_buff, context, freqs):
-    # start with a copy of the new buffer, in the form of numpy.ndarray
-    new_buff = numpy.array(list(curr_buff), dtype = complex)
+class OctaverContext:
+    def __init__(self, sample_cnt, bits):
+        # sanity checks
+        if bits not in [8,16,24,32]: raise ValueError()
+        if sample_cnt not in [128,256,512,1024,2048]: raise ValueError()
+        
+        # sizes and lengths
+        self.sample_cnt = sample_cnt
+        self.bits = bits
+        self.max_sample = 2**(bits-1)
+        
+        # window manipulations for smoother signals
+        self.hann_window = numpy.array([math.sin(math.pi*n/sample_cnt)**2 for n in range(sample_cnt)])
+        self.hann_window_double = numpy.array([math.sin(math.pi*n/sample_cnt/2)**2 for n in range(sample_cnt*2)])
+        
+        # context variables for each window: previous clean buffer, previous four modified buffers
+        self.prev_buff = numpy.array([0] * sample_cnt, dtype = complex)
+        self.prev_mod_buffs = [numpy.array([0] * sample_cnt * 2, dtype = complex) for i in range(4)]
     
-    # convert current sample to a complex number with real part in the range [-1,1]
-    new_buff = new_buff / MAX_SAMPLE
+    def extrapolate(buff):
+        return numpy.array([buff[i//2] for i in range(2*buff.size)])
     
-    # create the mid-buffer, composed of the last half of the previous buffer and the first half of the new buffer
-    mid_buff = numpy.array(context.prev_buff[NUM_SAMPLES//2:].tolist() + new_buff[:NUM_SAMPLES//2].tolist())
+    def get_windowed_quarters(self, buff, start_quarter):
+        l = numpy.array(([0] * (self.sample_cnt//2)) + list(buff * self.hann_window_double) + ([0] * (self.sample_cnt//2)))
+        return l[(start_quarter + 1) * self.sample_cnt//2 : (start_quarter + 3) * self.sample_cnt//2]
     
-    # stretch the arrays
-    new_mod_buff = extrapolate(new_buff)
-    mid_mod_buff = extrapolate(mid_buff)
-    
-    res = get_windowed_quarters(context.prev_mod_buffs[0], 3) + \
-        get_windowed_quarters(context.prev_mod_buffs[1], 2) + \
-        get_windowed_quarters(context.prev_mod_buffs[2], 1) + \
-        get_windowed_quarters(context.prev_mod_buffs[3], 0) + \
-        get_windowed_quarters(mid_mod_buff, -1)
-    
-    context.prev_buff = new_buff
-    context.prev_mod_buffs[0] = context.prev_mod_buffs[2]
-    context.prev_mod_buffs[1] = context.prev_mod_buffs[3]
-    context.prev_mod_buffs[2] = mid_mod_buff
-    context.prev_mod_buffs[3] = new_mod_buff
-    return list(map(lambda x: int(x.real), res * MAX_SAMPLE))
+    def modify_data(self, curr_buff, freqs):
+        # start with a copy of the new buffer, in the form of numpy.ndarray
+        new_buff = numpy.array(list(curr_buff), dtype = complex)
+        
+        # convert current sample to a complex number with real part in the range [-1,1]
+        new_buff = new_buff / self.max_sample
+                
+        # create the mid-buffer, composed of the last half of the previous buffer and the first half of the new buffer
+        mid_buff = numpy.array(self.prev_buff[self.sample_cnt//2:].tolist() + new_buff[:self.sample_cnt//2].tolist())
+        
+        # stretch the arrays
+        new_mod_buff = OctaverContext.extrapolate(new_buff)
+        mid_mod_buff = OctaverContext.extrapolate(mid_buff)
+        
+        # combine the different windows from each array
+        res = self.get_windowed_quarters(self.prev_mod_buffs[0], 3)
+        res += self.get_windowed_quarters(self.prev_mod_buffs[1], 2)
+        res += self.get_windowed_quarters(self.prev_mod_buffs[2], 1)
+        res += self.get_windowed_quarters(self.prev_mod_buffs[3], 0)
+        res += self.get_windowed_quarters(mid_mod_buff, -1)
+        
+        # prepare for the next window
+        self.prev_buff = new_buff
+        self.prev_mod_buffs[0] = self.prev_mod_buffs[2]
+        self.prev_mod_buffs[1] = self.prev_mod_buffs[3]
+        self.prev_mod_buffs[2] = mid_mod_buff
+        self.prev_mod_buffs[3] = new_mod_buff
+        return list(map(lambda x: int(x.real), res * self.max_sample))
 
 
 if __name__ == "__main__":
     parser = OptionParser(usage="usage: %prog [options] WAVFILE")
-    parser.add_option("-o", "--out", dest="outfile",
-                      help="output filename")
+    parser.add_option("-o", "--out", dest="outfile", help="output filename")
+    parser.add_option("-b", "--buff-size", dest="buff_size", type=int, default=1024, help="buffer size (default: 1024)")
 
     (options, args) = parser.parse_args()
     if len(args) < 1:
@@ -89,38 +96,35 @@ if __name__ == "__main__":
             unpacked_hdr.data_tag != b"data":
         print("input file is not a wav file")
         sys.exit()
-    if unpacked_hdr.bits != BITS or unpacked_hdr.bps != BITS:
-        print("expected 16-bit wav file")
-        sys.exit()
     
-    freqs = numpy.array([0] * (NUM_SAMPLES//2), dtype = float)
+    freqs = numpy.array([0] * (options.buff_size//2), dtype = float)
     
-    contexts = [Context(), Context()]
+    contexts = [OctaverContext(options.buff_size, unpacked_hdr.bits), OctaverContext(options.buff_size, unpacked_hdr.bits)]
     
     data_len = unpacked_hdr.data_len
     
-    while data_len >= NUM_SAMPLES*2*unpacked_hdr.ch:
-        curr_buff = infile.read(NUM_SAMPLES*2*unpacked_hdr.ch)
+    while data_len >= options.buff_size*2*unpacked_hdr.ch:
+        curr_buff = infile.read(options.buff_size*2*unpacked_hdr.ch)
         data_len -= len(curr_buff)
         
         # turn into numbers, separating left and right if needed
         if unpacked_hdr.ch == 1:
             curr_buff_left = list(struct.unpack(
-                "<" + "h"*NUM_SAMPLES, curr_buff
+                "<" + "h"*options.buff_size, curr_buff
             ))
-            curr_buff_right = [0] * NUM_SAMPLES
+            curr_buff_right = [0] * options.buff_size
         else:
             curr_buff_left = list(struct.unpack(
-                "<" + "hxx"*NUM_SAMPLES, curr_buff
+                "<" + "hxx"*options.buff_size, curr_buff
             ))
             curr_buff_right = list(struct.unpack(
-                "<" + "xxh"*NUM_SAMPLES, curr_buff
+                "<" + "xxh"*options.buff_size, curr_buff
             ))
-        mod_buff_left = modify_data(curr_buff_left, contexts[0], freqs)
+        mod_buff_left = contexts[0].modify_data(curr_buff_left, freqs)
         if unpacked_hdr.ch > 1:
-            mod_buff_right = modify_data(curr_buff_right, contexts[1], freqs)
+            mod_buff_right = contexts[1].modify_data(curr_buff_right, freqs)
         else:
-            mod_buff_right = [0] * NUM_SAMPLES
+            mod_buff_right = [0] * options.buff_size
         
         if unpacked_hdr.ch > 1:
             # interleave the modified buffers and write them to the output file
@@ -131,12 +135,12 @@ if __name__ == "__main__":
             mod_buff = mod_buff_left
         
         # prevent clipping and align the samples in case there's an overflow/underflow
-        mod_buff = list(map(lambda x: max(min(x, 32767), -32768), mod_buff))
+        mod_buff = list(map(lambda x: max(min(x, 2**(unpacked_hdr.bits-1) - 1), -2**(unpacked_hdr.bits-1)), mod_buff))
 
         if unpacked_hdr.ch == 1:
-            mod_buff = struct.pack("<" + "h"*NUM_SAMPLES, *mod_buff)
+            mod_buff = struct.pack("<" + "h"*options.buff_size, *mod_buff)
         else:
-            mod_buff = struct.pack("<" + "hh"*NUM_SAMPLES, *mod_buff)
+            mod_buff = struct.pack("<" + "hh"*options.buff_size, *mod_buff)
         outfile.write(mod_buff)
     
     # handle the remainder
