@@ -85,6 +85,7 @@ if __name__ == "__main__":
     parser = OptionParser(usage="usage: %prog [options] WAVFILE")
     parser.add_option("-o", "--out", dest="outfile", help="output filename")
     parser.add_option("-b", "--buff-size", dest="buff_size", type=int, default=1024, help="buffer size (default: 1024)")
+    parser.add_option("-p", "--plot-frames", dest="plot_frames", type=int, default=0, help="plot the first frames (default: 0)")
 
     (options, args) = parser.parse_args()
     if len(args) < 1:
@@ -121,6 +122,10 @@ if __name__ == "__main__":
     contexts = [OctaverContext(options.buff_size, unpacked_hdr.bits), OctaverContext(options.buff_size, unpacked_hdr.bits)]
     
     data_len = unpacked_hdr.data_len
+    
+    import matplotlib.pyplot as plt
+    
+    frame_idx = 0
     
     while data_len >= options.buff_size*2*unpacked_hdr.ch:
         curr_buff = infile.read(options.buff_size*2*unpacked_hdr.ch)
@@ -161,6 +166,13 @@ if __name__ == "__main__":
         else:
             mod_buff = struct.pack("<" + "hh"*options.buff_size, *mod_buff)
         outfile.write(mod_buff)
+        
+        if frame_idx < options.plot_frames:
+            plt.plot(list(range(options.buff_size)), curr_buff_left)
+            plt.plot(list(range(options.buff_size)), mod_buff_left)
+            plt.grid()
+            plt.show()
+        frame_idx += 1
     
     # handle the remainder
     outfile.write(infile.read())
