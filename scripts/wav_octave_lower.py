@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import struct, sys, math, numpy, functools
+from scipy.fft import fft, ifft
 from optparse import OptionParser
 from collections import namedtuple
 
@@ -14,6 +15,12 @@ class OctaverContext:
         self.sample_cnt = sample_cnt
         self.bits = bits
         self.max_sample = 2**(bits-1)
+        
+        #
+        # some frequency bins require different handling according to the frame index.
+        # save it and increment it when handling every frame
+        #
+        self.last_input_idx = 0
         
         # window manipulations for smoother signals
         self.hann_window = numpy.array([math.sin(math.pi*n/sample_cnt)**2 for n in range(sample_cnt)])
@@ -40,9 +47,22 @@ class OctaverContext:
         # create the mid-buffer, composed of the last half of the previous buffer and the first half of the new buffer
         mid_buff = numpy.array(self.prev_buff[self.sample_cnt//2:].tolist() + new_buff[:self.sample_cnt//2].tolist())
         
+        # compute the FFT of both the new buffer and the middle buffer, to get the phase shifts
+        mid_buff_fft = fft(mid_buff * self.hann_window)
+        new_buff_fft = fft(new_buff * self.hann_window)
+        
+        # compute the phase shift of each (non-DC) frequency bin and align the output phase accordingly
+        for k in range(1, self.sample_cnt):
+            phase_shift = numpy.exp(-1j * numpy.pi / 2 * (k % 4))
+            mid_buff_fft[k] *= phase_shift
+            new_buff_fft[k] *= (phase_shift**2)
+            if (self.last_input_idx % 2) == 0:
+                mid_buff_fft[k] *= (phase_shift**2)
+                new_buff_fft[k] *= (phase_shift**2)
+        
         # stretch the arrays
-        new_mod_buff = OctaverContext.extrapolate(new_buff)
-        mid_mod_buff = OctaverContext.extrapolate(mid_buff)
+        new_mod_buff = OctaverContext.extrapolate(ifft(new_buff_fft))
+        mid_mod_buff = OctaverContext.extrapolate(ifft(mid_buff_fft))
         
         # combine the different windows from each array
         res = self.get_windowed_quarters(self.prev_mod_buffs[0], 3)
@@ -57,6 +77,7 @@ class OctaverContext:
         self.prev_mod_buffs[1] = self.prev_mod_buffs[3]
         self.prev_mod_buffs[2] = mid_mod_buff
         self.prev_mod_buffs[3] = new_mod_buff
+        self.last_input_idx += 1
         return list(map(lambda x: int(x.real), res * self.max_sample))
 
 
