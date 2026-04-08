@@ -30,7 +30,7 @@ class OctaverContext:
         l = numpy.array(([0] * (self.sample_cnt//2)) + list(buff * self.hann_window_double) + ([0] * (self.sample_cnt//2)))
         return l[(start_quarter + 1) * self.sample_cnt//2 : (start_quarter + 3) * self.sample_cnt//2]
     
-    def modify_data(self, curr_buff, freqs):
+    def process_buff(self, curr_buff):
         # start with a copy of the new buffer, in the form of numpy.ndarray
         new_buff = numpy.array(list(curr_buff), dtype = complex)
         
@@ -97,8 +97,6 @@ if __name__ == "__main__":
         print("input file is not a wav file")
         sys.exit()
     
-    freqs = numpy.array([0] * (options.buff_size//2), dtype = float)
-    
     contexts = [OctaverContext(options.buff_size, unpacked_hdr.bits), OctaverContext(options.buff_size, unpacked_hdr.bits)]
     
     data_len = unpacked_hdr.data_len
@@ -120,9 +118,9 @@ if __name__ == "__main__":
             curr_buff_right = list(struct.unpack(
                 "<" + "xxh"*options.buff_size, curr_buff
             ))
-        mod_buff_left = contexts[0].modify_data(curr_buff_left, freqs)
+        mod_buff_left = contexts[0].process_buff(curr_buff_left)
         if unpacked_hdr.ch > 1:
-            mod_buff_right = contexts[1].modify_data(curr_buff_right, freqs)
+            mod_buff_right = contexts[1].process_buff(curr_buff_right)
         else:
             mod_buff_right = [0] * options.buff_size
         
