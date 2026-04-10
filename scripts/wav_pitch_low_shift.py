@@ -88,14 +88,28 @@ class OctaverContext:
         mid_buff_fft = fft(mid_buff * self.hann_window)
         new_buff_fft = fft(new_buff * self.hann_window)
         
-        # compute the phase shift of each (non-DC) frequency bin and align the output phase accordingly
-        for k in range(1, self.sample_cnt):
+        #
+        # compute the phase shift of each (non-DC) frequency bin and align the output phase accordingly.
+        # since we want the signal to be coherent in terms of its frequencies, we align the "negative" frequencies
+        # according to the positive frequencies, using the conjugate phase shift
+        #
+        for k in range(1, self.sample_cnt // 2):
             phase_shift = numpy.exp(1j * numpy.pi / self.scale_factor * k)
+            phase_shift_conj = numpy.exp(-1j * numpy.pi / self.scale_factor * k)
             mid_buff_fft[k] *= self.output_phase_shifts[k] * phase_shift
+            mid_buff_fft[self.sample_cnt - k] *= self.output_phase_shifts[self.sample_cnt - k] * phase_shift_conj
             if k % 2 != 0:
                 mid_buff_fft[k] *= -1
+                mid_buff_fft[self.sample_cnt - k] *= -1
             new_buff_fft[k] *= self.output_phase_shifts[k] * (phase_shift**2)
+            new_buff_fft[self.sample_cnt - k] *= self.output_phase_shifts[self.sample_cnt - k] * (phase_shift_conj**2)
             self.output_phase_shifts[k] *= (phase_shift**2)
+            self.output_phase_shifts[self.sample_cnt - k] *= (phase_shift_conj**2)
+        # do the same for the middle bin (no conjugate)
+        phase_shift = numpy.exp(1j * numpy.pi / self.scale_factor * (self.sample_cnt//2))
+        mid_buff_fft[self.sample_cnt//2] *= self.output_phase_shifts[self.sample_cnt//2] * phase_shift
+        new_buff_fft[self.sample_cnt//2] *= self.output_phase_shifts[self.sample_cnt//2] * (phase_shift**2)
+        self.output_phase_shifts[self.sample_cnt//2] *= (phase_shift**2)
         
         # stretch the arrays
         new_mod_buff = OctaverContext.extrapolate(ifft(new_buff_fft), self.scale_factor)
